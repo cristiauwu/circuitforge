@@ -18,8 +18,6 @@ export interface CatalogFixture {
   category: Category
   /** Descripción corta: que hace el componente. */
   description: string
-  /** Referencia del símbolo esquemático, en notacion de la profesion. */
-  symbol: string
   pins: { id: string; type: PinType }[]
   /** Unidad y valor por defecto del parámetro principal, para el inspector. */
   primaryParam?: { name: string; unit: string; value: number }
@@ -56,7 +54,6 @@ export const CATALOG: CatalogFixture[] = [
     name: 'Resistencia',
     category: 'passive',
     description: 'Limita la corriente en una rama.',
-    symbol: 'R',
     primaryParam: { name: 'Resistencia', unit: 'ohm', value: 220 },
     pins: [
       { id: 'a', type: 'power' },
@@ -68,7 +65,6 @@ export const CATALOG: CatalogFixture[] = [
     name: 'Capacitor',
     category: 'passive',
     description: 'Almacena carga y filtra ruido.',
-    symbol: 'C',
     primaryParam: { name: 'Capacitancia', unit: 'uF', value: 100 },
     pins: [
       { id: 'a', type: 'power' },
@@ -80,7 +76,6 @@ export const CATALOG: CatalogFixture[] = [
     name: 'Inductor',
     category: 'passive',
     description: 'Almacena energía en un campo magnético.',
-    symbol: 'L',
     primaryParam: { name: 'Inductancia', unit: 'mH', value: 10 },
     pins: [
       { id: 'a', type: 'power' },
@@ -92,7 +87,6 @@ export const CATALOG: CatalogFixture[] = [
     name: 'Potenciómetro',
     category: 'passive',
     description: 'Resistencia variable de tres terminales.',
-    symbol: 'RV',
     primaryParam: { name: 'Resistencia', unit: 'kohm', value: 10 },
     pins: [
       { id: 'a', type: 'power' },
@@ -107,7 +101,6 @@ export const CATALOG: CatalogFixture[] = [
     name: 'LED',
     category: 'semiconductor',
     description: 'Diodo emisor de luz.',
-    symbol: 'D',
     pins: [
       { id: 'anode', type: 'power' },
       { id: 'cathode', type: 'gnd' },
@@ -118,7 +111,6 @@ export const CATALOG: CatalogFixture[] = [
     name: 'Diodo',
     category: 'semiconductor',
     description: 'Conduce en un solo sentido.',
-    symbol: 'D',
     pins: [
       { id: 'anode', type: 'power' },
       { id: 'cathode', type: 'gnd' },
@@ -129,7 +121,6 @@ export const CATALOG: CatalogFixture[] = [
     name: 'Transistor NPN',
     category: 'semiconductor',
     description: 'Amplifica o conmuta corriente.',
-    symbol: 'Q',
     pins: [
       { id: 'base', type: 'analog' },
       { id: 'collector', type: 'power' },
@@ -143,7 +134,6 @@ export const CATALOG: CatalogFixture[] = [
     name: 'Arduino UNO',
     category: 'mcu',
     description: 'Placa de desarrollo ATmega328P.',
-    symbol: 'U',
     pins: [
       { id: '5V', type: 'power' },
       { id: 'GND', type: 'gnd' },
@@ -161,7 +151,6 @@ export const CATALOG: CatalogFixture[] = [
     name: 'ESP32',
     category: 'mcu',
     description: 'Microcontrolador con WiFi y Bluetooth.',
-    symbol: 'U',
     pins: [
       { id: '3V3', type: 'power' },
       { id: 'GND', type: 'gnd' },
@@ -177,7 +166,6 @@ export const CATALOG: CatalogFixture[] = [
     name: 'Fotorresistencia',
     category: 'sensor',
     description: 'Resistencia que varía con la luz.',
-    symbol: 'R',
     pins: [
       { id: 'a', type: 'power' },
       { id: 'b', type: 'analog' },
@@ -188,7 +176,6 @@ export const CATALOG: CatalogFixture[] = [
     name: 'DHT22',
     category: 'sensor',
     description: 'Sensor digital de temperatura y humedad.',
-    symbol: 'U',
     pins: [
       { id: 'VCC', type: 'power' },
       { id: 'GND', type: 'gnd' },
@@ -200,7 +187,6 @@ export const CATALOG: CatalogFixture[] = [
     name: 'HC-SR04',
     category: 'sensor',
     description: 'Sensor de distancia por ultrasonido.',
-    symbol: 'U',
     pins: [
       { id: 'VCC', type: 'power' },
       { id: 'GND', type: 'gnd' },
@@ -215,7 +201,6 @@ export const CATALOG: CatalogFixture[] = [
     name: 'Servomotor',
     category: 'actuator',
     description: 'Motor con ángulo controlado por PWM.',
-    symbol: 'M',
     pins: [
       { id: 'VCC', type: 'power' },
       { id: 'GND', type: 'gnd' },
@@ -227,7 +212,6 @@ export const CATALOG: CatalogFixture[] = [
     name: 'Motor DC',
     category: 'actuator',
     description: 'Motor de giro continuo.',
-    symbol: 'M',
     pins: [
       { id: 'a', type: 'power' },
       { id: 'b', type: 'gnd' },
@@ -238,7 +222,6 @@ export const CATALOG: CatalogFixture[] = [
     name: 'Zumbador',
     category: 'actuator',
     description: 'Emite tono cuando recibe señal.',
-    symbol: 'BZ',
     pins: [
       { id: 'positive', type: 'power' },
       { id: 'negative', type: 'gnd' },
@@ -251,7 +234,6 @@ export const CATALOG: CatalogFixture[] = [
     name: 'ESC 30A',
     category: 'esc',
     description: 'Controlador de velocidad para motor brushless.',
-    symbol: 'ESC',
     pins: [
       { id: 'BAT', type: 'power' },
       { id: 'GND', type: 'gnd' },
@@ -265,7 +247,6 @@ export const CATALOG: CatalogFixture[] = [
     name: 'Fuente DC',
     category: 'source',
     description: 'Fuente de tensión continua ajustable.',
-    symbol: 'V',
     primaryParam: { name: 'Tensión', unit: 'V', value: 5 },
     pins: [
       { id: 'positive', type: 'power' },
@@ -277,7 +258,6 @@ export const CATALOG: CatalogFixture[] = [
     name: 'Tierra',
     category: 'source',
     description: 'Referencia de 0 V del circuito.',
-    symbol: 'GND',
     pins: [{ id: 'gnd', type: 'gnd' }],
   },
 
@@ -287,7 +267,6 @@ export const CATALOG: CatalogFixture[] = [
     name: 'Batería 9V',
     category: 'battery',
     description: 'Batería rectangular de 9 voltios.',
-    symbol: 'BT',
     primaryParam: { name: 'Tensión', unit: 'V', value: 9 },
     pins: [
       { id: 'positive', type: 'power' },
@@ -299,7 +278,6 @@ export const CATALOG: CatalogFixture[] = [
     name: 'LiPo 3S',
     category: 'battery',
     description: 'Batería de polímero de litio, 11.1 V nominales.',
-    symbol: 'BT',
     primaryParam: { name: 'Tensión', unit: 'V', value: 11.1 },
     pins: [
       { id: 'positive', type: 'power' },
@@ -313,7 +291,6 @@ export const CATALOG: CatalogFixture[] = [
     name: 'Pantalla OLED I2C',
     category: 'connectivity',
     description: 'Display de 128x64 por bus I2C.',
-    symbol: 'DS',
     pins: [
       { id: 'VCC', type: 'power' },
       { id: 'GND', type: 'gnd' },
@@ -326,7 +303,6 @@ export const CATALOG: CatalogFixture[] = [
     name: 'Memoria SPI',
     category: 'connectivity',
     description: 'Memoria flash por bus SPI.',
-    symbol: 'U',
     pins: [
       { id: 'VCC', type: 'power' },
       { id: 'GND', type: 'gnd' },

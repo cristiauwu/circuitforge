@@ -1,7 +1,7 @@
 import type { Category } from '@circuitforge/netlist'
 import { useMemo, useState } from 'react'
 import { CATALOG, CATEGORIES, CATEGORY_LABELS, searchCatalog } from '@/lib/fixtures/components'
-import { Chip, Input, PinChip, RevealText } from '@/ui'
+import { Chip, Input, PinChip, RevealText, SchematicSymbol } from '@/ui'
 
 /**
  * Biblioteca de componentes (documento de diseño sección 4).
@@ -86,12 +86,11 @@ export function LibraryPage() {
                     <h2 className="truncate text-md font-medium text-text">{component.name}</h2>
                     <p className="cf-mono truncate text-2xs text-text-muted">{component.typeId}</p>
                   </div>
-                  <span
-                    aria-hidden="true"
-                    className="cf-mono shrink-0 text-xl leading-none text-text-muted"
-                  >
-                    {component.symbol}
-                  </span>
+                  {/* Simbolo esquematico real, no la inicial de la ficha */}
+                  <SchematicSymbol
+                    typeId={component.typeId}
+                    className="mt-0.5 h-6 w-9 shrink-0 text-text-muted"
+                  />
                 </div>
 
                 <p className="mb-4 flex-1 text-sm leading-snug text-text-secondary">

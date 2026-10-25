@@ -2,7 +2,7 @@ import type { Category } from '@circuitforge/netlist'
 import { useMemo, useState } from 'react'
 import { cx } from '@/lib/cx'
 import { CATALOG, CATEGORIES, CATEGORY_LABELS, searchCatalog } from '@/lib/fixtures/components'
-import { Chip, Input, PanelTitle } from '@/ui'
+import { Chip, Input, PanelTitle, SchematicSymbol } from '@/ui'
 
 /**
  * Paleta de componentes (documento de diseño sección 4).
@@ -98,13 +98,19 @@ export function Palette() {
 
       <ul
         /*
-          `overflow-x-hidden`: con la altura ya acotada por el shell la lista
-          desplaza en vertical, pero las fichas de 2 columnas no caben en los
-          ~216 px utiles y aparecia una barra horizontal. El desbordamiento
-          horizontal en una lista de fichas nunca es deseable: el nombre se
-          recorta con `truncate` en vez de empujar el ancho.
+          UNA columna con ficha HORIZONTAL (simbolo a la izquierda, texto a la
+          derecha), no una rejilla de 2 columnas.
+          
+          Por que: medido, una ficha vertical con simbolo + nombre + pines mide
+          98px de alto, y con 405px de lista solo caben 6 sin scroll. La
+          alternativa era truncar el nombre o quitar el simbolo, y ambas
+          empeoran la paleta. En horizontal la ficha mide ~40px, caben mas del
+          doble y el nombre entra completo en una linea.
+          
+          Es ademas como funciona una paleta de EDA real (KiCad, Altium): lista
+          densa de filas, no rejilla de tarjetas.
         */
-        className="grid min-h-0 flex-1 grid-cols-2 gap-2 overflow-y-auto overflow-x-hidden pr-1"
+        className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overflow-x-hidden pr-1"
         aria-label="Componentes disponibles"
       >
         {visible.map((component) => {
@@ -117,23 +123,30 @@ export function Palette() {
                 aria-pressed={isSelected}
                 title={`${component.name} — ${component.description}`}
                 className={cx(
-                  'flex h-full w-full cursor-grab flex-col gap-1.5 rounded-md p-2.5 text-left',
+                  // Fila horizontal: simbolo, nombre y pines en una sola linea
+                  'flex w-full cursor-grab items-center gap-2.5 rounded-lg px-2 py-1.5 text-left',
                   'border bg-surface',
-                  'transition-[border-color,transform] duration-fast ease-inout',
-                  'hover:-translate-y-0.5 hover:border-accent',
-                  'active:cursor-grabbing active:scale-[0.98]',
+                  'transition-[border-color,background-color] duration-fast ease-inout',
+                  'hover:border-accent',
+                  'active:cursor-grabbing',
                   isSelected ? 'border-accent bg-accent-veil' : 'border-hairline',
                 )}
               >
-                {/* Símbolo esquemático abreviado */}
-                <span aria-hidden="true" className="cf-mono text-sm font-medium text-text-muted">
-                  {component.symbol}
-                </span>
-                <span className="truncate text-sm leading-tight font-medium text-text">
+                {/*
+                  Simbolo esquematico real, no la inicial. En la paleta el
+                  simbolo es lo que el usuario reconoce de un vistazo: es el
+                  mismo dibujo que vera en el lienzo.
+                */}
+                <SchematicSymbol
+                  typeId={component.typeId}
+                  className="h-6 w-8 shrink-0 text-text-secondary"
+                />
+                {/* Nombre completo en una linea: en horizontal si cabe */}
+                <span className="min-w-0 flex-1 truncate text-xs leading-tight font-medium text-text">
                   {component.name}
                 </span>
-                <span className="cf-mono text-2xs text-text-muted">
-                  {component.pins.length} pines
+                <span className="cf-mono shrink-0 text-2xs text-text-muted">
+                  {component.pins.length}
                 </span>
               </button>
             </li>

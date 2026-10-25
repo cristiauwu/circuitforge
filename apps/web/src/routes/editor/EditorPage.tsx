@@ -25,21 +25,28 @@ export function EditorPage() {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {/*
-        Encabezado de la pantalla. El editor es una herramienta y su titulo no
-        necesita ocupar espacio visual, pero SI debe existir: sin el, la pagina
-        no tiene punto de entrada para un lector de pantalla ni para la
-        navegacion por encabezados (WCAG 1.3.1, 2.4.6).
-      */}
-      <h1 className="sr-only">Editor de circuitos</h1>
+        Barra de simulacion flotante — superficie glass 1 de 3.
 
-      {/* Barra de simulacion flotante — superficie glass 1 de 3 */}
+        El titulo de la pantalla vive AQUI, integrado en la barra, en vez de
+        oculto con `sr-only` o en una franja aparte. Da orientacion visible sin
+        costar altura vertical, que es el recurso escaso en una herramienta de
+        lienzo. Sigue siendo el `h1` real de la pagina, asi que un lector de
+        pantalla lo encuentra como encabezado de nivel 1 (WCAG 1.3.1/2.4.6).
+      */}
       <div className="px-3 pt-3">
-        <div className="cf-glass mx-auto flex w-full max-w-[1600px] flex-wrap items-center gap-x-4 gap-y-2 rounded-pill px-2 py-2">
+        <div className="cf-glass mx-auto flex w-full max-w-[1600px] flex-wrap items-center gap-x-4 gap-y-2 rounded-pill px-3 py-2">
+          <h1 className="shrink-0 text-sm font-semibold tracking-tight text-text-strong">Editor</h1>
+
+          <span
+            aria-hidden="true"
+            className="hidden h-5 w-px shrink-0 bg-hairline-strong sm:block"
+          />
+
           <div className="flex shrink-0 items-center gap-2">
             <Button variant="primary" size="sm" plain disabled>
               Simular
             </Button>
-            <IconButton label="Reiniciar simulacion" variant="ghost" size="sm" disabled>
+            <IconButton label="Reiniciar simulación" variant="ghost" size="sm" disabled>
               <svg
                 width="15"
                 height="15"

@@ -62,10 +62,13 @@ export function LandingPage() {
 
         {/*
           Titular con DOS niveles de contraste en el mismo bloque, como la
-          referencia: la primera linea en blanco, la segunda atenuada. El bloque
-          completo entra con un desplazamiento, sin revelado letra por letra —
-          ese patron se reserva a los titulares de seccion para no gastar el
-          efecto en la primera pantalla.
+          referencia: la primera linea en blanco, la segunda atenuada.
+          
+          `aria-label` en el h1 y `aria-hidden` en las lineas: dos `<span>` en
+          `display: block` NO producen separacion en el texto accesible, asi que
+          el lector de pantalla anunciaba "circuitosy simula" como una sola
+          palabra. Con el label explicito recibe la frase completa y bien
+          espaciada.
         */}
         <h1
           className={cx(
@@ -73,9 +76,14 @@ export function LandingPage() {
             state.title && 'cf-in',
           )}
           data-anim="title"
+          aria-label="Diseña circuitos y simula su comportamiento"
         >
-          <span className="block text-text-strong">Diseña circuitos</span>
-          <span className="block text-text-muted">y simula su comportamiento</span>
+          <span aria-hidden="true" className="block text-text-strong">
+            Diseña circuitos
+          </span>
+          <span aria-hidden="true" className="block text-text-muted">
+            y simula su comportamiento
+          </span>
         </h1>
 
         <p

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { SchematicSymbol } from '@/ui'
 
 /**
  * Lienzo del editor (documento de diseño sección 4).
@@ -18,7 +19,11 @@ import { useState } from 'react'
 interface PlacedComponent {
   id: string
   name: string
-  symbol: string
+  /**
+   * Clave de la ficha en la biblioteca. Determina el simbolo esquematico que se
+   * dibuja; un `typeId` desconocido cae en el simbolo generico.
+   */
+  typeId: string
   x: number
   y: number
   pins: { id: string; type: 'power' | 'gnd' | 'digital' | 'pwm' }[]
@@ -29,7 +34,7 @@ const PLACED: PlacedComponent[] = [
   {
     id: 'V1',
     name: 'Fuente DC',
-    symbol: 'V',
+    typeId: 'dc_source',
     x: 120,
     y: 120,
     pins: [
@@ -40,7 +45,7 @@ const PLACED: PlacedComponent[] = [
   {
     id: 'R1',
     name: 'Resistencia',
-    symbol: 'R',
+    typeId: 'resistor',
     x: 320,
     y: 120,
     pins: [
@@ -51,7 +56,7 @@ const PLACED: PlacedComponent[] = [
   {
     id: 'D1',
     name: 'LED',
-    symbol: 'D',
+    typeId: 'led',
     x: 520,
     y: 120,
     pins: [
@@ -62,7 +67,7 @@ const PLACED: PlacedComponent[] = [
   {
     id: 'U1',
     name: 'Arduino UNO',
-    symbol: 'U',
+    typeId: 'arduino_uno',
     x: 240,
     y: 320,
     pins: [
@@ -208,17 +213,21 @@ export function CanvasStage({ selectedId, onSelect }: CanvasStageProps) {
                 {component.id}
               </text>
 
-              {/* Símbolo, centrado en el cuerpo (el rect va de -30 a 30) */}
-              <text
-                x="0"
-                y="6"
-                textAnchor="middle"
-                className="cf-mono pointer-events-none"
-                fontSize="20"
-                fill="var(--cf-text-secondary)"
-              >
-                {component.symbol}
-              </text>
+              {/*
+                Simbolo esquematico real, anidado en el SVG del lienzo.
+                Centrado en el cuerpo (el rect va de -52,-30 a 52,30): 44x30
+                unidades deja aire a los lados y no toca ni el id (y=-38) ni el
+                nombre (y=24). `color` hereda del grupo para que el estado
+                seleccionado lo tinte sin duplicar el dibujo.
+              */}
+              <SchematicSymbol
+                typeId={component.typeId}
+                x={-22}
+                y={-12}
+                width={44}
+                height={30}
+                className="pointer-events-none text-text-secondary"
+              />
 
               {/*
                 Nombre, DENTRO del cuerpo (y=24). Antes estaba en y=44, fuera del

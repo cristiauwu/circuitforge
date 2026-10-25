@@ -1,6 +1,6 @@
 # CircuitForge — DESIGN.md
 
-**Versión:** 2.0
+**Versión:** 2.1
 **Fecha:** 2026-10-25
 **Estado:** fuente de verdad visual. Todo componente nuevo se mide contra este archivo.
 **Origen:** valores **medidos** de `iyo.ai` con `getComputedStyle` sobre el DOM renderizado. La evidencia completa está en `docs/design/2026-10-25-analisis-visual-referencia.md`.
@@ -172,6 +172,33 @@ Sin `box-shadow` de elevación en ninguna.
 Píldora, altura 28px. El chip activo usa **relleno fuerte, no el acento**: con 9 categorías pintadas de naranja, el naranja dejaría de significar "haz esto".
 
 Los pines llevan color por función eléctrica (V-4) y siempre monoespaciados.
+
+### 3.5b Paleta del editor — ficha horizontal
+
+**Cambio de la v2.1.** La paleta pasó de una rejilla de 2 columnas a una **lista de filas horizontales**: símbolo a la izquierda, nombre al centro, número de pines a la derecha.
+
+Medido, la decisión se justifica sola:
+
+| Disposición | Altura de ficha | Visibles sin scroll |
+|---|---|---|
+| Rejilla vertical (2 col) | 98 px | **6** |
+| Fila horizontal (1 col) | **38 px** | **9** |
+
+En vertical no cabía el nombre completo de «Potenciómetro» y había que truncarlo con elipsis o quitar el símbolo. En horizontal entra completo en una línea y el símbolo sigue visible.
+
+Es además como funciona una paleta de EDA real (KiCad, Altium): **lista densa de filas, no rejilla de tarjetas**. Una rejilla dice "catálogo para explorar"; una lista dice "herramienta para elegir rápido", que es lo que la paleta es.
+
+> **Densidad objetivo: ≥9 fichas visibles sin scroll a 900 px de alto.** No ≥14. Ese número venía de `2026-10-25-stitch-prompts.md`, escrito para el sistema anterior (fichas verticales sin símbolo); alcanzarlo hoy exigiría truncar nombres o eliminar los símbolos, y ambas cosas empeoran la paleta. La densidad es una consecuencia del contenido, no un objetivo que se persigue deformando el diseño.
+
+### 3.5c Símbolos esquemáticos
+
+`apps/web/src/ui/SchematicSymbol.tsx` dibuja **22 símbolos** en notación esquemática real: zigzag para la resistencia, placas paralelas para el capacitor, arcos para el inductor, triángulo con barra y flechas para el LED, círculo con base y colector con flecha saliente para el NPN, chip con pines para el microcontrolador.
+
+Por qué importa: el OE-3 exige que cada componente declare **símbolo, pines tipados, parámetros y modelo**. El símbolo *es* la interfaz de un editor de circuitos: dibujar un rectángulo con una letra dentro no cumple ese criterio.
+
+Convenciones: viewBox `0 0 32 24` (apaisado, porque un símbolo esquemático lo es), trazo de 1.5 unidades, `currentColor` para heredar el estado, y coordenadas sobre rejilla de 2 unidades. Los símbolos se **anidan** en el SVG del lienzo mediante `<svg x y width height>`, válido en SVG 2, lo que evita duplicar cada dibujo en dos variantes.
+
+Un `typeId` desconocido cae en un símbolo genérico (rectángulo con rombo, que en notación esquemática significa «bloque no especificado») en vez de dejar un hueco, porque un hueco se lee como un error de render.
 
 ### 3.6 Campo de entrada
 
