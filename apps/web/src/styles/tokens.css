@@ -1,0 +1,143 @@
+/**
+ * CircuitForge — Tokens del sistema visual.
+ *
+ * Traduccion literal de DESIGN.md sección 2. Este archivo es el contrato:
+ * ningún componente escribe un literal de color, radio, tamaño o duración.
+ * Si falta un token, se anade aquí o se usa el mas cercano — nunca un valor suelto.
+ *
+ * Fuente: docs/design/DESIGN.md
+ */
+
+:root {
+  /* Superficies (de mas profunda a mas elevada) */
+  --cf-bg: #0f1720;
+  --cf-surface: #1b2430;
+  --cf-surface-alt: #26313f;
+  --cf-surface-raised: #2e3b4a;
+  --cf-grid: #2e3b4a;
+
+  /* Texto */
+  --cf-text: #f1f5f9;
+  --cf-text-secondary: #94a3b8;
+  --cf-text-muted: #64748b;
+
+  /* Acento primario (acción) */
+  --cf-accent: #ff6b35;
+  --cf-accent-hover: #ff8557;
+
+  /* Acento secundario (instrumentacion) */
+  --cf-signal: #22d3ee;
+
+  /* Estado (semantica eléctrica, V-4) */
+  --cf-success: #34d399;
+  --cf-warning: #fbbf24;
+  --cf-error: #f87171;
+
+  /* Paleta de cables */
+  --cf-wire-1: #f87171;
+  --cf-wire-2: #fbbf24;
+  --cf-wire-3: #34d399;
+  --cf-wire-4: #22d3ee;
+  --cf-wire-5: #a78bfa;
+  --cf-wire-6: #f472b6;
+  --cf-wire-7: #60a5fa;
+  --cf-wire-8: #fb923c;
+
+  /* Velo y glass (V-2: la profundidad es luz, no sombra) */
+  --cf-glass-fill: rgb(255 255 255 / 0.04);
+  --cf-glass-fill-hi: rgb(255 255 255 / 0.07);
+  --cf-hairline: rgb(255 255 255 / 0.08);
+  --cf-hairline-strong: rgb(255 255 255 / 0.14);
+  --cf-scrim: rgb(15 23 32 / 0.72);
+
+  /* Velos de estado */
+  --cf-error-veil: rgb(248 113 113 / 0.08);
+  --cf-warning-veil: rgb(251 191 36 / 0.08);
+  --cf-success-veil: rgb(52 211 153 / 0.08);
+  --cf-accent-veil: rgb(255 107 53 / 0.12);
+
+  /* Tipografia */
+  --cf-font-ui: "Inter", system-ui, -apple-system, sans-serif;
+  --cf-font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+
+  /* Escala tipografica — seis pasos, sin excepciones */
+  --cf-text-2xs: 0.6875rem;
+  --cf-text-xs: 0.75rem;
+  --cf-text-sm: 0.8125rem;
+  --cf-text-md: 0.875rem;
+  --cf-text-xl: 1.5rem;
+  --cf-text-3xl: 2.5rem;
+
+  --cf-leading-tight: 1.15;
+  --cf-leading-snug: 1.4;
+  --cf-leading-base: 1.55;
+
+  --cf-tracking-tight: -0.02em;
+  --cf-tracking-wide: 0.08em;
+
+  /* Espaciado — base 4px, ocho pasos */
+  --cf-space-1: 0.25rem;
+  --cf-space-2: 0.5rem;
+  --cf-space-3: 0.75rem;
+  --cf-space-4: 1rem;
+  --cf-space-6: 1.5rem;
+  --cf-space-8: 2rem;
+  --cf-space-12: 3rem;
+  --cf-space-16: 4rem;
+
+  /* Geometria — tres radios, no hay un cuarto */
+  --cf-radius-sm: 0.5rem;
+  --cf-radius-md: 0.75rem;
+  --cf-radius-lg: 1.25rem;
+  --cf-radius-full: 9999px;
+
+  --cf-border-hairline: 1px solid var(--cf-hairline);
+  --cf-border-panel: 1px solid var(--cf-hairline);
+  --cf-border-focus: 2px solid var(--cf-accent);
+
+  /* Elevacion (V-2) */
+  --cf-glass-blur: 16px;
+  --cf-glass-sat: 140%;
+
+  /* Movimiento — tres curvas, cuatro duraciones */
+  --cf-ease-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --cf-ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
+  --cf-ease-pop: cubic-bezier(0.48, 0.01, 0, 1.08);
+
+  --cf-dur-instant: 100ms;
+  --cf-dur-fast: 200ms;
+  --cf-dur-base: 300ms;
+  --cf-dur-slow: 600ms;
+}
+
+/* Accesibilidad del movimiento (RNF-4, obligatorio).
+ *
+ * Los `!important` son deliberados: este bloque debe ganar a CUALQUIER
+ * transición declarada en cualquier componente, presente o futuro. Es el patron
+ * establecido para `prefers-reduced-motion`. Por eso `noImportantStyles` se
+ * suprime aquí y solo aquí; en el resto del sistema un `!important` si seria un
+ * problema real de cascada.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: debe sobrescribir toda transición */
+    animation-duration: 0.01ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: idem */
+    animation-iteration-count: 1 !important;
+    /* biome-ignore lint/complexity/noImportantStyles: idem */
+    transition-duration: 0.01ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: idem */
+    scroll-behavior: auto !important;
+  }
+
+  .cf-reveal-letter {
+    /* biome-ignore lint/complexity/noImportantStyles: idem */
+    filter: none !important;
+    /* biome-ignore lint/complexity/noImportantStyles: idem */
+    opacity: 1 !important;
+    /* biome-ignore lint/complexity/noImportantStyles: idem */
+    visibility: visible !important;
+  }
+}

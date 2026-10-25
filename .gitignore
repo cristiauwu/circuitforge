@@ -19,7 +19,6 @@ build/
 .planning/
 *.log
 npm-debug.log*
-
 # Test / cobertura
 coverage/
 playwright-report/

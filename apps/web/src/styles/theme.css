@@ -1,0 +1,147 @@
+/**
+ * CircuitForge — Tema de Tailwind 4.
+ *
+ * DESIGN.md sección 7: los tokens se MAPEAN, no se duplican. `@theme inline`
+ * hace que las utilidades de Tailwind apunten a las custom properties, asi que
+ * cambiar tokens.css cambia todo el sistema sin tocar este archivo.
+ *
+ * Uso: bg-surface, text-text-secondary, border-hairline, ease-out, duration-base
+ */
+
+@import "tailwindcss";
+@import "./tokens.css";
+
+@theme inline {
+  /* Superficies */
+  --color-bg: var(--cf-bg);
+  --color-surface: var(--cf-surface);
+  --color-surface-alt: var(--cf-surface-alt);
+  --color-surface-raised: var(--cf-surface-raised);
+  --color-grid: var(--cf-grid);
+
+  /* Texto */
+  --color-text: var(--cf-text);
+  --color-text-secondary: var(--cf-text-secondary);
+  --color-text-muted: var(--cf-text-muted);
+
+  /* Acentos */
+  --color-accent: var(--cf-accent);
+  --color-accent-hover: var(--cf-accent-hover);
+  --color-signal: var(--cf-signal);
+
+  /* Estado */
+  --color-success: var(--cf-success);
+  --color-warning: var(--cf-warning);
+  --color-error: var(--cf-error);
+
+  /* Bordes */
+  --color-hairline: var(--cf-hairline);
+  --color-hairline-strong: var(--cf-hairline-strong);
+
+  /* Tipografia */
+  --font-ui: var(--cf-font-ui);
+  --font-mono: var(--cf-font-mono);
+
+  --text-2xs: var(--cf-text-2xs);
+  --text-xs: var(--cf-text-xs);
+  --text-sm: var(--cf-text-sm);
+  --text-md: var(--cf-text-md);
+  --text-xl: var(--cf-text-xl);
+  --text-3xl: var(--cf-text-3xl);
+
+  /* Radios */
+  --radius-sm: var(--cf-radius-sm);
+  --radius-md: var(--cf-radius-md);
+  --radius-lg: var(--cf-radius-lg);
+  --radius-full: var(--cf-radius-full);
+
+  /* Movimiento */
+  --ease-out: var(--cf-ease-out);
+  --ease-inout: var(--cf-ease-inout);
+  --ease-pop: var(--cf-ease-pop);
+
+  --duration-instant: var(--cf-dur-instant);
+  --duration-fast: var(--cf-dur-fast);
+  --duration-base: var(--cf-dur-base);
+  --duration-slow: var(--cf-dur-slow);
+}
+
+/* ---------------------------------------------------------------------------
+ * Base
+ * ------------------------------------------------------------------------- */
+
+html {
+  color-scheme: dark;
+  background-color: var(--cf-bg);
+}
+
+body {
+  margin: 0;
+  background-color: var(--cf-bg);
+  color: var(--cf-text);
+  font-family: var(--cf-font-ui);
+  font-size: var(--cf-text-md);
+  line-height: var(--cf-leading-base);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Foco visible coherente en toda la app (WCAG 2.4.7) */
+:focus-visible {
+  outline: var(--cf-border-focus);
+  outline-offset: 2px;
+  border-radius: var(--cf-radius-sm);
+}
+
+/* El foco por ratón no dibuja anillo: solo el de teclado. */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ---------------------------------------------------------------------------
+ * Utilidades de dominio
+ * ------------------------------------------------------------------------- */
+
+/* Superficie solida — uso por defecto */
+.cf-panel {
+  background: var(--cf-surface);
+  border: var(--cf-border-panel);
+  border-radius: var(--cf-radius-md);
+}
+
+/* Superficie glass — solo donde hay contenido vivo detras.
+ * Presupuesto: exactamente 3 superficies (DESIGN.md sección 2.5). */
+.cf-glass {
+  background: linear-gradient(180deg, var(--cf-glass-fill-hi), var(--cf-glass-fill));
+  backdrop-filter: blur(var(--cf-glass-blur)) saturate(var(--cf-glass-sat));
+  -webkit-backdrop-filter: blur(var(--cf-glass-blur)) saturate(var(--cf-glass-sat));
+  border: var(--cf-border-panel);
+  border-radius: var(--cf-radius-md);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .cf-glass {
+    background: var(--cf-surface);
+  }
+}
+
+/* Etiqueta monoespaciada para valores tecnicos (DESIGN.md sección 2.2) */
+.cf-mono {
+  font-family: var(--cf-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Cuadrícula del lienzo — CSS puro, sin WebGL (DESIGN.md sección 3, etapa UI-1) */
+.cf-grid-bg {
+  background-image:
+    linear-gradient(to right, var(--cf-grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--cf-grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Viñeta para que la cuadrícula se disuelva en los bordes */
+.cf-grid-fade {
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 45%, #000 40%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 45%, #000 40%, transparent 100%);
+}

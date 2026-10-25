@@ -1,0 +1,182 @@
+/**
+ * Animaciones del sistema visual (DESIGN.md sección 4).
+ *
+ * Todas son CSS nativo. No hay GSAP ni Framer Motion: el sitio de referencia
+ * logra su calidad sin librerias de animación, y CircuitForge no necesita añadir una.
+ *
+ * M-1: revelado de titular letra por letra con desenfoque
+ * M-2: botón con text roll de doble capa
+ * M-3: panel glass
+ * M-4: entrada del inspector
+ * M-5: LED y flujo de corriente
+ */
+
+/* ---------------------------------------------------------------------------
+ * M-1 — Revelado de titular
+ *
+ * Cada letra parte de blur(2px) + opacity 0 y anima a blur(0) + opacity 1,
+ * escalonada por indice. `will-change` se retira al terminar: dejarlo activo
+ * penaliza la GPU, que es lo que el lienzo necesita después.
+ * ------------------------------------------------------------------------- */
+
+.cf-reveal-letter {
+  display: inline-block;
+  will-change: filter, opacity;
+  filter: blur(2px);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    filter var(--cf-dur-slow) var(--cf-ease-out),
+    opacity var(--cf-dur-slow) var(--cf-ease-out);
+  transition-delay: calc(var(--i, 0) * 18ms);
+}
+
+.cf-reveal.is-visible .cf-reveal-letter {
+  filter: blur(0);
+  opacity: 1;
+  visibility: visible;
+}
+
+.cf-reveal.is-done .cf-reveal-letter {
+  will-change: auto;
+}
+
+/* ---------------------------------------------------------------------------
+ * M-2 — Botón con text roll
+ *
+ * Dos copias identicas del texto. En reposo una es visible; al hacer hover o
+ * foco la primera sale por arriba y la segunda entra desde abajo. Se activa
+ * también en :focus-visible, no solo en :hover (requisito de teclado).
+ * ------------------------------------------------------------------------- */
+
+.cf-btn__roll {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.cf-btn__text {
+  display: block;
+  transition: transform var(--cf-dur-base) var(--cf-ease-out);
+}
+
+.cf-btn__text + .cf-btn__text {
+  position: absolute;
+  inset: 0;
+  transform: translate3d(0, 100%, 0);
+}
+
+.cf-btn:hover .cf-btn__text,
+.cf-btn:focus-visible .cf-btn__text {
+  transform: translate3d(0, -100%, 0);
+}
+
+.cf-btn:hover .cf-btn__text + .cf-btn__text,
+.cf-btn:focus-visible .cf-btn__text + .cf-btn__text {
+  transform: translate3d(0, 0, 0);
+}
+
+/* ---------------------------------------------------------------------------
+ * M-4 — Entrada del inspector
+ *
+ * Desplazamiento de 6 px: apenas perceptible, comunica "el contenido cambio"
+ * sin robar atencion al lienzo.
+ * ------------------------------------------------------------------------- */
+
+.cf-inspector__body {
+  transition:
+    opacity var(--cf-dur-fast) var(--cf-ease-inout),
+    transform var(--cf-dur-base) var(--cf-ease-out);
+}
+
+.cf-inspector__body[data-swapping="true"] {
+  opacity: 0;
+  transform: translate3d(6px, 0, 0);
+}
+
+/* ---------------------------------------------------------------------------
+ * M-5 — LED y flujo de corriente
+ *
+ * Diseño propio de CircuitForge, no de la referencia. El brillo es proporcional
+ * a la corriente, y el pulso recorre el cable siguiendo su curva con
+ * offset-distance, que es lo que da la direccion del flujo.
+ *
+ * Es la única animación declarativa del sistema (equivalente al único
+ * @keyframes spin de la referencia) y esta justificada porque representa un
+ * fenomeno fisico continuo.
+ * ------------------------------------------------------------------------- */
+
+.cf-led__halo {
+  opacity: calc(var(--cf-current-ratio, 0) * 0.9);
+  transition: opacity var(--cf-dur-fast) linear;
+}
+
+.cf-wire[data-live="true"] {
+  filter: brightness(1.35);
+  transition: filter var(--cf-dur-fast) linear;
+}
+
+.cf-wire__pulse {
+  animation: cf-pulse 1.6s linear infinite;
+}
+
+@keyframes cf-pulse {
+  0% {
+    offset-distance: 0%;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Portada — ensamblado del circuito
+ *
+ * Trazo de cable con stroke-dashoffset (técnica estándar y compositiva).
+ * El SVG es decorativo: aria-hidden, asi que la animación es prescindible.
+ * ------------------------------------------------------------------------- */
+
+.cf-trace {
+  stroke-dasharray: var(--len, 100);
+  stroke-dashoffset: var(--len, 100);
+  transition: stroke-dashoffset var(--cf-dur-slow) var(--cf-ease-out);
+}
+
+.cf-trace.is-drawn {
+  stroke-dashoffset: 0;
+}
+
+.cf-node {
+  opacity: 0;
+  transform: translate3d(0, 6px, 0) scale(0.94);
+  transition:
+    opacity var(--cf-dur-base) var(--cf-ease-inout),
+    transform var(--cf-dur-base) var(--cf-ease-pop);
+}
+
+.cf-node.is-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+/* Entrada escalonada del bloque de texto de la portada */
+.cf-fade-up {
+  opacity: 0;
+  transform: translate3d(0, 12px, 0);
+  transition:
+    opacity var(--cf-dur-slow) var(--cf-ease-inout),
+    transform var(--cf-dur-slow) var(--cf-ease-out);
+}
+
+.cf-fade-up.is-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
