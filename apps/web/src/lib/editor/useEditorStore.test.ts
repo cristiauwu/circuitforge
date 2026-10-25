@@ -52,6 +52,34 @@ describe('addComponent', () => {
     expect(id).toMatch(/^X\d+$/)
     expect(project().components[0]?.pins).toEqual([])
   })
+
+  it('la tierra se rotula GND, no V', () => {
+    // `gnd_ref` es categoria `source` en la taxonomia electrica, pero rotularlo
+    // `V2` se confunde con la fuente de al lado. En un esquematico la tierra es
+    // `GND` y un `V` significa fuente.
+    const gnd = state().addComponent('gnd_ref', { x: 0, y: 0 })
+    expect(gnd).toBe('GND1')
+  })
+
+  it('los pasivos no comparten prefijo R entre si', () => {
+    // Resistencia, capacitor e inductor son los tres de categoria `passive`.
+    // Sin distinguirlos por tipo, los tres saldrian `R1`, `R2`, `R3`.
+    expect(state().addComponent('resistor', { x: 0, y: 0 })).toBe('R1')
+    expect(state().addComponent('capacitor', { x: 0, y: 0 })).toBe('C1')
+    expect(state().addComponent('inductor', { x: 0, y: 0 })).toBe('L1')
+    expect(state().addComponent('potentiometer', { x: 0, y: 0 })).toBe('RV1')
+  })
+
+  it('el transistor no comparte prefijo D con los diodos', () => {
+    expect(state().addComponent('led', { x: 0, y: 0 })).toBe('D1')
+    expect(state().addComponent('diode', { x: 0, y: 0 })).toBe('D2')
+    expect(state().addComponent('bjt_npn', { x: 0, y: 0 })).toBe('Q1')
+  })
+
+  it('la fuente sigue siendo V y la bateria BT', () => {
+    expect(state().addComponent('dc_source', { x: 0, y: 0 })).toBe('V1')
+    expect(state().addComponent('battery_9v', { x: 0, y: 0 })).toBe('BT1')
+  })
 })
 
 describe('moveComponent', () => {

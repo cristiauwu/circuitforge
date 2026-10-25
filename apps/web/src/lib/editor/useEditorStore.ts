@@ -71,8 +71,45 @@ const PREFIX_BY_CATEGORY: Record<Category, string> = {
   connectivity: 'J',
 }
 
+/**
+ * Prefijos que la categoría NO distingue bien.
+ *
+ * `gnd_ref` esta en la categoria `source` porque electricamente es una
+ * referencia de potencial, pero **rotularlo `V2` es un error de lectura**: en
+ * cualquier esquematico la tierra es `GND`, y un `V` significa fuente. Medido en
+ * el navegador: al colocar una tierra salia etiquetada `V2`, que se confunde con
+ * la fuente `V1` de al lado.
+ *
+ * Este mapa tiene prioridad sobre la categoria. Solo recoge los casos donde la
+ * taxonomia electrica y la convencion de rotulado no coinciden.
+ */
+const PREFIX_BY_TYPE: Record<string, string> = {
+  gnd_ref: 'GND',
+  // Los capacitores e inductores comparten la categoria `passive` con las
+  // resistencias, asi que sin esto los tres saldrian `R3`, `R4`, `R5`.
+  capacitor: 'C',
+  inductor: 'L',
+  potentiometer: 'RV',
+  // Diodos y LED comparten `semiconductor` con el transistor.
+  led: 'D',
+  diode: 'D',
+  bjt_npn: 'Q',
+}
+
 /** Prefijo por defecto si la categoría no se conoce. */
 const DEFAULT_PREFIX = 'X'
+
+/**
+ * Elige el prefijo de un componente.
+ *
+ * El `typeId` gana a la categoria cuando esta en el mapa de excepciones.
+ */
+function prefixFor(typeId: string, category: Category | undefined): string {
+  const byType = PREFIX_BY_TYPE[typeId]
+  if (byType !== undefined) return byType
+  if (category === undefined) return DEFAULT_PREFIX
+  return PREFIX_BY_CATEGORY[category]
+}
 
 /**
  * Contador de componentes por prefijo.
@@ -186,7 +223,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   addComponent: (typeId, position) => {
     const { history } = get()
     const fixture = CATALOG_INDEX.get(typeId)
-    const prefix = fixture ? PREFIX_BY_CATEGORY[fixture.category] : DEFAULT_PREFIX
+    // El prefijo sale del `typeId` cuando la categoria no basta: `gnd_ref` es
+    // `source` para la taxonomia electrica, pero se rotula `GND`, no `V`.
+    const prefix = prefixFor(typeId, fixture?.category)
     const id = nextComponentId(history.present.components, prefix)
     const component = createComponent(id, typeId, position)
 

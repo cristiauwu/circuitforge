@@ -23,7 +23,25 @@
   --cf-surface: #1c1c1e;
   --cf-surface-alt: #242426;
   --cf-surface-raised: #303030;
-  --cf-grid: #242426;
+
+  /*
+   * Lineas de la reticula del lienzo.
+   *
+   * **Este valor estaba mal calibrado y no se noto hasta arreglar otra cosa.**
+   * Era `#242426`, que sobre el fondo `#101010` da un contraste de **1.23:1**:
+   * invisible. Medido con la formula de luminancia relativa de WCAG.
+   *
+   * No se veia mal antes porque habia un bug distinto: los colores de la escena
+   * se pasaban como `var(--cf-...)`, que Three.js no entiende, asi que caia a un
+   * valor por defecto claro. Al corregir ese bug, el color real —el que siempre
+   * estuvo mal— quedo a la vista. Un bug tapaba al otro.
+   *
+   * `#525256` da 2.45:1: la reticula se lee como referencia de alineacion sin
+   * competir con los componentes, que es exactamente su papel. Por debajo de 2:1
+   * no se ve; por encima de 3.5:1 empieza a leerse como contenido.
+   */
+  --cf-grid: #525256;
+  --cf-grid-strong: #6b6b70;
 
   /* Relleno translucido de tarjeta — el valor medido literalmente */
   --cf-fill: rgb(56 56 56 / 0.6);
