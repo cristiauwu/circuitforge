@@ -1,32 +1,30 @@
 import { useEffect, useState } from 'react'
 import { cx } from '@/lib/cx'
+import { useEditorStore } from '@/lib/editor/useEditorStore'
 import { CATALOG_INDEX } from '@/lib/fixtures/components'
 import { Input, PanelTitle, PinChip, ViolationMessage } from '@/ui'
 
-/** Componentes colocados, para que el inspector tenga algo que inspeccionar. */
-const PLACED: Record<string, { name: string; typeId: string }> = {
-  V1: { name: 'Fuente DC', typeId: 'dc_source' },
-  R1: { name: 'Resistencia', typeId: 'resistor' },
-  D1: { name: 'LED', typeId: 'led' },
-  U1: { name: 'Arduino UNO', typeId: 'arduino_uno' },
-}
-
-interface InspectorProps {
-  selectedId: string | null
-}
-
 /**
- * Inspector de propiedades (documento de diseño sección 4).
+ * Inspector de propiedades.
  *
  * Superficie glass (M-3) — segunda del presupuesto de tres.
  *
- * Con un componente seleccionado, el cuerpo del panel entra con el patron M-4:
- * el contenido anterior se desvanece y desplaza 6 px antes de que entre el nuevo.
- * `data-swapping` es lo que dispara esa transición, y se limpia en el siguiente
- * frame para que el contenido nuevo pueda animarse.
+ * **Lee del store, no de una tabla fija:** el componente seleccionado sale del
+ * netlist, que es la fuente de verdad. La versión anterior tenía cuatro
+ * componentes escritos a mano, así que no reflejaba lo que hubiera en el lienzo.
+ *
+ * Con un componente seleccionado, el cuerpo entra con el patrón M-4: el contenido
+ * anterior se desvanece y desplaza 6 px antes de que entre el nuevo.
  */
+export interface InspectorProps {
+  selectedId: string | null
+}
+
 export function Inspector({ selectedId }: InspectorProps) {
   const [swapping, setSwapping] = useState(false)
+  const component = useEditorStore((s) =>
+    selectedId === null ? undefined : s.project.components.find((c) => c.id === selectedId),
+  )
 
   // M-4: al cambiar la selección, marcar el cuerpo como "saliendo" durante un
   // frame. Sin esto la transición no se dispara porque el DOM se reemplaza
@@ -38,55 +36,62 @@ export function Inspector({ selectedId }: InspectorProps) {
     return () => window.cancelAnimationFrame(id)
   }, [selectedId])
 
-  const placed = selectedId ? PLACED[selectedId] : undefined
-  const entry = placed ? CATALOG_INDEX.get(placed.typeId) : undefined
+  const fixture = component ? CATALOG_INDEX.get(component.typeId) : undefined
 
   return (
     <>
       <PanelTitle
         action={
-          selectedId ? <span className="cf-mono text-2xs text-signal">{selectedId}</span> : null
+          component ? <span className="cf-mono text-2xs text-signal">{component.id}</span> : null
         }
       >
         Inspector
       </PanelTitle>
 
       <div className="cf-inspector__body min-h-0 flex-1 overflow-y-auto" data-swapping={swapping}>
-        {!placed || !entry ? (
+        {!component || !fixture ? (
           <EmptyInspector />
         ) : (
           <div className="flex flex-col gap-4">
             {/* Identidad */}
             <div>
-              <p className="text-md font-medium text-text">{placed.name}</p>
-              <p className="text-xs text-text-secondary">{entry.description}</p>
-              <p className="cf-mono mt-1 text-2xs text-text-muted">{entry.typeId}</p>
+              <p className="text-md font-medium text-text">{fixture.name}</p>
+              <p className="text-xs text-text-secondary">{fixture.description}</p>
+              <p className="cf-mono mt-1 text-2xs text-text-muted">{component.typeId}</p>
             </div>
 
+            {/* Transformación */}
+            <fieldset className="flex flex-col gap-2">
+              <legend className="cf-eyebrow mb-2">Transformación</legend>
+              <Row
+                label="Posición"
+                value={`${Math.round(component.position.x)}, ${Math.round(component.position.y)}`}
+              />
+              <Row label="Rotación" value={`${component.position.rotation}°`} />
+            </fieldset>
+
             {/* Parámetros editables */}
-            {entry.primaryParam && (
+            {fixture.primaryParam && (
               <fieldset className="flex flex-col gap-2">
-                <legend className="mb-2 text-2xs font-semibold uppercase tracking-wide text-text-muted">
-                  Parámetros
-                </legend>
+                <legend className="cf-eyebrow mb-2">Parámetros</legend>
                 <div className="flex items-center justify-between gap-3">
                   {/*
-                    `htmlFor` explicito en vez de envolver el input: la asociacion
+                    `htmlFor` explícito en vez de envolver el input: la asociación
                     por anidamiento se rompe si hay un contenedor en medio, y un
-                    lector de pantalla dejaria de anunciar para que sirve el campo.
+                    lector de pantalla dejaría de anunciar para qué sirve el campo.
                   */}
                   <label htmlFor="param-primary" className="text-sm text-text-secondary">
-                    {entry.primaryParam.name}
+                    {fixture.primaryParam.name}
                   </label>
                   <span className="flex items-center gap-1.5">
                     <Input
                       id="param-primary"
                       numeric
-                      defaultValue={entry.primaryParam.value}
+                      defaultValue={fixture.primaryParam.value}
                       className="w-24"
                     />
                     <span className="cf-mono w-8 text-xs text-text-muted">
-                      {entry.primaryParam.unit}
+                      {fixture.primaryParam.unit}
                     </span>
                   </span>
                 </div>
@@ -95,28 +100,39 @@ export function Inspector({ selectedId }: InspectorProps) {
 
             {/* Pines */}
             <fieldset>
-              <legend className="mb-2 text-2xs font-semibold uppercase tracking-wide text-text-muted">
-                Pines
-              </legend>
+              <legend className="cf-eyebrow mb-2">Pines</legend>
               <ul className="flex flex-wrap gap-1.5">
-                {entry.pins.map((pin) => (
-                  <li key={pin.id} className="flex items-center gap-1.5">
-                    <PinChip pinType={pin.type} pinName={pin.id} />
-                  </li>
-                ))}
+                {fixture.pins.map((pin) => {
+                  const connected = component.pins.find((p) => p.pinId === pin.id)?.netId != null
+                  return (
+                    <li key={pin.id} className="flex items-center gap-1.5">
+                      <PinChip pinType={pin.type} pinName={pin.id} />
+                      <span
+                        className={cx(
+                          'cf-mono text-2xs',
+                          connected ? 'text-success' : 'text-text-muted',
+                        )}
+                      >
+                        {connected ? 'net' : '—'}
+                      </span>
+                    </li>
+                  )
+                })}
               </ul>
             </fieldset>
 
-            {/* Estado de conexiones: aquí vivira la salida de validateCircuit */}
+            {/* Estado de conexiones */}
             <fieldset>
-              <legend className="mb-2 text-2xs font-semibold uppercase tracking-wide text-text-muted">
-                Conexiones
-              </legend>
-              <ViolationMessage
-                severity="warning"
-                rule="V-5"
-                message="Hay pines sin conectar en este componente."
-              />
+              <legend className="cf-eyebrow mb-2">Conexiones</legend>
+              {component.pins.some((p) => p.netId === null) ? (
+                <ViolationMessage
+                  severity="warning"
+                  rule="V-5"
+                  message="Hay pines sin conectar en este componente."
+                />
+              ) : (
+                <ViolationMessage severity="success" message="Todos los pines están conectados." />
+              )}
             </fieldset>
           </div>
         )}
@@ -125,10 +141,20 @@ export function Inspector({ selectedId }: InspectorProps) {
   )
 }
 
-/** Estado vacio del inspector: guia en vez de un panel en blanco. */
+/** Fila etiqueta/valor en monoespaciada. */
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <dt className="text-xs text-text-muted">{label}</dt>
+      <dd className="cf-mono text-sm text-text">{value}</dd>
+    </div>
+  )
+}
+
+/** Estado vacío del inspector: guía en vez de un panel en blanco. */
 function EmptyInspector() {
   return (
-    <div className={cx('flex flex-col items-center gap-3 py-10 text-center')}>
+    <div className="flex flex-col items-center gap-3 py-10 text-center">
       <svg
         width="32"
         height="32"

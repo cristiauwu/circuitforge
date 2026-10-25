@@ -16,10 +16,14 @@ import { Chip, Input, PanelTitle, SchematicSymbol } from '@/ui'
  * En esta etapa solo **selecciona**: arrastrar al lienzo llega con la lógica de
  * dominio. Aun asi el estado de selección es real, para que se sienta vivo.
  */
-export function Palette() {
+export interface PaletteProps {
+  /** Añade el componente al lienzo. */
+  onAdd: (typeId: string) => void
+}
+
+export function Palette({ onAdd }: PaletteProps) {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState<Category | 'all'>('all')
-  const [selected, setSelected] = useState<string | null>(null)
 
   const visible = useMemo(() => {
     const byQuery = searchCatalog(query)
@@ -114,22 +118,25 @@ export function Palette() {
         aria-label="Componentes disponibles"
       >
         {visible.map((component) => {
-          const isSelected = selected === component.typeId
           return (
             <li key={component.typeId}>
+              {/*
+                Al pulsar se ANADE el componente al lienzo. El arrastre directo
+                desde la paleta al lienzo es una mejora posterior: con el clic ya
+                se puede construir un circuito completo, que es lo que exige el
+                OE-1.
+              */}
               <button
                 type="button"
-                onClick={() => setSelected(isSelected ? null : component.typeId)}
-                aria-pressed={isSelected}
+                onClick={() => onAdd(component.typeId)}
                 title={`${component.name} — ${component.description}`}
                 className={cx(
                   // Fila horizontal: simbolo, nombre y pines en una sola linea
                   'flex w-full cursor-grab items-center gap-2.5 rounded-lg px-2 py-1.5 text-left',
-                  'border bg-surface',
+                  'border border-hairline bg-surface',
                   'transition-[border-color,background-color] duration-fast ease-inout',
-                  'hover:border-accent',
+                  'hover:border-accent hover:bg-accent-veil',
                   'active:cursor-grabbing',
-                  isSelected ? 'border-accent bg-accent-veil' : 'border-hairline',
                 )}
               >
                 {/*
