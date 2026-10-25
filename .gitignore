@@ -18,6 +18,7 @@ build/
 .tools/
 .review/
 .planning/
+.superpowers/
 *.log
 npm-debug.log*
 
