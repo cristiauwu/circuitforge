@@ -170,37 +170,58 @@
 /* ---------------------------------------------------------------------------
  * Entrada escalonada de bloques
  *
- * Un desplazamiento corto (14px) con la curva firma. Se usa en la portada para
- * que los bloques aparezcan en orden sin que el usuario lo note como animacion:
- * el ojo solo percibe que la pagina "se compone".
+ * Un desplazamiento corto (14px) con la curva firma. Los bloques aparecen en
+ * orden sin que el usuario lo note como animacion: el ojo solo percibe que la
+ * pagina "se compone".
  *
- * `data-anim` lleva el retardo por indice, para no repetir el estilo en cada
- * elemento. El retardo es corto (70ms) porque en una portada el ritmo debe
- * sentirse inmediato.
+ * **Animacion CSS pura, sin JavaScript.** Es la decision importante y viene de un
+ * bug real: antes la entrada dependia de clases que anadia un `useEffect` con
+ * temporizadores de hasta 3 s, y medido en el navegador la portada pasaba casi
+ * tres segundos con el titular, la descripcion y los botones en `opacity: 0`.
+ *
+ * Los tres problemas de aquel diseno:
+ *   1. Si el JS fallaba o tardaba, la portada quedaba EN BLANCO.
+ *   2. Buscadores y lectores de pantalla veian `opacity: 0`.
+ *   3. Con red lenta el usuario miraba un fondo negro durante segundos.
+ *
+ * Con `animation` + `animation-fill-mode: both` el navegador resuelve la entrada
+ * por si solo: el CSS siempre llega, y `both` mantiene el estado inicial hasta
+ * que arranca la animacion y el final cuando termina. No hay estado de React, no
+ * hay condicion de carrera y no hay forma de quedarse a medias.
+ *
+ * `--d` lleva el retardo por bloque. Es corto (90 ms) porque en una portada el
+ * ritmo debe sentirse inmediato.
  * ------------------------------------------------------------------------- */
 
-[data-anim] {
-  opacity: 0;
-  transform: translate3d(0, 14px, 0);
-  transition:
-    opacity var(--cf-dur-slow) var(--cf-ease-inout),
-    transform var(--cf-dur-slow) var(--cf-ease-out);
+.cf-enter {
+  animation: cf-enter-up var(--cf-dur-slow) var(--cf-ease-out) both;
+  animation-delay: var(--d, 0ms);
 }
 
-[data-anim="title"] {
-  transition-delay: 0ms;
-}
-[data-anim="desc"] {
-  transition-delay: 70ms;
-}
-[data-anim="cta"] {
-  transition-delay: 140ms;
-}
-[data-anim="stats"] {
-  transition-delay: 210ms;
+@keyframes cf-enter-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
 }
 
-.cf-in {
-  opacity: 1;
-  transform: translate3d(0, 0, 0);
+/* Entrada con un punto de escala: para bloques que deben "asentarse" */
+.cf-enter-pop {
+  animation: cf-enter-pop var(--cf-dur-slow) var(--cf-ease-pop) both;
+  animation-delay: var(--d, 0ms);
+}
+
+@keyframes cf-enter-pop {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
 }

@@ -9,17 +9,23 @@ import { useEffect, useRef, useState } from 'react'
  * desincronizaria al primer ajuste de ritmo.
  *
  * El orden importa: cada etapa asume que la anterior ya se vio.
+ *
+ * **Por que el ritmo es tan corto:** la secuencia original terminaba a los 3 s,
+ * y el titular y los botones no aparecian hasta los 2.6 s y los 3 s. Medido en el
+ * navegador, eso significaba que la portada pasaba casi tres segundos con el
+ * texto invisible. La secuencia completa ahora termina en 1.9 s: el circuito se
+ * sigue viendo montarse pieza a pieza, pero el usuario no espera para leer.
  */
 export const STAGES = [
-  { name: 'source', at: 200 },
-  { name: 'resistor', at: 600 },
-  { name: 'led', at: 1000 },
-  { name: 'wireToResistor', at: 1400 },
-  { name: 'wireToLed', at: 1800 },
-  { name: 'wireToGround', at: 2200 },
-  { name: 'pulse', at: 2400 },
-  { name: 'title', at: 2600 },
-  { name: 'cta', at: 3000 },
+  { name: 'source', at: 120 },
+  { name: 'resistor', at: 380 },
+  { name: 'led', at: 640 },
+  { name: 'wireToResistor', at: 880 },
+  { name: 'wireToLed', at: 1120 },
+  { name: 'wireToGround', at: 1360 },
+  { name: 'pulse', at: 1500 },
+  { name: 'title', at: 1600 },
+  { name: 'cta', at: 1900 },
 ] as const
 
 export type StageName = (typeof STAGES)[number]['name']
