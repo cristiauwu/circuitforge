@@ -4,6 +4,7 @@ import { RouterProvider } from 'react-router-dom'
 import { router } from './app/router'
 import './styles/theme.css'
 import './styles/animations.css'
+import './styles/atmosphere.css'
 
 const container = document.getElementById('root')
 

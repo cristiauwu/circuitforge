@@ -1,7 +1,7 @@
 import type { Category } from '@circuitforge/netlist'
 import { useMemo, useState } from 'react'
 import { CATALOG, CATEGORIES, CATEGORY_LABELS, searchCatalog } from '@/lib/fixtures/components'
-import { Chip, Input, PinChip, RevealText, SchematicSymbol } from '@/ui'
+import { CatalogCard, Chip, Input, PinChip, RevealText, SchematicSymbol } from '@/ui'
 
 /**
  * Biblioteca de componentes (documento de diseño sección 4).
@@ -72,7 +72,7 @@ export function LibraryPage() {
       {/* Rejilla de fichas */}
       {visible.length > 0 ? (
         <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {visible.map((component) => (
+          {visible.map((component, index) => (
             <li key={component.typeId}>
               {/*
                 `cf-tile` en vez de un div con borde: da el mismo relleno tenue
@@ -80,7 +80,7 @@ export function LibraryPage() {
                 fondo). Con 22 fichas visibles, `backdrop-filter` en cada una
                 agotaria el presupuesto y degradaria el arrastre del lienzo.
               */}
-              <article className="cf-tile h-full hover:-translate-y-0.5">
+              <CatalogCard index={index}>
                 <div className="mb-3 flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <h2 className="truncate text-md font-medium text-text">{component.name}</h2>
@@ -121,7 +121,7 @@ export function LibraryPage() {
                     </li>
                   )}
                 </ul>
-              </article>
+              </CatalogCard>
             </li>
           ))}
         </ul>

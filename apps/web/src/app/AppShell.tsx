@@ -1,5 +1,6 @@
 import { Outlet, useLocation } from 'react-router-dom'
 import { SiteHeader } from '@/features/navigation/SiteHeader'
+import { Atmosphere } from '@/ui'
 
 /**
  * Layout raiz — patron de *app shell* de altura fija.
@@ -15,6 +16,10 @@ import { SiteHeader } from '@/features/navigation/SiteHeader'
  *
  * `key` en el main remonta el arbol al cambiar de ruta, para que las animaciones
  * de entrada se disparen aunque dos vistas compartan estructura.
+ *
+ * **Atmosfera:** la capa de aurora, grano y vineta vive AQUI, no en cada ruta,
+ * para que el fondo sea continuo entre navegaciones. El editor la recibe mas
+ * tenue porque su lienzo ya tiene iluminacion propia.
  */
 export function AppShell() {
   const { pathname } = useLocation()
@@ -24,23 +29,31 @@ export function AppShell() {
   const isEditor = pathname === '/editor'
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden bg-bg">
-      {!isLanding && <SiteHeader />}
+    <div className="relative flex h-dvh flex-col overflow-hidden bg-bg">
+      <Atmosphere intensity={isEditor ? 'soft' : 'full'} />
+
       {/*
-        `min-h-0` es imprescindible: por defecto un hijo flex tiene
-        `min-height: auto`, que le impide encoger por debajo de su contenido. Sin
-        el, `flex-1` no acota nada y el shell vuelve a crecer.
+        El contenido va en su propia capa por encima de la atmosfera. Sin este
+        `relative z-10` los halos y el grano quedarian por delante del texto.
       */}
-      <main
-        key={pathname}
-        className={
-          isEditor
-            ? 'flex min-h-0 flex-1 flex-col overflow-hidden'
-            : 'flex min-h-0 flex-1 flex-col overflow-y-auto'
-        }
-      >
-        <Outlet />
-      </main>
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col">
+        {!isLanding && <SiteHeader />}
+        {/*
+          `min-h-0` es imprescindible: por defecto un hijo flex tiene
+          `min-height: auto`, que le impide encoger por debajo de su contenido. Sin
+          el, `flex-1` no acota nada y el shell vuelve a crecer.
+        */}
+        <main
+          key={pathname}
+          className={
+            isEditor
+              ? 'flex min-h-0 flex-1 flex-col overflow-hidden'
+              : 'flex min-h-0 flex-1 flex-col overflow-y-auto'
+          }
+        >
+          <Outlet />
+        </main>
+      </div>
     </div>
   )
 }

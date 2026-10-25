@@ -183,12 +183,21 @@ body {
   transition:
     background-color var(--cf-dur-fast) var(--cf-ease-inout),
     border-color var(--cf-dur-fast) var(--cf-ease-inout),
+    box-shadow var(--cf-dur-base) var(--cf-ease-out),
     transform var(--cf-dur-base) var(--cf-ease-out);
 }
 
+/*
+ * Hover: la tarjeta se levanta un pixel, el borde se enciende y gana un halo
+ * tenue. El halo es de color neutro claro, no del acento: con 22 tarjetas, 22
+ * halos naranjas convertirian el acento en decoracion y dejaria de significar
+ * "esto es la accion principal".
+ */
 .cf-tile:hover {
   background: var(--cf-fill);
   border-color: var(--cf-hairline-strong);
+  box-shadow: 0 0 28px -10px rgb(237 236 237 / 0.22);
+  transform: translateY(-2px);
 }
 
 /* La misma superficie para un enlace: hereda el layout y quita el subrayado */

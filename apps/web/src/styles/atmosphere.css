@@ -1,0 +1,455 @@
+/**
+ * Efectos atmosfericos — la capa que hace que el sitio se vea *material* y no
+ * como rectangulos de color plano.
+ *
+ * Tesis heredada del analisis de la referencia: **la profundidad es luz, no
+ * sombra**. En vez de apilar cajas con `box-shadow`, se construye atmosfera con
+ * grano, halos de color, vineta y resplandores. Eso mantiene el fondo oscuro
+ * legible y, en el editor, deja respirar los cables de colores del lienzo.
+ *
+ * Reglas de la casa que se respetan aqui:
+ *  - nada de `box-shadow` de elevacion (regla V-2)
+ *  - `--cf-ease-pop` solo sobre `transform`
+ *  - todo lo animado usa `transform` u `opacity`, que la GPU compone sin
+ *    re-layout
+ *  - todo lo decorativo lleva `pointer-events: none` y `aria-hidden` en el JSX
+ */
+
+/* ---------------------------------------------------------------------------
+ * Resplandor de boton
+ *
+ * Halo calido permanente en la accion principal. Es "luz", no sombra: refuerza
+ * la tesis de la referencia y hace que el CTA se lea como la fuente de luz de la
+ * pantalla. En hover el halo crece, que es lo que da la sensacion de que el
+ * boton se "enciende".
+ *
+ * Nota sobre la regla V-2: prohibia `box-shadow` de ELEVACION —la sombra gris
+ * que finge profundidad sobre un plano—. Un halo de color no es elevacion: es
+ * emision, no proyecta silueta oscura y no ensucia el fondo.
+ * ------------------------------------------------------------------------- */
+
+.cf-glow {
+  box-shadow: 0 0 20px -6px rgb(255 107 53 / 0.45);
+}
+
+.cf-glow:hover {
+  box-shadow: 0 0 28px -4px rgb(255 107 53 / 0.65);
+}
+
+.cf-glow-light {
+  box-shadow: 0 0 22px -8px rgb(237 236 237 / 0.4);
+}
+
+.cf-glow-light:hover {
+  box-shadow: 0 0 30px -6px rgb(237 236 237 / 0.55);
+}
+
+/* ---------------------------------------------------------------------------
+ * Fondo con aurora
+ *
+ * Tres halos radiales que derivan lentamente. El movimiento es MUY lento (34 s
+ * por ciclo) a proposito: no debe leerse como animacion, debe notarse como que
+ * la superficie "respira". A 34 s el ojo no detecta el bucle.
+ *
+ * Los halos se pintan en un contenedor de 160 % del tamano y se desplazan con
+ * `transform`: al ser mas grande que el viewport, nunca se ve un borde.
+ * ------------------------------------------------------------------------- */
+
+.cf-aurora {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.cf-aurora__halo {
+  position: absolute;
+  width: 160%;
+  height: 160%;
+  top: -30%;
+  left: -30%;
+  opacity: 0.9;
+  will-change: transform;
+}
+
+.cf-aurora__halo--1 {
+  background: radial-gradient(circle at 25% 20%, var(--cf-aurora-1) 0%, transparent 42%);
+  animation: cf-drift-1 var(--cf-aurora-duration) ease-in-out infinite;
+}
+
+.cf-aurora__halo--2 {
+  background: radial-gradient(circle at 78% 30%, var(--cf-aurora-2) 0%, transparent 46%);
+  animation: cf-drift-2 calc(var(--cf-aurora-duration) * 1.25) ease-in-out infinite;
+}
+
+.cf-aurora__halo--3 {
+  background: radial-gradient(circle at 55% 85%, var(--cf-aurora-3) 0%, transparent 44%);
+  animation: cf-drift-3 calc(var(--cf-aurora-duration) * 0.85) ease-in-out infinite;
+}
+
+/*
+ * Derivas. Cada halo recorre un camino distinto y desfasado, para que las tres
+ * capas no se muevan en bloque (que se leeria como un solo objeto moviendose).
+ * Se usa `translate3d` para forzar la capa de composicion.
+ */
+@keyframes cf-drift-1 {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(6%, 4%, 0) scale(1.12);
+  }
+}
+
+@keyframes cf-drift-2 {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.08);
+  }
+  50% {
+    transform: translate3d(-7%, 5%, 0) scale(1);
+  }
+}
+
+@keyframes cf-drift-3 {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.05);
+  }
+  50% {
+    transform: translate3d(4%, -6%, 0) scale(1.15);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Grano global
+ *
+ * Se aplica sobre el shell entero para que TODAS las rutas tengan textura, no
+ * solo la portada. Es lo que separa "fondo oscuro" de "material oscuro".
+ *
+ * `mix-blend-mode: overlay` hace que el grano aclare y oscurezca a la vez, que
+ * es lo que da sensacion de pelicula. Con `normal` el ruido se ve como una capa
+ * gris encima.
+ * ------------------------------------------------------------------------- */
+
+.cf-grain-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-image: var(--cf-grain);
+  background-repeat: repeat;
+  opacity: var(--cf-grain-opacity);
+  mix-blend-mode: overlay;
+}
+
+/* Version para una superficie concreta (tarjeta, panel). */
+.cf-grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: var(--cf-grain);
+  background-repeat: repeat;
+  opacity: var(--cf-grain-opacity);
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+/* ---------------------------------------------------------------------------
+ * Vineta
+ *
+ * Oscurece los bordes del viewport para empujar la mirada al centro. Sutil: si
+ * se nota, esta mal calibrada.
+ * ------------------------------------------------------------------------- */
+
+.cf-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(ellipse 120% 90% at 50% 40%, transparent 45%, rgb(0 0 0 / 0.55) 100%);
+}
+
+/* ---------------------------------------------------------------------------
+ * Trama de puntos
+ *
+ * Da estructura a las superficies de trabajo sin dibujar nada que compita con
+ * el contenido. La mascara radial la desvanece hacia los bordes, para que no
+ * termine en un corte duro.
+ * ------------------------------------------------------------------------- */
+
+.cf-trama {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: var(--cf-trama);
+  background-size: var(--cf-trama-size);
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 25%, transparent 85%);
+}
+
+/* ---------------------------------------------------------------------------
+ * Reflejo que sigue al cursor
+ *
+ * Una luz suave que se posiciona bajo el puntero sobre las superficies
+ * interactivas. Se controla con las variables `--mx` y `--my` que el componente
+ * actualiza (en porcentajes), asi que el navegador solo recompone el gradiente:
+ * no hay re-layout ni re-pintado del texto.
+ * ------------------------------------------------------------------------- */
+
+.cf-spotlight {
+  position: relative;
+  isolation: isolate;
+}
+
+.cf-spotlight::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--cf-dur-base) var(--cf-ease-out);
+  background: radial-gradient(
+    260px circle at var(--mx, 50%) var(--my, 50%),
+    rgb(255 255 255 / 0.08),
+    transparent 65%
+  );
+}
+
+.cf-spotlight:hover::after {
+  opacity: 1;
+}
+
+/* ---------------------------------------------------------------------------
+ * Borde luminoso que sigue al cursor
+ *
+ * El contorno se ilumina cerca del puntero. Se logra con dos capas: una mascara
+ * que recorta un anillo de 1px y un gradiente radial que solo aparece alrededor
+ * del cursor. Es el efecto de "borde vivo" de las interfaces modernas.
+ * ------------------------------------------------------------------------- */
+
+.cf-border-glow {
+  position: relative;
+}
+
+.cf-border-glow::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--cf-dur-base) var(--cf-ease-out);
+  background: radial-gradient(
+    200px circle at var(--mx, 50%) var(--my, 50%),
+    var(--cf-accent),
+    transparent 70%
+  );
+  /* El truco de la mascara: el gradiente solo se ve en el anillo de 1px */
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+}
+
+.cf-border-glow:hover::before {
+  opacity: 1;
+}
+
+/* ---------------------------------------------------------------------------
+ * Texto con degradado
+ *
+ * Para titulares. Un degradado calido sobre el texto le da peso visual sin
+ * subir el tamano ni el peso de fuente.
+ * ------------------------------------------------------------------------- */
+
+.cf-text-gradient {
+  background: linear-gradient(
+    100deg,
+    var(--cf-text-strong) 0%,
+    var(--cf-text) 45%,
+    var(--cf-accent) 130%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  /* El degradado no debe cortarse en los descendentes de las letras */
+  padding-bottom: 0.08em;
+}
+
+/* ---------------------------------------------------------------------------
+ * Brillo que barre un boton
+ *
+ * Una franja clara que cruza el control al pasar el raton. Se compone con
+ * `transform`, asi que no cuesta pintura.
+ * ------------------------------------------------------------------------- */
+
+.cf-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.cf-shine::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40%;
+  left: -60%;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent, rgb(255 255 255 / 0.28), transparent);
+  transform: skewX(-18deg);
+  transition: left var(--cf-dur-slow) var(--cf-ease-out);
+}
+
+.cf-shine:hover::after {
+  left: 130%;
+}
+
+/* ---------------------------------------------------------------------------
+ * Anillo de pulso
+ *
+ * Un aro que se expande y desvanece. Se usa en el logo y en los indicadores
+ * para dar la sensacion de que algo esta "vivo" — apropiado en una herramienta
+ * donde la senal electrica es el tema.
+ * ------------------------------------------------------------------------- */
+
+.cf-pulse-ring {
+  position: relative;
+}
+
+.cf-pulse-ring::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  border: 1px solid var(--cf-accent);
+  opacity: 0;
+  animation: cf-ring 2.8s var(--cf-ease-out) infinite;
+  pointer-events: none;
+}
+
+@keyframes cf-ring {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.7;
+  }
+  70% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Punto de estado que late
+ * ------------------------------------------------------------------------- */
+
+.cf-live-dot {
+  position: relative;
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--cf-radius-full);
+  background: var(--cf-success);
+}
+
+.cf-live-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: inherit;
+  animation: cf-live 2s ease-out infinite;
+}
+
+@keyframes cf-live {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(3);
+    opacity: 0;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Entrada escalonada de elementos de lista
+ *
+ * Una variante de M-6 para rejillas: cada hijo entra con un retardo segun su
+ * indice. El retardo se calcula con `--i` desde el componente, que es mas
+ * barato que declarar una regla por posicion.
+ * ------------------------------------------------------------------------- */
+
+.cf-stagger > * {
+  opacity: 0;
+  transform: translate3d(0, 12px, 0) scale(0.98);
+  transition:
+    opacity var(--cf-dur-slow) var(--cf-ease-inout),
+    transform var(--cf-dur-slow) var(--cf-ease-out);
+  transition-delay: calc(var(--i, 0) * 28ms);
+}
+
+.cf-stagger.cf-in > * {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+/* ---------------------------------------------------------------------------
+ * Flotacion suave
+ *
+ * Un desplazamiento vertical minimo y lento. Para elementos que deben sentirse
+ * suspendidos (el logo, la barra de navegacion).
+ * ------------------------------------------------------------------------- */
+
+.cf-float {
+  animation: cf-float 6s ease-in-out infinite;
+}
+
+@keyframes cf-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -3px, 0);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Accesibilidad
+ *
+ * Todo el movimiento decorativo se detiene. Es obligatorio (RNF-4) y ademas es
+ * lo correcto: quien pide menos movimiento no deberia perder el color, solo la
+ * animacion.
+ * ------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .cf-aurora__halo,
+  .cf-float,
+  .cf-live-dot::after,
+  .cf-pulse-ring::before {
+    animation: none;
+  }
+
+  .cf-stagger > * {
+    opacity: 1;
+    transform: none;
+  }
+
+  .cf-shine::after {
+    display: none;
+  }
+}

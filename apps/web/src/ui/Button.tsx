@@ -18,13 +18,15 @@ type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'light'
 type Size = 'sm' | 'md' | 'lg'
 
 const VARIANTS: Record<Variant, string> = {
-  primary: 'bg-accent text-on-accent hover:bg-accent-hover',
+  // El primario lleva un halo calido permanente: es la accion principal y debe
+  // leerse como la fuente de luz de la pantalla, no como un boton mas.
+  primary: 'bg-accent text-on-accent hover:bg-accent-hover cf-glow',
   secondary:
-    'bg-[var(--cf-fill)] text-text border border-hairline hover:bg-[var(--cf-fill-strong)]',
+    'bg-[var(--cf-fill)] text-text border border-hairline hover:bg-[var(--cf-fill-strong)] hover:border-hairline-strong',
   ghost: 'bg-transparent text-text-secondary hover:text-text hover:bg-surface-alt',
   danger: 'bg-error text-on-accent hover:brightness-110',
   // Superficie clara sobre fondo oscuro: el tratamiento de la referencia
-  light: 'bg-text text-bg hover:bg-text-strong',
+  light: 'bg-text text-bg hover:bg-text-strong cf-glow-light',
 }
 
 const SIZES: Record<Size, string> = {
@@ -60,10 +62,10 @@ export function Button({
     <button
       type={type}
       className={cx(
-        'cf-btn group relative inline-flex shrink-0 items-center justify-center gap-2',
+        'cf-btn cf-shine group relative inline-flex shrink-0 items-center justify-center gap-2',
         'rounded-pill font-medium leading-none',
-        'transition-[background-color,color,transform,filter] duration-base ease-out',
-        'active:scale-[0.97]',
+        'transition-[background-color,color,transform,filter,box-shadow] duration-base ease-out',
+        'hover:-translate-y-px active:scale-[0.97] active:translate-y-0',
         'disabled:pointer-events-none disabled:opacity-40',
         SIZES[size],
         VARIANTS[variant],
@@ -114,10 +116,10 @@ export function LinkButton({
       href={href}
       onClick={onClick}
       className={cx(
-        'cf-btn group relative inline-flex shrink-0 items-center justify-center gap-2',
+        'cf-btn cf-shine group relative inline-flex shrink-0 items-center justify-center gap-2',
         'rounded-pill font-medium leading-none no-underline',
-        'transition-[background-color,color,transform,filter] duration-base ease-out',
-        'active:scale-[0.97]',
+        'transition-[background-color,color,transform,filter,box-shadow] duration-base ease-out',
+        'hover:-translate-y-px active:scale-[0.97] active:translate-y-0',
         SIZES[size],
         VARIANTS[variant],
         className,
@@ -153,10 +155,10 @@ export interface IconButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonEle
 }
 
 const ICON_VARIANTS = {
-  light: 'bg-text text-bg hover:bg-text-strong',
-  dark: 'bg-[var(--cf-fill)] text-text border border-hairline hover:bg-[var(--cf-fill-strong)]',
+  light: 'bg-text text-bg hover:bg-text-strong cf-glow-light',
+  dark: 'bg-[var(--cf-fill)] text-text border border-hairline hover:bg-[var(--cf-fill-strong)] hover:border-hairline-strong',
   ghost: 'bg-transparent text-text-secondary hover:text-text hover:bg-surface-alt',
-  accent: 'bg-accent text-on-accent hover:bg-accent-hover',
+  accent: 'bg-accent text-on-accent hover:bg-accent-hover cf-glow',
 } as const
 
 const ICON_SIZES = {
@@ -181,8 +183,8 @@ export function IconButton({
       title={label}
       className={cx(
         'inline-flex shrink-0 items-center justify-center rounded-pill',
-        'transition-[background-color,color,transform] duration-base ease-out',
-        'active:scale-95',
+        'transition-[background-color,color,transform,box-shadow] duration-base ease-out',
+        'hover:scale-105 active:scale-95',
         'disabled:pointer-events-none disabled:opacity-40',
         ICON_SIZES[size],
         ICON_VARIANTS[variant],

@@ -8,7 +8,9 @@
  * aparezca el segundo consumidor; hoy serian ceremonia sin beneficio.
  */
 
+export { Atmosphere } from './Atmosphere'
 export { Button, IconButton, LinkButton } from './Button'
+export { CatalogCard } from './CatalogCard'
 export { Chip, PinChip } from './Chip'
 export { Input } from './Input'
 export { Panel, PanelGlass, PanelTitle, Tile } from './Panel'
