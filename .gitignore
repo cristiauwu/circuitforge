@@ -1,0 +1,33 @@
+# Dependencias
+node_modules/
+.pnpm-store/
+
+# Build
+dist/
+build/
+*.tsbuildinfo
+.turbo/
+
+# Entorno — NUNCA commitear secretos
+.env
+.env.local
+.env.*.local
+
+# Herramientas del agente / artefactos de análisis (no son código del proyecto)
+.rea-chrome-profile/
+.tools/
+.planning/
+*.log
+npm-debug.log*
+
+# Test / cobertura
+coverage/
+playwright-report/
+test-results/
+
+# Editor / SO
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db

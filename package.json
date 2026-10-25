@@ -1,0 +1,31 @@
+{
+  "name": "circuitforge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Plataforma web para diseño y simulación de circuitos electrónicos",
+  "license": "MIT",
+  "type": "module",
+  "packageManager": "pnpm@11.23.0",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "test": "turbo run test",
+    "test:watch": "turbo run test:watch",
+    "typecheck": "turbo run typecheck",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "check": "biome check . && turbo run typecheck test",
+    "clean": "turbo run clean && rimraf node_modules"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.2.5",
+    "rimraf": "^6.0.1",
+    "turbo": "^2.5.8",
+    "typescript": "^5.9.3"
+  }
+}
