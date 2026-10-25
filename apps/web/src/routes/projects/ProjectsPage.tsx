@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom'
-import { cx } from '@/lib/cx'
 import { formatRelative, PROJECTS } from '@/lib/fixtures/projects'
 import { Chip, RevealText } from '@/ui'
 
@@ -20,10 +19,11 @@ export function ProjectsPage() {
     <div className="mx-auto w-full max-w-[1200px] px-6 py-8">
       <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
+          <p className="cf-eyebrow mb-2">Tus circuitos</p>
           <RevealText
             text="Proyectos"
             as="h1"
-            className="mb-1 text-xl font-semibold tracking-tight text-text"
+            className="mb-1 text-xl font-semibold tracking-tight text-text-strong"
           />
           <p className="text-sm text-text-secondary">
             Tus circuitos guardados. Abre uno para seguir editándolo.
@@ -43,20 +43,21 @@ export function ProjectsPage() {
         <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
           {PROJECTS.map((project) => (
             <li key={project.id}>
+              {/*
+                `cf-tile` da el relleno tenue de la referencia sin coste de GPU.
+                El hover eleva 2px con la curva firma: es el mismo movimiento que
+                la referencia aplica a sus tarjetas, pero con `transform` y no con
+                `width`/`height`, que provocaria layout thrashing.
+              */}
               <Link
                 to={`/compartido/${project.id}`}
                 viewTransition
-                className={cx(
-                  'flex h-full flex-col rounded-md border border-hairline bg-surface p-4',
-                  'no-underline',
-                  'transition-[border-color,transform] duration-fast ease-inout',
-                  'hover:-translate-y-0.5 hover:border-accent',
-                )}
+                className="cf-tile h-full no-underline hover:-translate-y-0.5"
               >
                 <div className="mb-2 flex items-start justify-between gap-2">
-                  <h2 className="text-md font-medium text-text">{project.name}</h2>
+                  <h2 className="min-w-0 truncate text-md font-medium text-text">{project.name}</h2>
                   {!project.owned && (
-                    <span className="shrink-0 rounded-full bg-surface-alt px-2 py-0.5 text-2xs text-text-muted">
+                    <span className="shrink-0 rounded-pill border border-hairline px-2.5 py-0.5 text-2xs text-text-muted">
                       Solo lectura
                     </span>
                   )}

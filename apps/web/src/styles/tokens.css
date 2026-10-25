@@ -1,39 +1,65 @@
 /**
  * CircuitForge — Tokens del sistema visual.
  *
- * Traduccion literal de DESIGN.md sección 2. Este archivo es el contrato:
- * ningún componente escribe un literal de color, radio, tamaño o duración.
- * Si falta un token, se anade aquí o se usa el mas cercano — nunca un valor suelto.
+ * Derivados de MEDIR iyo.ai con getComputedStyle, no de estimarlo. Los valores
+ * entre parentesis son la evidencia extraida del DOM de la referencia.
  *
- * Fuente: docs/design/DESIGN.md
+ * DECISION CLAVE — base neutra, no azul:
+ * la referencia usa grises calidos neutros (rgba(56,56,56,.6), #101010, #151515)
+ * y reserva el color para el acento. El azul pizarra anterior era un desvio
+ * nuestro: con un fondo azul, cualquier gris de UI se lee sucio, y el naranja de
+ * acento pierde contraste. Sobre neutro, el acento manda.
+ *
+ * Ningun componente escribe un literal de color, radio, tamano o duracion.
  */
 
 :root {
-  /* Superficies (de mas profunda a mas elevada) */
-  --cf-bg: #0f1720;
-  --cf-surface: #1b2430;
-  --cf-surface-alt: #26313f;
-  --cf-surface-raised: #2e3b4a;
-  --cf-grid: #2e3b4a;
+  /* ── Superficies (neutras, calidas) ─────────────────────────────────────
+   * Evidencia: --black #101010, --light-black #151515, --dark-grey #242426,
+   * --dark-grey-lighter #303030, y el relleno de tarjeta rgba(56,56,56,.6).
+   */
+  --cf-bg: #101010;
+  --cf-bg-raised: #151515;
+  --cf-surface: #1c1c1e;
+  --cf-surface-alt: #242426;
+  --cf-surface-raised: #303030;
+  --cf-grid: #242426;
 
-  /* Texto */
-  --cf-text: #f1f5f9;
-  --cf-text-secondary: #94a3b8;
-  --cf-text-muted: #64748b;
+  /* Relleno translucido de tarjeta — el valor medido literalmente */
+  --cf-fill: rgb(56 56 56 / 0.6);
 
-  /* Acento primario (acción) */
+  /* ── Texto ──────────────────────────────────────────────────────────────
+   * Evidencia: --pearl-white #dddee3 (42 usos, el dominante),
+   * --almost-white #edeced, --white #f9f9fb (reservado a UI).
+   * El texto principal NO es blanco puro: la perla reduce el halagado sobre
+   * negro y es lo que da la sensacion de material en vez de pantalla.
+   */
+  --cf-text: #dddee3;
+  --cf-text-strong: #edeced;
+  --cf-text-secondary: #9a9a9e;
+  --cf-text-muted: #6b6b70;
+
+  /* ── Acento (naranja de CircuitForge, conservado) ───────────────────────
+   * La referencia no tiene acento cromatico: es monocroma y usa el blanco para
+   * la accion. CircuitForge SI necesita uno, porque el color codifica estado
+   * electrico (V-4). El naranja se mantiene y ahora contrasta mas sobre neutro.
+   */
   --cf-accent: #ff6b35;
   --cf-accent-hover: #ff8557;
+  --cf-on-accent: #131313;
 
-  /* Acento secundario (instrumentacion) */
+  /* ── Instrumentacion ────────────────────────────────────────────────────
+   * Cian para valores de simulacion: es el unico color que no colisiona con
+   * los estados (verde/ambar/rojo) ni con el acento.
+   */
   --cf-signal: #22d3ee;
 
-  /* Estado (semantica eléctrica, V-4) */
+  /* ── Estado (semantica electrica) ───────────────────────────────────────*/
   --cf-success: #34d399;
   --cf-warning: #fbbf24;
   --cf-error: #f87171;
 
-  /* Paleta de cables */
+  /* ── Paleta de cables ───────────────────────────────────────────────────*/
   --cf-wire-1: #f87171;
   --cf-wire-2: #fbbf24;
   --cf-wire-3: #34d399;
@@ -43,28 +69,38 @@
   --cf-wire-7: #60a5fa;
   --cf-wire-8: #fb923c;
 
-  /* Velo y glass (V-2: la profundidad es luz, no sombra) */
-  --cf-glass-fill: rgb(255 255 255 / 0.04);
-  --cf-glass-fill-hi: rgb(255 255 255 / 0.07);
-  --cf-hairline: rgb(255 255 255 / 0.08);
-  --cf-hairline-strong: rgb(255 255 255 / 0.14);
-  --cf-scrim: rgb(15 23 32 / 0.72);
+  /* ── Velo y glass ───────────────────────────────────────────────────────
+   * Evidencia del borde: 1px rgba(138,138,138,.1) — un GRIS neutro al 10%, no
+   * blanco. Un borde blanco sobre fondo calido se ve lechoso; el gris se
+   * funde y solo deja el filo.
+   * Evidencia del blur: backdrop-filter blur(19px) en 12 elementos.
+   */
+  --cf-glass-blur: 19px;
+  --cf-glass-sat: 130%;
+  --cf-hairline: rgb(138 138 138 / 0.12);
+  --cf-hairline-strong: rgb(138 138 138 / 0.22);
+  --cf-scrim: rgb(16 16 16 / 0.72);
+  --cf-fill-dim: rgb(56 56 56 / 0.35);
+  --cf-fill-strong: rgb(56 56 56 / 0.85);
 
-  /* Velos de estado */
-  --cf-error-veil: rgb(248 113 113 / 0.08);
-  --cf-warning-veil: rgb(251 191 36 / 0.08);
-  --cf-success-veil: rgb(52 211 153 / 0.08);
-  --cf-accent-veil: rgb(255 107 53 / 0.12);
+  /* ── Velos de estado ────────────────────────────────────────────────────*/
+  --cf-error-veil: rgb(248 113 113 / 0.1);
+  --cf-warning-veil: rgb(251 191 36 / 0.1);
+  --cf-success-veil: rgb(52 211 153 / 0.1);
+  --cf-accent-veil: rgb(255 107 53 / 0.14);
 
-  /* Tipografia */
+  /* ── Tipografia ─────────────────────────────────────────────────────────
+   * Inter y JetBrains Mono sustituyen a Magnetik/Roobert (licencia comercial).
+   * La escala se mantiene corta: 6 pasos.
+   */
   --cf-font-ui: "Inter", system-ui, -apple-system, sans-serif;
   --cf-font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
 
-  /* Escala tipografica — seis pasos, sin excepciones */
   --cf-text-2xs: 0.6875rem;
   --cf-text-xs: 0.75rem;
   --cf-text-sm: 0.8125rem;
   --cf-text-md: 0.875rem;
+  --cf-text-lg: 1.125rem;
   --cf-text-xl: 1.5rem;
   --cf-text-3xl: 2.5rem;
 
@@ -74,32 +110,48 @@
 
   --cf-tracking-tight: -0.02em;
   --cf-tracking-wide: 0.08em;
+  --cf-tracking-wider: 0.14em;
 
-  /* Espaciado — base 4px, ocho pasos */
+  /* ── Espaciado (base 4px) ───────────────────────────────────────────────*/
   --cf-space-1: 0.25rem;
   --cf-space-2: 0.5rem;
   --cf-space-3: 0.75rem;
   --cf-space-4: 1rem;
+  --cf-space-5: 1.25rem;
   --cf-space-6: 1.5rem;
   --cf-space-8: 2rem;
   --cf-space-12: 3rem;
   --cf-space-16: 4rem;
 
-  /* Geometria — tres radios, no hay un cuarto */
+  /* ── Geometria ──────────────────────────────────────────────────────────
+   * Evidencia de iyo.ai: 17.28px (x8), 12.8px (x6), 32px, 42px, 160px (pildora),
+   * y "100%" para circulos. Traducido a la rampa de Tailwind:
+   *
+   *   sm    8px   → controles compactos
+   *   md   12px   → tarjetas y campos
+   *   lg   20px   → contenedores grandes
+   *   xl   28px   → paneles destacados
+   *   pill 9999px → navegacion, chips, botones de accion
+   *
+   * La rampa es mas amplia que antes (era 8/12/20/9999): la referencia usa
+   * radios grandes con generosidad y esa es una de las razones por las que se
+   * ve suave en vez de rigida.
+   */
   --cf-radius-sm: 0.5rem;
   --cf-radius-md: 0.75rem;
   --cf-radius-lg: 1.25rem;
+  --cf-radius-xl: 1.75rem;
   --cf-radius-full: 9999px;
 
   --cf-border-hairline: 1px solid var(--cf-hairline);
   --cf-border-panel: 1px solid var(--cf-hairline);
   --cf-border-focus: 2px solid var(--cf-accent);
 
-  /* Elevacion (V-2) */
-  --cf-glass-blur: 16px;
-  --cf-glass-sat: 140%;
-
-  /* Movimiento — tres curvas, cuatro duraciones */
+  /* ── Movimiento ─────────────────────────────────────────────────────────
+   * Evidencia: cubic-bezier(0.77,0,0.175,1) x11 (la firma), y las duraciones
+   * 0.6s / 0.3s dominantes. El sobrepaso cubic-bezier(0.48,0.01,0,1.08) x3,
+   * siempre en transform.
+   */
   --cf-ease-out: cubic-bezier(0.77, 0, 0.175, 1);
   --cf-ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
   --cf-ease-pop: cubic-bezier(0.48, 0.01, 0, 1.08);
@@ -108,21 +160,28 @@
   --cf-dur-fast: 200ms;
   --cf-dur-base: 300ms;
   --cf-dur-slow: 600ms;
+
+  /* ── Textura de grano ───────────────────────────────────────────────────
+   * La referencia tiene grano sobre el negro en lugar de una superficie lisa.
+   * Se genera con un SVG en linea: cero peticiones, cero imagen que cachear.
+   */
+  --cf-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.42'/%3E%3C/svg%3E");
+  --cf-grain-opacity: 0.5;
 }
 
 /* Accesibilidad del movimiento (RNF-4, obligatorio).
  *
  * Los `!important` son deliberados: este bloque debe ganar a CUALQUIER
- * transición declarada en cualquier componente, presente o futuro. Es el patron
+ * transicion declarada en cualquier componente, presente o futuro. Es el patron
  * establecido para `prefers-reduced-motion`. Por eso `noImportantStyles` se
- * suprime aquí y solo aquí; en el resto del sistema un `!important` si seria un
+ * suprime aqui y solo aqui; en el resto del sistema un `!important` si seria un
  * problema real de cascada.
  */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
-    /* biome-ignore lint/complexity/noImportantStyles: debe sobrescribir toda transición */
+    /* biome-ignore lint/complexity/noImportantStyles: debe sobrescribir toda transicion */
     animation-duration: 0.01ms !important;
     /* biome-ignore lint/complexity/noImportantStyles: idem */
     animation-iteration-count: 1 !important;

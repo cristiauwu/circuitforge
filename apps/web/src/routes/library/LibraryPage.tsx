@@ -1,6 +1,5 @@
 import type { Category } from '@circuitforge/netlist'
 import { useMemo, useState } from 'react'
-import { cx } from '@/lib/cx'
 import { CATALOG, CATEGORIES, CATEGORY_LABELS, searchCatalog } from '@/lib/fixtures/components'
 import { Chip, Input, PinChip, RevealText } from '@/ui'
 
@@ -26,10 +25,11 @@ export function LibraryPage() {
   return (
     <div className="mx-auto w-full max-w-[1600px] px-6 py-8">
       <header className="mb-6">
+        <p className="cf-eyebrow mb-2">Catálogo</p>
         <RevealText
           text="Biblioteca de componentes"
           as="h1"
-          className="mb-1 text-xl font-semibold tracking-tight text-text"
+          className="mb-1 text-xl font-semibold tracking-tight text-text-strong"
         />
         <p className="text-sm text-text-secondary">
           {CATALOG.length} fichas tipadas en {CATEGORIES.length} categorías. Cada una declara su
@@ -74,19 +74,22 @@ export function LibraryPage() {
         <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {visible.map((component) => (
             <li key={component.typeId}>
-              <article
-                className={cx(
-                  'flex h-full flex-col rounded-md border border-hairline bg-surface p-4',
-                  'transition-[border-color,transform] duration-fast ease-inout',
-                  'hover:-translate-y-0.5 hover:border-accent',
-                )}
-              >
+              {/*
+                `cf-tile` en vez de un div con borde: da el mismo relleno tenue
+                que el glass de la referencia SIN el coste de GPU (no relee el
+                fondo). Con 22 fichas visibles, `backdrop-filter` en cada una
+                agotaria el presupuesto y degradaria el arrastre del lienzo.
+              */}
+              <article className="cf-tile h-full hover:-translate-y-0.5">
                 <div className="mb-3 flex items-start justify-between gap-2">
-                  <div>
-                    <h2 className="text-md font-medium text-text">{component.name}</h2>
-                    <p className="cf-mono text-2xs text-text-muted">{component.typeId}</p>
+                  <div className="min-w-0">
+                    <h2 className="truncate text-md font-medium text-text">{component.name}</h2>
+                    <p className="cf-mono truncate text-2xs text-text-muted">{component.typeId}</p>
                   </div>
-                  <span aria-hidden="true" className="cf-mono text-xl leading-none text-text-muted">
+                  <span
+                    aria-hidden="true"
+                    className="cf-mono shrink-0 text-xl leading-none text-text-muted"
+                  >
                     {component.symbol}
                   </span>
                 </div>
@@ -99,7 +102,7 @@ export function LibraryPage() {
                 {component.primaryParam && (
                   <p className="mb-3 flex items-baseline gap-1.5 text-xs">
                     <span className="text-text-muted">{component.primaryParam.name}</span>
-                    <span className="cf-mono font-medium text-signal">
+                    <span className="cf-mono font-medium text-text">
                       {component.primaryParam.value}
                     </span>
                     <span className="cf-mono text-text-muted">{component.primaryParam.unit}</span>

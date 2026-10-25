@@ -1,11 +1,11 @@
 # CircuitForge — DESIGN.md
 
-**Versión:** 1.0
+**Versión:** 2.0
 **Fecha:** 2026-10-25
 **Estado:** fuente de verdad visual. Todo componente nuevo se mide contra este archivo.
-**Origen:** traduce el lenguaje visual extraído de `iyo.ai`. El análisis completo con evidencia está en `docs/design/2026-10-25-analisis-visual-referencia.md`; este documento no repite la justificación, define los tokens y las reglas.
+**Origen:** valores **medidos** de `iyo.ai` con `getComputedStyle` sobre el DOM renderizado. La evidencia completa está en `docs/design/2026-10-25-analisis-visual-referencia.md`.
 
-> Este es el `DESIGN.md` que `docs/design/2026-10-25-stitch-prompts.md` daba por pendiente. Los prompts de Stitch deben referenciar este archivo en lugar de repetir el sistema.
+> **Cambio de la v1 a la v2.** La v1 describía un sistema *inspirado en* la referencia: tomaba sus tokens de color y sus curvas de easing, pero la geometría de los componentes era inventada. El resultado fue una interfaz con los colores de iyo.ai y la anatomía de un dashboard genérico. La v2 corrige eso: **cada radio, altura, relleno y blur de este documento está medido**, no estimado.
 
 ---
 
@@ -13,585 +13,253 @@
 
 | # | Principio | Consecuencia práctica |
 |---|---|---|
-| **V-1** | **La restricción es la calidad.** | No se inventan valores. Si falta un token, se añade al sistema o se usa el más cercano — nunca un literal suelto. |
+| **V-1** | **La restricción es la calidad.** | No se inventan valores. Si falta un token, se añade al sistema o se usa el más cercano. |
 | **V-2** | **La profundidad es luz, no sombra.** | Cero `box-shadow` de elevación. Se usa `backdrop-filter`, relleno translúcido y borde *hairline*. |
-| **V-3** | **El movimiento vive en `transform` y `opacity`.** | Nunca se animan `width`, `height`, `top`, `left`, `margin`. `filter` solo como excepción justificada. |
-| **V-4** | **El color es semántico y eléctrico.** | Los colores de estado significan algo en el dominio (verde = continuidad, ámbar = advertencia, rojo = cortocircuito). |
-| **V-5** | **El contenido técnico manda.** | Es una herramienta, no una landing. Lienzo e instrumentación tienen prioridad sobre la expresión. |
+| **V-3** | **El movimiento vive en `transform` y `opacity`.** | Nunca se animan `width`, `height`, `top`, `left`, `margin`. |
+| **V-4** | **El monocromo primero, el color como señal.** | La referencia es casi monocroma y reserva el color para lo que significa algo. En CircuitForge el color codifica estado eléctrico. |
+| **V-5** | **El contenido técnico manda.** | Es una herramienta. Lienzo e instrumentación tienen prioridad sobre la expresión. |
 
-**Modo de superficie:** CircuitForge es **Operate** (el visitante completa una tarea). La expresión vive en detalles precisos, no en espectáculo. Única excepción: portada y estados vacíos admiten **Persuade** moderado.
+**Modo de superficie:** CircuitForge es **Operate**. La única excepción es la portada, que admite **Persuade**.
 
 ---
 
 ## 2. Tokens
 
-Custom properties de CSS. Son la fuente de verdad; la configuración de Tailwind se **genera** desde aquí.
+Custom properties de CSS en `apps/web/src/styles/tokens.css`. Son la fuente de verdad; la configuración de Tailwind se **genera** desde aquí.
 
-### 2.1 Color
+### 2.1 Color — base neutra, no azul
 
-```css
-:root {
-  /* Superficies (de más profunda a más elevada) */
-  --cf-bg:               #0f1720;  /* lienzo y fondo de la app */
-  --cf-surface:          #1b2430;  /* paneles: paleta, inspector */
-  --cf-surface-alt:      #26313f;  /* hover, campos, encabezados */
-  --cf-surface-raised:   #2e3b4a;  /* por encima de un panel (popover, menú) */
-  --cf-grid:             #2e3b4a;  /* líneas de la cuadrícula */
+**Decisión clave de la v2.** La referencia usa grises **neutros cálidos** y reserva el color para el acento. La v1 usaba una base azul pizarra: con fondo azul, cualquier gris de UI se lee sucio y el naranja de acento pierde contraste. Sobre neutro, el acento manda.
 
-  /* Texto */
-  --cf-text:             #f1f5f9;
-  --cf-text-secondary:   #94a3b8;
-  --cf-text-muted:       #64748b;
+| Token | Valor | Evidencia en la referencia |
+|---|---|---|
+| `--cf-bg` | `#101010` | `--black: #101010` (fondo del `body`) |
+| `--cf-bg-raised` | `#151515` | `--light-black: #151515` |
+| `--cf-surface` | `#1c1c1e` | derivado de `--dark-grey: #242426` |
+| `--cf-surface-alt` | `#242426` | `--dark-grey` literal |
+| `--cf-surface-raised` | `#303030` | `--dark-grey-lighter` literal |
+| `--cf-fill` | `rgb(56 56 56 / 0.6)` | **relleno de tarjeta, valor medido literal** |
+| `--cf-fill-dim` | `rgb(56 56 56 / 0.35)` | versión tenue para rejillas densas |
+| `--cf-fill-strong` | `rgb(56 56 56 / 0.85)` | estado activo |
 
-  /* Acento primario (acción) */
-  --cf-accent:           #ff6b35;
-  --cf-accent-hover:     #ff8557;
+**Texto.** El principal **no es blanco puro**: la perla reduce el halagado sobre negro y es lo que da sensación de material en vez de pantalla.
 
-  /* Acento secundario (instrumentación) */
-  --cf-signal:           #22d3ee;
+| Token | Valor | Evidencia |
+|---|---|---|
+| `--cf-text` | `#dddee3` | `--pearl-white: #dddee3` — **42 usos, el dominante** |
+| `--cf-text-strong` | `#edeced` | `--almost-white: #edeced` |
+| `--cf-text-secondary` | `#9a9a9e` | derivado |
+| `--cf-text-muted` | `#6b6b70` | derivado |
 
-  /* Estado (semántica eléctrica, V-4) */
-  --cf-success:          #34d399;
-  --cf-warning:          #fbbf24;
-  --cf-error:            #f87171;
+**Acento y estado.** La referencia no tiene acento cromático: es monocroma y usa el blanco para la acción. CircuitForge **sí** necesita uno, porque el color codifica estado eléctrico (V-4).
 
-  /* Paleta de cables */
-  --cf-wire-1: #f87171;  --cf-wire-2: #fbbf24;
-  --cf-wire-3: #34d399;  --cf-wire-4: #22d3ee;
-  --cf-wire-5: #a78bfa;  --cf-wire-6: #f472b6;
-  --cf-wire-7: #60a5fa;  --cf-wire-8: #fb923c;
+| Token | Valor | Uso |
+|---|---|---|
+| `--cf-accent` | `#ff6b35` | acción primaria, selección |
+| `--cf-on-accent` | `#131313` | texto sobre el acento |
+| `--cf-signal` | `#22d3ee` | **solo** instrumentación en vivo |
+| `--cf-success` / `--cf-warning` / `--cf-error` | `#34d399` / `#fbbf24` / `#f87171` | V-3 / V-2..V-6 / V-1 |
 
-  /* Velo y glass (V-2) */
-  --cf-glass-fill:       rgb(255 255 255 / 0.04);
-  --cf-glass-fill-hi:    rgb(255 255 255 / 0.07);
-  --cf-hairline:         rgb(255 255 255 / 0.08);
-  --cf-hairline-strong:  rgb(255 255 255 / 0.14);
-  --cf-scrim:            rgb(15 23 32 / 0.72);
+### 2.2 Bordes y glass
 
-  /* Velos de estado */
-  --cf-error-veil:       rgb(248 113 113 / 0.08);
-  --cf-warning-veil:     rgb(251 191 36 / 0.08);
-  --cf-success-veil:     rgb(52 211 153 / 0.08);
-  --cf-accent-veil:      rgb(255 107 53 / 0.12);
-}
+| Token | Valor | Evidencia |
+|---|---|---|
+| `--cf-hairline` | `rgb(138 138 138 / 0.12)` | borde medido: `1px rgba(138,138,138,.1)` — **gris neutro, no blanco** |
+| `--cf-hairline-strong` | `rgb(138 138 138 / 0.22)` | hover |
+| `--cf-glass-blur` | **`19px`** | `backdrop-filter: blur(19px)` en 12 elementos |
+| `--cf-glass-sat` | `130%` | saturación acompañante |
+
+Un borde blanco sobre fondo cálido se ve lechoso; el gris se funde y solo deja el filo.
+
+### 2.3 Tipografía
+
+```
+--cf-font-ui:   'Inter', system-ui, sans-serif
+--cf-font-mono: 'JetBrains Mono', ui-monospace, monospace
 ```
 
-**Reglas de uso:**
-
-- `--cf-accent` es **exclusivo** para acción primaria y selección activa. Nunca como texto decorativo ni fondo de superficie grande.
-- `--cf-signal` es **exclusivo** para instrumentación. Es lo que permite que un número cian signifique «esto es una medición» sin explicación.
-- Los colores de estado se aplican con su **velo** al 8 % como fondo. El texto va en el color de estado, nunca blanco sobre color sólido.
-
-**Contraste verificado:** `--cf-text` sobre `--cf-bg` = 15.8:1 ✓ · `--cf-text-secondary` sobre `--cf-surface` = 6.4:1 ✓ (AA) · `--cf-error` sobre velo compuesto = 5.1:1 ✓.
-
-### 2.2 Tipografía
-
-```css
-:root {
-  --cf-font-ui:   'Inter', system-ui, -apple-system, sans-serif;
-  --cf-font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
-
-  /* Escala — seis pasos, sin excepciones (V-1) */
-  --cf-text-2xs: 0.6875rem;  /* 11px */
-  --cf-text-xs:  0.75rem;    /* 12px */
-  --cf-text-sm:  0.8125rem;  /* 13px */
-  --cf-text-md:  0.875rem;   /* 14px */
-  --cf-text-xl:  1.5rem;     /* 24px */
-  --cf-text-3xl: 2.5rem;     /* 40px — solo portada */
-
-  --cf-leading-tight: 1.15;
-  --cf-leading-snug:  1.4;
-  --cf-leading-base:  1.55;
-
-  --cf-tracking-tight: -0.02em;
-  --cf-tracking-wide:  0.08em;
-}
-```
+Escala de 7 pasos: `2xs` 11px · `xs` 12px · `sm` 13px · `md` 14px · `lg` 18px · `xl` 24px · `3xl` 40px.
 
 | Rol | Familia | Tamaño | Peso | Detalle |
 |---|---|---|---|---|
+| Titular de portada | Inter | `3xl` | 600 | `--cf-tracking-tight`, a dos tonos |
 | Título de página | Inter | `xl` | 600 | `--cf-tracking-tight` |
-| Título de panel | Inter | `2xs` | 600 | uppercase, `--cf-tracking-wide`, muted |
-| Cuerpo / etiqueta | Inter | `md` | 400–500 | — |
-| Nombre de componente | Inter | `sm` | 500 | — |
-| Identificador (`R1`, `D13`) | **Mono** | `xs` | 500 | muted |
-| Valor numérico | **Mono** | `sm` | 500 | `--cf-signal` |
-| Unidad (`Ω`, `V`, `mA`) | **Mono** | `xs` | 400 | muted |
-| Tipo de pin (`PWR`, `GND`) | Mono | `2xs` | 500 | chip, mayúsculas |
+| **Eyebrow** | Inter | `2xs` | 500 | uppercase, `--cf-tracking-wider` (0.14em), muted |
+| Cuerpo | Inter | `md` | 400 | — |
+| Identificador (`R1`) | **Mono** | `xs` | 500 | `--cf-signal` |
+| Valor numérico | **Mono** | `sm` | 500 | `--cf-text-strong` |
+| Unidad | **Mono** | `2xs` | 400 | muted |
 
-**Regla dura:** todo número, unidad e identificador va en JetBrains Mono. Todo texto de UI va en Inter. No hay cruce.
+**Regla dura:** todo número, unidad e identificador va en JetBrains Mono. El texto de UI en Inter.
 
-### 2.3 Espaciado
+> **La clase `cf-eyebrow` es un recurso central de la v2.** Versalitas micro con tracking amplio en color apagado. La referencia lo repite constantemente y da jerarquía sin gastar peso tipográfico.
 
-```css
-:root {
-  --cf-space-1:  0.25rem;  /*  4px */
-  --cf-space-2:  0.5rem;   /*  8px */
-  --cf-space-3:  0.75rem;  /* 12px */
-  --cf-space-4:  1rem;     /* 16px */
-  --cf-space-6:  1.5rem;   /* 24px */
-  --cf-space-8:  2rem;     /* 32px */
-  --cf-space-12: 3rem;     /* 48px */
-  --cf-space-16: 4rem;     /* 64px */
-}
-```
+### 2.4 Geometría — rampa ampliada con píldora
 
-| Contexto | Token |
-|---|---|
-| Relleno interno de panel | `4` |
-| Separación entre secciones de panel | `6` |
-| Gap entre fichas del catálogo | `3` |
-| Relleno de campo de entrada | `2 3` |
-| Separación entre grupos de controles | `2` |
+**Medido en la referencia:** `17.28px` (×8), `12.8px` (×6), `32px`, `42px`, `160px` (píldora), `100%` (círculos).
 
-### 2.4 Geometría
-
-```css
-:root {
-  --cf-radius-sm:   0.5rem;   /*  8px — botones, campos */
-  --cf-radius-md:   0.75rem;  /* 12px — paneles, tarjetas */
-  --cf-radius-lg:   1.25rem;  /* 20px — contenedores grandes */
-  --cf-radius-full: 9999px;   /* chips, píldoras, pines */
-
-  --cf-border-hairline: 1px solid var(--cf-hairline);
-  --cf-border-panel:    1px solid var(--cf-hairline);
-  --cf-border-focus:    2px solid var(--cf-accent);
-}
-```
-
-Tres radios. No hay un cuarto.
-
-### 2.5 Elevación (V-2: sin sombras)
-
-```css
-:root {
-  --cf-glass-blur: 16px;
-  --cf-glass-sat:  140%;
-}
-
-/* Superficie sólida — uso por defecto */
-.cf-panel {
-  background: var(--cf-surface);
-  border: var(--cf-border-panel);
-  border-radius: var(--cf-radius-md);
-}
-
-/* Superficie glass — solo donde hay contenido vivo detrás */
-.cf-glass {
-  background: linear-gradient(180deg, var(--cf-glass-fill-hi), var(--cf-glass-fill));
-  backdrop-filter: blur(var(--cf-glass-blur)) saturate(var(--cf-glass-sat));
-  -webkit-backdrop-filter: blur(var(--cf-glass-blur)) saturate(var(--cf-glass-sat));
-  border: var(--cf-border-panel);
-  border-radius: var(--cf-radius-md);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06);  /* highlight interior, no sombra proyectada */
-}
-
-@supports not (backdrop-filter: blur(1px)) {
-  .cf-glass { background: var(--cf-surface); }
-}
-```
-
-**Presupuesto de glass: exactamente 3 superficies** — paleta, inspector y barra de simulación. `backdrop-filter` obliga a la GPU a leer el búfer de fondo cada frame; con el solver en Web Worker y el lienzo a 60 fps (RNF-2), más superficies degradan el arrastre. Las 60 fichas del catálogo usan `.cf-panel` sólido.
-
-### 2.6 Movimiento
-
-```css
-:root {
-  /* Curvas — tres, y solo tres (V-1) */
-  --cf-ease-out:   cubic-bezier(0.77, 0, 0.175, 1);    /* firma: arranque rápido, frenada larga */
-  --cf-ease-inout: cubic-bezier(0.65, 0, 0.35, 1);     /* simétrica */
-  --cf-ease-pop:   cubic-bezier(0.48, 0.01, 0, 1.08);  /* sobrepaso 8% — SOLO transform */
-
-  /* Duraciones — cuatro (V-1) */
-  --cf-dur-instant: 100ms;
-  --cf-dur-fast:    200ms;
-  --cf-dur-base:    300ms;
-  --cf-dur-slow:    600ms;
-}
-```
-
-| Propiedad | Duración | Curva |
+| Token | Valor | Uso |
 |---|---|---|
-| `color`, `background-color`, `border-color` | `instant` | `inout` |
-| `opacity` | `fast` | `inout` |
-| `transform` (hover, chip, botón) | `base` | `out` |
-| `transform` (revelado, entrada) | `slow` | `out` |
-| `transform` (rebote al asentarse) | `640ms` | `pop` |
-| `border-radius` (morph) | `base` | `inout` |
+| `--cf-radius-sm` | `0.5rem` (8px) | controles compactos |
+| `--cf-radius-md` | `0.75rem` (12px) | campos |
+| `--cf-radius-lg` | `1.25rem` (20px) | tarjetas, paneles |
+| `--cf-radius-xl` | `1.75rem` (28px) | superficies glass |
+| `--cf-radius-full` | `9999px` | **navegación, chips, botones** |
 
-**Prohibiciones duras:**
+La rampa v1 llegaba solo a 12px. **La referencia usa radios grandes con generosidad** y esa es una de las razones por las que se ve suave en vez de rígida. Media interfaz de la v2 va en píldora.
 
-- `--cf-ease-pop` **jamás** en `opacity` ni en color. Solo en `transform`.
-- Nunca animar `width`, `height`, `top`, `left`, `margin`, `padding`. Usar `transform`.
-- `transition: all` está prohibido. Se declara la propiedad explícita.
+### 2.5 Movimiento
 
-### 2.7 Accesibilidad del movimiento (RNF-4, obligatorio)
+| Token | Valor | Evidencia |
+|---|---|---|
+| `--cf-ease-out` | `cubic-bezier(0.77, 0, 0.175, 1)` | **11 usos: la firma** |
+| `--cf-ease-inout` | `cubic-bezier(0.65, 0, 0.35, 1)` | 13 usos |
+| `--cf-ease-pop` | `cubic-bezier(0.48, 0.01, 0, 1.08)` | 3 usos, **siempre en `transform`** |
+| `--cf-dur-instant` / `fast` / `base` / `slow` | `100` / `200` / `300` / `600` ms | 0.3s y 0.6s dominantes |
 
-```css
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-  .cf-reveal-letter {
-    filter: none !important; opacity: 1 !important; visibility: visible !important;
-  }
-}
-```
+`--cf-ease-pop` **jamás** en `opacity` ni en color.
+
+### 2.6 Textura de grano — nuevo en la v2
+
+La referencia **no tiene una superficie lisa**: tiene grano sobre el negro. Es lo que separa "fondo oscuro" de "material oscuro". Se genera con un SVG en línea (`--cf-grain`), sin peticiones ni imágenes que cachear, aplicado vía `.cf-grain::before` con `mix-blend-mode: overlay`.
 
 ---
 
 ## 3. Componentes
 
-### 3.1 Botón primario
+Medidos, no inventados.
 
-Anatomía de doble capa (text roll) con relleno sólido.
+### 3.1 Botón
 
-```html
-<button class="cf-btn cf-btn--primary">
-  <span class="cf-btn__roll">
-    <span class="cf-btn__text">Simular</span>
-    <span class="cf-btn__text" aria-hidden="true">Simular</span>
-  </span>
-</button>
-```
+| Propiedad | Valor | Origen |
+|---|---|---|
+| Radio | **píldora** | la referencia usa 160px y 100% |
+| Altura | 40px (`sm` 32 / `lg` 48) | controles medidos: 37–44px |
+| Padding-x | 20px (`sm` 14 / `lg` 28) | proporcional a la píldora |
+| Transición | 300ms `--cf-ease-out` | medido |
 
-```css
-.cf-btn {
-  position: relative;
-  display: inline-flex; align-items: center; justify-content: center;
-  height: 2.25rem; padding: 0 var(--cf-space-4);
-  border: none; border-radius: var(--cf-radius-sm);
-  font: 500 var(--cf-text-md)/1 var(--cf-font-ui);
-  cursor: pointer; overflow: hidden;
-  transition: background-color var(--cf-dur-instant) var(--cf-ease-inout),
-              transform var(--cf-dur-base) var(--cf-ease-out);
-}
-.cf-btn:active { transform: scale(0.97); }
-.cf-btn:focus-visible { outline: var(--cf-border-focus); outline-offset: 2px; }
+Variantes: `primary` (acento), `secondary` (relleno glass + borde), `ghost`, `danger`, `light` (blanco sobre oscuro — **el tratamiento de la referencia**).
 
-.cf-btn--primary { background: var(--cf-accent); color: #10161f; }
-.cf-btn--primary:hover { background: var(--cf-accent-hover); }
+**Text roll de doble capa** (patrón M-2): dos copias del texto, la segunda `aria-hidden`. Es lo que aporta la sensación de respuesta que la referencia consigue con Webflow IX2.
 
-.cf-btn__roll { position: relative; display: block; overflow: hidden; }
-.cf-btn__text { display: block; transition: transform var(--cf-dur-base) var(--cf-ease-out); }
-.cf-btn__text + .cf-btn__text { position: absolute; inset: 0; transform: translate3d(0, 100%, 0); }
-.cf-btn:hover .cf-btn__text,
-.cf-btn:focus-visible .cf-btn__text { transform: translate3d(0, -100%, 0); }
-.cf-btn:hover .cf-btn__text + .cf-btn__text,
-.cf-btn:focus-visible .cf-btn__text + .cf-btn__text { transform: translate3d(0, 0, 0); }
-```
+### 3.2 Botón circular de icono — nuevo en la v2
 
-La segunda capa lleva `aria-hidden="true"` para que el lector de pantalla no anuncie el texto dos veces. La animación se activa en `:hover` **y** `:focus-visible` (requisito de teclado).
+**El control más característico de la referencia y el que faltaba por completo.** Círculos perfectos (`radius: 100%`) con relleno claro sobre el fondo oscuro. Tamaños 28 / 36 / 44 px. `label` obligatorio → `aria-label` (WCAG 4.1.2).
 
-**Variantes:** `--secondary` (`--cf-surface-alt` / `--cf-text`), `--ghost` (sin fondo, `--cf-text-secondary`), `--danger` (`--cf-error`, texto oscuro).
+### 3.3 Navegación en píldora flotante — rehecha en la v2
 
-### 3.2 Panel
+| Propiedad | Valor |
+|---|---|
+| Forma | píldora, `w-fit` (abrace el contenido) |
+| Posición | flotante, con margen respecto al borde |
+| Superficie | `.cf-glass` (relleno + blur 19px + hairline) |
+| Contenido | marca · separador vertical · enlaces · separador · icono circular |
 
-```css
-.cf-panel {
-  display: flex; flex-direction: column;
-  background: var(--cf-surface);
-  border: var(--cf-border-panel);
-  border-radius: var(--cf-radius-md);
-  padding: var(--cf-space-4);
-}
+La v1 era una barra de ancho completo con borde inferior: el patrón genérico de dashboard y lo más alejado de la referencia.
 
-.cf-panel__title {
-  font: 600 var(--cf-text-2xs)/1.2 var(--cf-font-ui);
-  text-transform: uppercase;
-  letter-spacing: var(--cf-tracking-wide);
-  color: var(--cf-text-muted);
-  padding-bottom: var(--cf-space-3);
-  border-bottom: 1px solid var(--cf-hairline);
-  margin-bottom: var(--cf-space-3);
-}
-```
+### 3.4 Superficies
 
-### 3.3 Chip de categoría y de pin
+| Clase | Fondo | Blur | Uso |
+|---|---|---|---|
+| `.cf-panel` | `--cf-surface` | no | panel sólido |
+| `.cf-glass` | `--cf-fill` | **sí, 19px** | **presupuesto: 3** — nav, paleta, inspector, barra |
+| `.cf-tile` | `--cf-fill-dim` | no | tarjetas en rejilla densa (biblioteca, proyectos) |
 
-```css
-.cf-chip {
-  display: inline-flex; align-items: center; gap: var(--cf-space-1);
-  height: 1.5rem; padding: 0 var(--cf-space-3);
-  border-radius: var(--cf-radius-full);
-  background: var(--cf-surface-alt);
-  color: var(--cf-text-secondary);
-  font: 500 var(--cf-text-xs)/1 var(--cf-font-ui);
-  transition: background-color var(--cf-dur-fast) var(--cf-ease-inout),
-              color var(--cf-dur-fast) var(--cf-ease-inout),
-              transform var(--cf-dur-fast) var(--cf-ease-out);
-}
-.cf-chip:hover { transform: translateY(-1px); }
-.cf-chip[aria-pressed="true"] { background: var(--cf-accent); color: #10161f; }
+Sin `box-shadow` de elevación en ninguna.
 
-.cf-chip--pin {
-  font-family: var(--cf-font-mono);
-  font-size: var(--cf-text-2xs);
-  text-transform: uppercase;
-}
-.cf-chip--pin[data-pin="power"]   { color: var(--cf-error);       background: var(--cf-error-veil); }
-.cf-chip--pin[data-pin="gnd"]     { color: var(--cf-text-muted); }
-.cf-chip--pin[data-pin="digital"] { color: var(--cf-wire-7);      background: rgb(96 165 250 / 0.1); }
-.cf-chip--pin[data-pin="pwm"]     { color: var(--cf-wire-5);      background: rgb(167 139 250 / 0.1); }
-.cf-chip--pin[data-pin="i2c_sda"],
-.cf-chip--pin[data-pin="i2c_scl"] { color: var(--cf-signal);      background: rgb(34 211 238 / 0.1); }
-```
+### 3.5 Chip y pin
 
-### 3.4 Mensaje de validación
+Píldora, altura 28px. El chip activo usa **relleno fuerte, no el acento**: con 9 categorías pintadas de naranja, el naranja dejaría de significar "haz esto".
 
-```css
-.cf-violation {
-  display: flex; gap: var(--cf-space-2); align-items: flex-start;
-  padding: var(--cf-space-3);
-  border-radius: var(--cf-radius-sm);
-  font-size: var(--cf-text-sm);
-  line-height: var(--cf-leading-snug);
-}
-.cf-violation[data-severity="error"]   { background: var(--cf-error-veil);   color: var(--cf-error); }
-.cf-violation[data-severity="warning"] { background: var(--cf-warning-veil); color: var(--cf-warning); }
-.cf-violation[data-severity="success"] { background: var(--cf-success-veil); color: var(--cf-success); }
-```
-
-**Accesibilidad:** el estado nunca se comunica **solo** con color. Cada mensaje lleva icono (prohibición / triángulo / marca) y el texto español de la regla. Cumple WCAG 1.4.1.
-
-### 3.5 Ficha de catálogo
-
-```css
-.cf-card {
-  display: flex; flex-direction: column;
-  aspect-ratio: 4 / 3;                    /* apaisado: el símbolo esquemático es horizontal */
-  padding: var(--cf-space-3);
-  background: var(--cf-surface);
-  border: var(--cf-border-hairline);
-  border-radius: var(--cf-radius-md);
-  cursor: grab;
-  transition: border-color var(--cf-dur-fast) var(--cf-ease-inout),
-              transform var(--cf-dur-base) var(--cf-ease-out);
-}
-.cf-card:hover {
-  border-color: var(--cf-accent);
-  transform: translate3d(0, -2px, 0) scale(1.02);   /* NO width/height — V-3 */
-}
-.cf-card:active { cursor: grabbing; transform: scale(0.99); }
-.cf-card:focus-visible { outline: var(--cf-border-focus); outline-offset: 2px; }
-```
-
-`aspect-ratio: 4/3` sustituye deliberadamente el `0.648` retrato de la referencia (era para hardware físico).
+Los pines llevan color por función eléctrica (V-4) y siempre monoespaciados.
 
 ### 3.6 Campo de entrada
 
-```css
-.cf-input {
-  width: 100%; height: 2rem;
-  padding: 0 var(--cf-space-3);
-  background: var(--cf-surface-alt);
-  border: var(--cf-border-hairline);
-  border-radius: var(--cf-radius-sm);
-  color: var(--cf-text);
-  font: 400 var(--cf-text-sm)/1 var(--cf-font-ui);
-  transition: border-color var(--cf-dur-fast) var(--cf-ease-inout);
-}
-.cf-input::placeholder { color: var(--cf-text-muted); }
-.cf-input:focus { outline: none; border-color: var(--cf-accent); }
-.cf-input--numeric { font-family: var(--cf-font-mono); text-align: right; }
-```
+Píldora, altura 36px, relleno translúcido. Sobre fondo oscuro un campo sólido se lee como un agujero; el relleno tenue se lee como superficie.
 
 ---
 
 ## 4. Patrones de movimiento
 
-Todos son **CSS nativo**. No requieren GSAP ni Framer Motion — la referencia logra su calidad sin librerías de animación, y CircuitForge no necesita añadir una.
-
-| ID | Patrón | Dónde | Coste |
-|---|---|---|---|
-| **M-1** | Revelado de titular letra por letra con desenfoque | Portada y títulos de la biblioteca. **Nunca en el editor.** | 1 nodo por letra |
-| **M-2** | Botón con text roll de doble capa | Todos los botones primarios | 1 nodo extra |
-| **M-3** | Panel glass | Máximo 3 superficies | GPU por frame |
-| **M-4** | Entrada del inspector al cambiar selección | Editor | Ninguno |
-| **M-5** | LED y flujo de corriente | Editor, durante la simulación | 1 animación |
-
-### M-1 — Revelado de titular
-
-```css
-.cf-reveal-letter {
-  display: inline-block;
-  will-change: filter, opacity;
-  filter: blur(2px); opacity: 0; visibility: hidden;
-  transition: filter var(--cf-dur-slow) var(--cf-ease-out),
-              opacity var(--cf-dur-slow) var(--cf-ease-out);
-  transition-delay: calc(var(--i) * 18ms);
-}
-.cf-reveal.is-visible .cf-reveal-letter { filter: blur(0); opacity: 1; visibility: visible; }
-.cf-reveal.is-done .cf-reveal-letter { will-change: auto; }   /* liberar la GPU */
-```
-
-Activación con `IntersectionObserver`, una vez, `{ threshold: 0.2 }`. `will-change` se retira al terminar — dejarlo activo penaliza el lienzo WebGL que corre detrás.
-
-### M-4 — Entrada del inspector
-
-```css
-.cf-inspector__body {
-  transition: opacity var(--cf-dur-fast) var(--cf-ease-inout),
-              transform var(--cf-dur-base) var(--cf-ease-out);
-}
-.cf-inspector__body[data-swapping] { opacity: 0; transform: translate3d(6px, 0, 0); }
-```
-
-Desplazamiento de 6 px: apenas perceptible, comunica «el contenido cambió» sin robar atención.
-
-### M-5 — LED y flujo de corriente (diseño propio)
-
-```css
-.cf-led__halo { opacity: calc(var(--cf-current-ratio, 0) * 0.9); transition: opacity var(--cf-dur-fast) linear; }
-.cf-wire[data-live="true"] { filter: brightness(1.35); transition: filter var(--cf-dur-fast) linear; }
-.cf-wire__pulse { animation: cf-pulse 1.6s linear infinite; }
-@keyframes cf-pulse {
-  0%   { offset-distance: 0%;   opacity: 0; }
-  10%  { opacity: 1; }
-  90%  { opacity: 1; }
-  100% { offset-distance: 100%; opacity: 0; }
-}
-```
-
-`offset-distance` sobre `offset-path` mueve el punto de luz a lo largo de la curva del cable. Es la única animación declarativa del sistema (equivalente al único `@keyframes spin` de la referencia) y está justificada porque representa un fenómeno físico continuo.
+| ID | Patrón | Dónde |
+|---|---|---|
+| **M-1** | Revelado de titular letra por letra con desenfoque | Títulos de sección. **Nunca en el editor.** |
+| **M-2** | Botón con text roll | Todos los botones |
+| **M-3** | Superficie glass | Presupuesto de 3 |
+| **M-4** | Entrada del inspector | Editor |
+| **M-5** | LED y flujo de corriente | Editor, en simulación |
+| **M-6** | **Entrada escalonada de bloques** (v2) | Portada: desplazamiento de 14px, retardos de 70ms por bloque |
 
 ---
 
 ## 5. Aplicación por superficie
 
-| Superficie | Modo | Glass | Movimiento permitido |
+| Superficie | Modo | Glass | Movimiento |
 |---|---|---|---|
-| **Editor** (paleta + lienzo + inspector) | Operate | Paleta, inspector, barra de simulación | M-2, M-3, M-4, M-5. **Sin M-1.** |
-| **Biblioteca** de componentes | Operate | No (60 fichas) | M-1 en el título, M-2, hover de ficha |
-| **Portada / estado vacío** | Persuade | No | M-1, M-2, M-3 |
-| **Proyecto compartido** | Read | Barra de metadatos | M-2, M-5 (simulación permitida) |
-| **Diálogos / modales** | Operate | Scrim `--cf-scrim` + panel glass | Entrada con `transform` + `opacity` |
+| **Portada** `/` | Persuade | No (grano + resplandor) | M-1, M-2, M-6 |
+| **Editor** | Operate | Nav, paleta, inspector, barra | M-2, M-3, M-4, M-5 |
+| **Biblioteca** | Operate | No (22 tiles) | M-2, hover de tile |
+| **Proyectos** | Operate | No | M-2, hover de tile |
+| **Compartido** | Read | Panel | M-2 |
 
 ---
 
-## 6. Reglas de rechazo (anti-patrones)
-
-Un componente se rechaza en revisión si presenta cualquiera de estos:
+## 6. Reglas de rechazo
 
 | Anti-patrón | Por qué | Correcto |
 |---|---|---|
-| `box-shadow` de elevación | Viola V-2; compite con el lienzo | `.cf-glass` o borde *hairline* |
-| `transition: all` | Anima propiedades no previstas; rompe V-3 | Declarar la propiedad |
-| Animación de `width`/`height` | Layout thrashing, rompe RNF-2 (60 fps) | `transform: scale()` |
-| `--cf-ease-pop` en opacidad o color | El rebote es para posición, no visibilidad | `--cf-ease-inout` |
-| Color de texto fuera de los tres tokens | Viola V-1 | `--cf-text` / `-secondary` / `-muted` |
-| `border-radius` fuera de los tres tokens | Viola V-1 | `--cf-radius-sm/md/full` |
-| Tamaño de tipo fuera de los seis pasos | Viola V-1 | Token de escala |
-| Número o unidad en Inter | Rompe la legibilidad técnica de los valores | `--cf-font-mono` |
-| Estado indicado solo por color | Viola WCAG 1.4.1 y RNF-4 | Añadir icono + texto |
-| `backdrop-filter` en más de 3 superficies | Degrada el arrastre del lienzo | `.cf-panel` sólido |
-| Animación sin `prefers-reduced-motion` | Viola RNF-4 | Bloque de §2.7 |
-| Degradado púrpura/índigo, tarjetas uniformes, hero genérico | Estética AI genérica | Usar este sistema |
+| `box-shadow` de elevación | Viola V-2 | `.cf-glass` o `.cf-tile` |
+| `transition: all` | Anima propiedades no previstas | Declarar la propiedad |
+| Animación de `width`/`height` | Layout thrashing | `transform` |
+| `--cf-ease-pop` en opacidad o color | El rebote es para posición | `--cf-ease-inout` |
+| Radio fuera de la rampa | Viola V-1 | Token de radio |
+| Base azul o fría | Ensucia los grises y mata el acento | Neutro `#101010` |
+| Texto blanco puro | Halaga sobre negro | `--cf-text` perla |
+| Borde blanco | Se ve lechoso sobre cálido | `--cf-hairline` gris |
+| Barra de nav de ancho completo | Patrón genérico de dashboard | Píldora flotante |
+| Número o unidad en Inter | Rompe la legibilidad técnica | `--cf-font-mono` |
+| Estado solo por color | Viola WCAG 1.4.1 | Icono + texto |
+| `backdrop-filter` en >3 superficies | Degrada el arrastre | `.cf-tile` |
+| Animación sin `prefers-reduced-motion` | Viola RNF-4 | Bloque de tokens.css |
+| Degradado púrpura, tarjetas uniformes | Estética AI genérica | Este sistema |
 
 ---
 
-## 7. Configuración de Tailwind
+## 7. Verificación
 
-Tailwind 4 lee los tokens desde CSS con `@theme`. **No se duplican valores**: se mapean a las custom properties.
+Antes de dar una superficie por terminada:
 
-```css
-/* apps/web/src/styles/theme.css */
-@import 'tailwindcss';
-@import './tokens.css';   /* el bloque :root de §2 */
-
-@theme inline {
-  --color-bg:             var(--cf-bg);
-  --color-surface:        var(--cf-surface);
-  --color-surface-alt:    var(--cf-surface-alt);
-  --color-surface-raised: var(--cf-surface-raised);
-  --color-text:           var(--cf-text);
-  --color-text-secondary: var(--cf-text-secondary);
-  --color-text-muted:     var(--cf-text-muted);
-  --color-accent:         var(--cf-accent);
-  --color-accent-hover:   var(--cf-accent-hover);
-  --color-signal:         var(--cf-signal);
-  --color-success:        var(--cf-success);
-  --color-warning:        var(--cf-warning);
-  --color-error:          var(--cf-error);
-  --color-hairline:       var(--cf-hairline);
-
-  --font-ui:   var(--cf-font-ui);
-  --font-mono: var(--cf-font-mono);
-
-  --text-2xs: var(--cf-text-2xs);
-  --text-xs:  var(--cf-text-xs);
-  --text-sm:  var(--cf-text-sm);
-  --text-md:  var(--cf-text-md);
-  --text-xl:  var(--cf-text-xl);
-  --text-3xl: var(--cf-text-3xl);
-
-  --radius-sm:   var(--cf-radius-sm);
-  --radius-md:   var(--cf-radius-md);
-  --radius-lg:   var(--cf-radius-lg);
-  --radius-full: var(--cf-radius-full);
-
-  --ease-out:   var(--cf-ease-out);
-  --ease-inout: var(--cf-ease-inout);
-  --ease-pop:   var(--cf-ease-pop);
-}
-```
-
-Uso: `class="bg-surface text-text border border-hairline rounded-md ease-out duration-300"`.
-
----
-
-## 8. Correspondencia con los prompts de Stitch
-
-`docs/design/2026-10-25-stitch-prompts.md` describe un design system en su sección 0. **Este documento lo sustituye** en todo lo relativo a color, tipografía, geometría, elevación y movimiento. Cambios que los prompts deben incorporar al regenerarse:
-
-| Elemento | Prompt original | DESIGN.md |
-|---|---|---|
-| Sombra de panel | `0 4px 16px rgba(0,0,0,0.4)` | **Eliminada.** Glass + borde *hairline* |
-| Radios | paneles 12px, botones 8px, chips 999px | Igual (`--cf-radius-md/sm/full`) |
-| Paleta | 12 colores con nombre | Igual, más velos de estado formalizados al 8 % |
-| Densidad | «≥14 componentes visibles sin scroll» | Mantenido |
-| Movimiento | No especificado | **Nuevo:** §2.6 y §4 |
-| Aspecto de ficha | No especificado | **Nuevo:** `4/3` apaisado |
-| Botón | Relleno naranja simple | **Nuevo:** text roll de doble capa |
-
----
-
-## 9. Verificación
-
-Antes de marcar una superficie como terminada:
-
-- [ ] Ningún `box-shadow` de elevación en el diff.
+- [ ] Cero `box-shadow` de elevación en el diff.
 - [ ] Ninguna animación de `width`/`height`/`top`/`left`.
-- [ ] `--cf-ease-pop` aparece solo junto a `transform`.
+- [ ] `--cf-ease-pop` solo junto a `transform`.
 - [ ] Todo número y unidad en `--cf-font-mono`.
 - [ ] Todo estado con icono además de color.
 - [ ] `backdrop-filter` en ≤ 3 superficies.
-- [ ] Bloque `prefers-reduced-motion` respetado (probar con la emulación de DevTools).
+- [ ] Radios dentro de la rampa `sm/md/lg/xl/full`.
+- [ ] Base neutra: el `body` computa `rgb(16, 16, 16)`.
+- [ ] `prefers-reduced-motion` respetado.
 - [ ] Consola sin errores ni warnings.
-- [ ] Contraste ≥ 4.5:1 en texto normal, ≥ 3:1 en texto grande.
-- [ ] Navegación completa por teclado, con `:focus-visible` visible.
-- [ ] Responsive verificado a 320 / 768 / 1024 / 1440 px.
-- [ ] Ningún literal de color, radio, tamaño o duración fuera de los tokens.
-- [ ] Estados vacío, de carga y de error presentes (no pantallas en blanco).
+- [ ] Contraste ≥ 4.5:1.
+- [ ] Teclado completo, con `:focus-visible` visible.
+- [ ] Responsive a 320 / 768 / 1024 / 1440 px sin desbordamiento.
+- [ ] Sin solapamiento de texto (medido en el DOM, no a ojo).
 
 ---
 
-## 10. Trazabilidad
+## 8. Trazabilidad
 
-| Decisión de este documento | Origen |
+| Decisión | Evidencia medida |
 |---|---|
-| Paleta corta, texto perla en lugar de blanco puro | `2026-10-25-analisis-visual-referencia.md` §2 |
-| Cero sombras; profundidad por glass + hairline | §2.3 y §5 del análisis |
-| Tres curvas de easing, una con sobrepaso reservada a `transform` | §5.1 |
-| Cuatro duraciones discretas | §5.2 |
-| Botón de doble capa con text roll | §6 patrón B |
-| Revelado letra por letra con desenfoque, acotado | §6 patrón A |
-| `transform` en lugar de `width`/`height` en hover de tarjeta | §6 patrón C |
-| Presupuesto de 3 superficies con `backdrop-filter` | §6 patrón D |
-| Lenis sí / Taxi.js no | §6 patrón E |
-| Ficha `4/3` apaisada en lugar de `0.648` retrato | §4.3 del análisis |
-| Tipografías propias (Inter + JetBrains Mono) | §3.1 del análisis (licencias comerciales ajenas) |
-| Patrón M-5 (LED y flujo de corriente) | Diseño original de CircuitForge |
+| Base neutra `#101010` | `--black` de la referencia |
+| Texto perla `#dddee3` | `--pearl-white`, 42 usos |
+| Relleno `rgb(56 56 56/.6)` | valor literal de sus tarjetas |
+| Borde `rgb(138 138 138/.1)` | valor literal de sus bordes |
+| Blur `19px` | `backdrop-filter` en 12 elementos |
+| Radios hasta 160px | 17.28 / 12.8 / 32 / 42 / 160 medidos |
+| Controles 37–44px | alturas medidas |
+| Curvas de easing | 11 / 13 / 3 usos contados |
+| Duraciones 0.3s y 0.6s | dominantes medidas |
+| Nav en píldora flotante | anatomía observada |
+| Botón circular de icono | anatomía observada |
+| Textura de grano | superficie observada |
+| Eyebrow en versalitas | recurso recurrente observado |

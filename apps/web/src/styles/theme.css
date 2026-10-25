@@ -1,11 +1,11 @@
 /**
  * CircuitForge — Tema de Tailwind 4.
  *
- * DESIGN.md sección 7: los tokens se MAPEAN, no se duplican. `@theme inline`
- * hace que las utilidades de Tailwind apunten a las custom properties, asi que
- * cambiar tokens.css cambia todo el sistema sin tocar este archivo.
+ * Los tokens se MAPEAN, no se duplican. `@theme inline` hace que las utilidades
+ * apunten a las custom properties, asi que cambiar tokens.css cambia todo el
+ * sistema sin tocar este archivo.
  *
- * Uso: bg-surface, text-text-secondary, border-hairline, ease-out, duration-base
+ * Uso: bg-surface, text-text-secondary, border-hairline, rounded-pill, ease-out
  */
 
 @import "tailwindcss";
@@ -14,19 +14,23 @@
 @theme inline {
   /* Superficies */
   --color-bg: var(--cf-bg);
+  --color-bg-raised: var(--cf-bg-raised);
   --color-surface: var(--cf-surface);
   --color-surface-alt: var(--cf-surface-alt);
   --color-surface-raised: var(--cf-surface-raised);
   --color-grid: var(--cf-grid);
+  --color-fill: var(--cf-fill);
 
   /* Texto */
   --color-text: var(--cf-text);
+  --color-text-strong: var(--cf-text-strong);
   --color-text-secondary: var(--cf-text-secondary);
   --color-text-muted: var(--cf-text-muted);
 
   /* Acentos */
   --color-accent: var(--cf-accent);
   --color-accent-hover: var(--cf-accent-hover);
+  --color-on-accent: var(--cf-on-accent);
   --color-signal: var(--cf-signal);
 
   /* Estado */
@@ -46,14 +50,16 @@
   --text-xs: var(--cf-text-xs);
   --text-sm: var(--cf-text-sm);
   --text-md: var(--cf-text-md);
+  --text-lg: var(--cf-text-lg);
   --text-xl: var(--cf-text-xl);
   --text-3xl: var(--cf-text-3xl);
 
-  /* Radios */
+  /* Radios — la rampa ampliada con pildora */
   --radius-sm: var(--cf-radius-sm);
   --radius-md: var(--cf-radius-md);
   --radius-lg: var(--cf-radius-lg);
-  --radius-full: var(--cf-radius-full);
+  --radius-xl: var(--cf-radius-xl);
+  --radius-pill: var(--cf-radius-full);
 
   /* Movimiento */
   --ease-out: var(--cf-ease-out);
@@ -86,38 +92,70 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* Foco visible coherente en toda la app (WCAG 2.4.7) */
+/* Foco visible coherente (WCAG 2.4.7) */
 :focus-visible {
   outline: var(--cf-border-focus);
   outline-offset: 2px;
   border-radius: var(--cf-radius-sm);
 }
 
-/* El foco por ratón no dibuja anillo: solo el de teclado. */
 :focus:not(:focus-visible) {
   outline: none;
 }
 
+/* Scrollbar discreta: la de serie sobre fondo oscuro es una barra clara que
+ * rompe la superficie. Se estiliza para que se lea como parte del panel. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--cf-surface-raised) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--cf-surface-raised);
+  border-radius: var(--cf-radius-full);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--cf-hairline-strong);
+}
+
 /* ---------------------------------------------------------------------------
- * Utilidades de dominio
+ * Superficies
  * ------------------------------------------------------------------------- */
 
-/* Superficie solida — uso por defecto */
+/* Panel solido — uso por defecto */
 .cf-panel {
   background: var(--cf-surface);
   border: var(--cf-border-panel);
-  border-radius: var(--cf-radius-md);
+  border-radius: var(--cf-radius-lg);
 }
 
-/* Superficie glass — solo donde hay contenido vivo detras.
- * Presupuesto: exactamente 3 superficies (DESIGN.md sección 2.5). */
+/*
+ * Superficie glass — el patron dominante de la referencia.
+ *
+ * Evidencia: relleno rgba(56,56,56,.6) + backdrop-filter blur(19px) + borde
+ * gris al 10%. Los tres juntos: sin el relleno translucido el blur no se lee;
+ * sin el borde el panel se desdibuja contra el fondo.
+ *
+ * Presupuesto: 3 superficies. `backdrop-filter` obliga a la GPU a releer el
+ * fondo en cada frame y el lienzo necesita esos ciclos.
+ */
 .cf-glass {
-  background: linear-gradient(180deg, var(--cf-glass-fill-hi), var(--cf-glass-fill));
+  background: var(--cf-fill);
   backdrop-filter: blur(var(--cf-glass-blur)) saturate(var(--cf-glass-sat));
   -webkit-backdrop-filter: blur(var(--cf-glass-blur)) saturate(var(--cf-glass-sat));
   border: var(--cf-border-panel);
-  border-radius: var(--cf-radius-md);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06);
+  border-radius: var(--cf-radius-xl);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.05);
 }
 
 @supports not (backdrop-filter: blur(1px)) {
@@ -126,13 +164,61 @@ body {
   }
 }
 
-/* Etiqueta monoespaciada para valores tecnicos (DESIGN.md sección 2.2) */
+/* Superficie con relleno tenue, sin blur — para tarjetas en rejilla densa */
+.cf-tile {
+  background: var(--cf-fill-dim);
+  border: var(--cf-border-panel);
+  border-radius: var(--cf-radius-lg);
+  transition:
+    background-color var(--cf-dur-fast) var(--cf-ease-inout),
+    border-color var(--cf-dur-fast) var(--cf-ease-inout),
+    transform var(--cf-dur-base) var(--cf-ease-out);
+}
+
+.cf-tile:hover {
+  background: var(--cf-fill);
+  border-color: var(--cf-hairline-strong);
+}
+
+/* ---------------------------------------------------------------------------
+ * Textura de grano
+ *
+ * La referencia tiene grano sobre el negro en vez de una superficie lisa: le da
+ * material y evita el aspecto de "rectangulo de color plano". Se aplica como
+ * pseudo-elemento para no interferir con el contenido ni con el layout.
+ * ------------------------------------------------------------------------- */
+
+.cf-grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--cf-grain);
+  background-repeat: repeat;
+  opacity: var(--cf-grain-opacity);
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+/* ---------------------------------------------------------------------------
+ * Utilidades de dominio
+ * ------------------------------------------------------------------------- */
+
+/* Etiqueta micro en mayusculas con tracking — muy presente en la referencia */
+.cf-eyebrow {
+  font-size: var(--cf-text-2xs);
+  font-weight: 500;
+  letter-spacing: var(--cf-tracking-wider);
+  text-transform: uppercase;
+  color: var(--cf-text-muted);
+}
+
+/* Valor tecnico monoespaciado */
 .cf-mono {
   font-family: var(--cf-font-mono);
   font-variant-numeric: tabular-nums;
 }
 
-/* Cuadrícula del lienzo — CSS puro, sin WebGL (DESIGN.md sección 3, etapa UI-1) */
+/* Cuadricula del lienzo */
 .cf-grid-bg {
   background-image:
     linear-gradient(to right, var(--cf-grid) 1px, transparent 1px),
@@ -140,8 +226,22 @@ body {
   background-size: 24px 24px;
 }
 
-/* Viñeta para que la cuadrícula se disuelva en los bordes */
 .cf-grid-fade {
   mask-image: radial-gradient(ellipse 80% 70% at 50% 45%, #000 40%, transparent 100%);
   -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 45%, #000 40%, transparent 100%);
+}
+
+/*
+ * Separador con desvanecimiento en los extremos — la referencia lo usa en lugar
+ * de lineas duras, y es lo que hace que los limites se lean suaves.
+ */
+.cf-divider {
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--cf-hairline-strong) 20%,
+    var(--cf-hairline-strong) 80%,
+    transparent
+  );
 }

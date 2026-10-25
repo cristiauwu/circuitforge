@@ -42,10 +42,15 @@ export function CircuitAssembly({ state, className }: CircuitAssemblyProps) {
       focusable="false"
     >
       <defs>
+        {/*
+          Halo del LED. Los stops usan el token `--cf-error` en vez de un hex: en
+          un SVG hay que referenciar la custom property con `var()`, que funciona
+          en atributos de presentacion porque `stop-color` es una propiedad CSS.
+        */}
         <radialGradient id="cf-led-halo">
-          <stop offset="0%" stopColor="#f87171" stopOpacity="0.5" />
-          <stop offset="55%" stopColor="#f87171" stopOpacity="0.16" />
-          <stop offset="100%" stopColor="#f87171" stopOpacity="0" />
+          <stop offset="0%" stopColor="var(--cf-error)" stopOpacity="0.5" />
+          <stop offset="55%" stopColor="var(--cf-error)" stopOpacity="0.16" />
+          <stop offset="100%" stopColor="var(--cf-error)" stopOpacity="0" />
         </radialGradient>
 
         <filter id="cf-glow" x="-50%" y="-50%" width="200%" height="200%">

@@ -9,18 +9,28 @@ export interface ChipProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   className?: string
 }
 
-/** Chip de categoría o filtro (DESIGN.md sección 3.3). */
+/**
+ * Chip de categoria o filtro.
+ *
+ * Radio de pildora y altura 28px. El estado activo usa el relleno fuerte en vez
+ * del acento: en la referencia el acento cromatico se reserva a la accion
+ * primaria, y un filtro activo no es una accion primaria. Con 9 categorias
+ * pintadas de naranja, el naranja dejaria de significar "haz esto".
+ */
 export function Chip({ children, active = false, className, type = 'button', ...rest }: ChipProps) {
   return (
     <button
       type={type}
       aria-pressed={active}
       className={cx(
-        'inline-flex h-6 items-center gap-1 rounded-full px-3',
+        'inline-flex h-7 items-center gap-1.5 rounded-pill px-3',
         'text-xs font-medium leading-none whitespace-nowrap',
-        'transition-[background-color,color,transform] duration-fast ease-inout',
-        'hover:-translate-y-px',
-        active ? 'bg-accent text-[#10161f]' : 'bg-surface-alt text-text-secondary hover:text-text',
+        'border transition-[background-color,border-color,color,transform] duration-fast ease-inout',
+        'active:scale-[0.97]',
+        'disabled:pointer-events-none disabled:opacity-35',
+        active
+          ? 'border-transparent bg-[var(--cf-fill-strong)] text-text'
+          : 'border-hairline bg-transparent text-text-secondary hover:border-hairline-strong hover:text-text',
         className,
       )}
       {...rest}
@@ -31,28 +41,28 @@ export function Chip({ children, active = false, className, type = 'button', ...
 }
 
 /**
- * Colores por tipo de pin (DESIGN.md sección 3.3).
+ * Colores por tipo de pin.
  *
- * El color asocia visualmente el pin con su funcion eléctrica. No es decorativo:
- * alimentacion en rojo, tierra en apagado, digital en azul, PWM en violeta,
- * I2C en el cian de instrumentacion.
+ * El color asocia visualmente el pin con su funcion electrica (V-4): no es
+ * decorativo. Todos los valores salen de los tokens de la paleta de cables, no
+ * de literales: un hex suelto en un componente es un token que falta.
  */
 const PIN_STYLES: Record<PinType, string> = {
-  power: 'text-error bg-[rgb(248_113_113/0.1)]',
-  gnd: 'text-text-muted',
-  digital: 'text-[#60a5fa] bg-[rgb(96_165_250/0.1)]',
-  analog: 'text-[#a78bfa] bg-[rgb(167_139_250/0.1)]',
-  pwm: 'text-[#a78bfa] bg-[rgb(167_139_250/0.1)]',
-  i2c_sda: 'text-signal bg-[rgb(34_211_238/0.1)]',
-  i2c_scl: 'text-signal bg-[rgb(34_211_238/0.1)]',
-  spi_mosi: 'text-[#34d399] bg-[rgb(52_211_153/0.1)]',
-  spi_miso: 'text-[#34d399] bg-[rgb(52_211_153/0.1)]',
-  spi_sck: 'text-[#34d399] bg-[rgb(52_211_153/0.1)]',
-  uart_tx: 'text-[#fb923c] bg-[rgb(251_146_60/0.1)]',
-  uart_rx: 'text-[#fb923c] bg-[rgb(251_146_60/0.1)]',
+  power: 'text-error bg-[color-mix(in_srgb,var(--cf-error)_12%,transparent)]',
+  gnd: 'text-text-muted bg-[var(--cf-fill-dim)]',
+  digital: 'text-[var(--cf-wire-7)] bg-[color-mix(in_srgb,var(--cf-wire-7)_12%,transparent)]',
+  analog: 'text-[var(--cf-wire-5)] bg-[color-mix(in_srgb,var(--cf-wire-5)_12%,transparent)]',
+  pwm: 'text-[var(--cf-wire-5)] bg-[color-mix(in_srgb,var(--cf-wire-5)_12%,transparent)]',
+  i2c_sda: 'text-signal bg-[color-mix(in_srgb,var(--cf-signal)_12%,transparent)]',
+  i2c_scl: 'text-signal bg-[color-mix(in_srgb,var(--cf-signal)_12%,transparent)]',
+  spi_mosi: 'text-[var(--cf-wire-3)] bg-[color-mix(in_srgb,var(--cf-wire-3)_12%,transparent)]',
+  spi_miso: 'text-[var(--cf-wire-3)] bg-[color-mix(in_srgb,var(--cf-wire-3)_12%,transparent)]',
+  spi_sck: 'text-[var(--cf-wire-3)] bg-[color-mix(in_srgb,var(--cf-wire-3)_12%,transparent)]',
+  uart_tx: 'text-[var(--cf-wire-8)] bg-[color-mix(in_srgb,var(--cf-wire-8)_12%,transparent)]',
+  uart_rx: 'text-[var(--cf-wire-8)] bg-[color-mix(in_srgb,var(--cf-wire-8)_12%,transparent)]',
 }
 
-/** Etiqueta compacta del tipo de pin. */
+/** Abreviatura del tipo de pin. */
 const PIN_LABELS: Record<PinType, string> = {
   power: 'PWR',
   gnd: 'GND',
@@ -70,21 +80,21 @@ const PIN_LABELS: Record<PinType, string> = {
 
 export interface PinChipProps {
   pinType: PinType
-  /** Etiqueta del pin en la ficha ("D13", "A0"). Si falta, se usa la abreviatura del tipo. */
+  /** Etiqueta del pin en la ficha ("D13", "A0"). */
   pinName?: string
   className?: string
 }
 
 /**
- * Chip de pin — siempre monoespaciado (DESIGN.md sección 2.2: todo
- * identificador y todo valor técnico va en JetBrains Mono).
+ * Chip de pin — siempre monoespaciado.
+ * Todo identificador y todo valor tecnico va en JetBrains Mono.
  */
 export function PinChip({ pinType, pinName, className }: PinChipProps) {
   return (
     <span
       data-pin={pinType}
       className={cx(
-        'inline-flex h-5 items-center rounded-full px-2',
+        'inline-flex h-5 items-center rounded-pill px-2',
         'cf-mono text-2xs font-medium uppercase leading-none',
         PIN_STYLES[pinType],
         className,

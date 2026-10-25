@@ -98,24 +98,24 @@ export function CanvasStage({ selectedId, onSelect }: CanvasStageProps) {
   const [hovered, setHovered] = useState<string | null>(null)
 
   return (
-    <div className="relative min-h-0 flex-1 overflow-hidden rounded-md border border-hairline bg-bg">
+    <div className="cf-grain relative min-h-0 flex-1 overflow-hidden rounded-xl border border-hairline bg-bg">
       {/* Cuadrícula. Se disuelve en los bordes para no competir con el contenido. */}
-      <div aria-hidden="true" className="cf-grid-bg cf-grid-fade absolute inset-0 opacity-70" />
+      <div aria-hidden="true" className="cf-grid-bg cf-grid-fade absolute inset-0 opacity-60" />
 
-      {/* Regla de la barra de estado: coordenadas de la rejilla */}
+      {/* Barra de estado flotante, en píldora con glass */}
       <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
-        <span className="cf-mono rounded-sm border border-hairline bg-surface/80 px-2 py-1 text-2xs text-text-muted">
-          1200 x 800 px
+        <span className="cf-mono rounded-pill border border-hairline bg-[var(--cf-fill)] px-3 py-1 text-2xs text-text-muted backdrop-blur-md">
+          1200 × 800 px
         </span>
-        <span className="cf-mono rounded-sm border border-hairline bg-surface/80 px-2 py-1 text-2xs text-text-muted">
+        <span className="cf-mono rounded-pill border border-hairline bg-[var(--cf-fill)] px-3 py-1 text-2xs text-text-muted backdrop-blur-md">
           rejilla 24 px
         </span>
       </div>
 
       {/* Indicador de simulación detenida */}
-      <div className="absolute top-3 right-3 z-10 flex items-center gap-2 rounded-sm border border-hairline bg-surface/80 px-2.5 py-1">
+      <div className="absolute top-3 right-3 z-10 flex items-center gap-2 rounded-pill border border-hairline bg-[var(--cf-fill)] px-3 py-1 backdrop-blur-md">
         <span className="size-1.5 rounded-full bg-text-muted" aria-hidden="true" />
-        <span className="text-2xs text-text-secondary">Simulación detenida</span>
+        <span className="cf-eyebrow">Simulación detenida</span>
       </div>
 
       <svg
@@ -170,7 +170,7 @@ export function CanvasStage({ selectedId, onSelect }: CanvasStageProps) {
                 y="-30"
                 width="104"
                 height="60"
-                rx="8"
+                rx="16"
                 fill="var(--cf-surface)"
                 stroke={isSelected ? 'var(--cf-accent)' : 'var(--cf-hairline-strong)'}
                 strokeWidth={isSelected ? 2 : 1}
@@ -184,28 +184,21 @@ export function CanvasStage({ selectedId, onSelect }: CanvasStageProps) {
                   y="-30"
                   width="104"
                   height="60"
-                  rx="8"
+                  rx="16"
                   fill="var(--cf-accent-veil)"
                   pointerEvents="none"
                 />
               )}
 
-              {/* Símbolo */}
+              {/*
+                Identificador, arriba del cuerpo.
+                Medido antes: estaba en y=-14 y el simbolo en y=2, con cajas que
+                se solapaban 8px. Ahora el id vive fuera del rect (y=-38) y el
+                simbolo dentro (y=6), sin contacto.
+              */}
               <text
                 x="0"
-                y="2"
-                textAnchor="middle"
-                className="cf-mono pointer-events-none"
-                fontSize="20"
-                fill="var(--cf-text-muted)"
-              >
-                {component.symbol}
-              </text>
-
-              {/* Identificador */}
-              <text
-                x="0"
-                y="-14"
+                y="-38"
                 textAnchor="middle"
                 className="cf-mono pointer-events-none"
                 fontSize="11"
@@ -215,19 +208,36 @@ export function CanvasStage({ selectedId, onSelect }: CanvasStageProps) {
                 {component.id}
               </text>
 
-              {/* Nombre */}
+              {/* Símbolo, centrado en el cuerpo (el rect va de -30 a 30) */}
               <text
                 x="0"
-                y="44"
+                y="6"
+                textAnchor="middle"
+                className="cf-mono pointer-events-none"
+                fontSize="20"
+                fill="var(--cf-text-secondary)"
+              >
+                {component.symbol}
+              </text>
+
+              {/*
+                Nombre, DENTRO del cuerpo (y=24). Antes estaba en y=44, fuera del
+                rect, y colisionaba con las etiquetas de los pines: medido, el
+                nombre caia en 564-577 y "5V"/"GND"/"D13" en 567-579, la misma
+                franja. Dentro del cuerpo no hay nada con lo que chocar.
+              */}
+              <text
+                x="0"
+                y="24"
                 textAnchor="middle"
                 className="pointer-events-none"
-                fontSize="11"
-                fill="var(--cf-text-secondary)"
+                fontSize="10"
+                fill="var(--cf-text-muted)"
               >
                 {component.name}
               </text>
 
-              {/* Pines */}
+              {/* Pines: circulo sobre el borde inferior, etiqueta por debajo */}
               {component.pins.map((pin, pinIndex) => {
                 const offset = (pinIndex - (component.pins.length - 1) / 2) * 22
                 return (
@@ -240,7 +250,7 @@ export function CanvasStage({ selectedId, onSelect }: CanvasStageProps) {
                       className="pointer-events-none"
                     />
                     <text
-                      y="16"
+                      y="15"
                       textAnchor="middle"
                       className="cf-mono pointer-events-none"
                       fontSize="9"
