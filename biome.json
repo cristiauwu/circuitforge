@@ -19,6 +19,7 @@
       "!**/docs",
       "!**/*.md",
       "!**/.github",
+      "!**/.review",
       "!**/*.cmd",
       "!**/*.min.js",
       "!**/pnpm-lock.yaml"

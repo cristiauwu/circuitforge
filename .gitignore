@@ -16,9 +16,11 @@ build/
 # Herramientas del agente / artefactos de análisis (no son código del proyecto)
 .rea-chrome-profile/
 .tools/
+.review/
 .planning/
 *.log
 npm-debug.log*
+
 # Test / cobertura
 coverage/
 playwright-report/

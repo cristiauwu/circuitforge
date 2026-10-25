@@ -164,8 +164,19 @@ body {
   }
 }
 
-/* Superficie con relleno tenue, sin blur — para tarjetas en rejilla densa */
+/*
+ * Superficie con relleno tenue, sin blur — para tarjetas en rejilla densa.
+ *
+ * Define la superficie COMPLETA, no solo la pintura: fondo, borde, radio,
+ * `display: flex` en columna y `padding`. Antes solo pintaba, y al sustituir un
+ * `div` con utilidades de Tailwind por esta clase se perdian el layout y el
+ * relleno: medido, las tarjetas quedaban con `padding: 0px` y en Proyectos con
+ * `display: inline` (el elemento es un `<a>`), asi que no habia caja visible.
+ */
 .cf-tile {
+  display: flex;
+  flex-direction: column;
+  padding: var(--cf-space-4);
   background: var(--cf-fill-dim);
   border: var(--cf-border-panel);
   border-radius: var(--cf-radius-lg);
@@ -178,6 +189,12 @@ body {
 .cf-tile:hover {
   background: var(--cf-fill);
   border-color: var(--cf-hairline-strong);
+}
+
+/* La misma superficie para un enlace: hereda el layout y quita el subrayado */
+a.cf-tile {
+  text-decoration: none;
+  color: inherit;
 }
 
 /* ---------------------------------------------------------------------------
