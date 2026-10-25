@@ -123,6 +123,35 @@ La rampa v1 llegaba solo a 12px. **La referencia usa radios grandes con generosi
 
 La referencia **no tiene una superficie lisa**: tiene grano sobre el negro. Es lo que separa "fondo oscuro" de "material oscuro". Se genera con un SVG en línea (`--cf-grain`), sin peticiones ni imágenes que cachear, aplicado vía `.cf-grain::before` con `mix-blend-mode: overlay`.
 
+### 2.7 Capa de atmósfera — nuevo en la v2.2
+
+Vive en `apps/web/src/styles/atmosphere.css` y se monta **una vez en el shell**, no por ruta, para que el fondo sea continuo entre navegaciones.
+
+| Efecto | Clase | Qué aporta |
+|---|---|---|
+| **Aurora** | `.cf-aurora` | Tres halos radiales (naranja del acento, cian de señal, violeta de apoyo) que derivan en 34 s por ciclo. A esa velocidad el ojo no percibe el bucle: se lee como que la superficie respira |
+| **Grano global** | `.cf-grain-layer` | El grano sobre todo el viewport. Antes solo estaba en la portada; medido, las rutas de trabajo —que son las superficies oscuras grandes— no lo tenían |
+| **Viñeta** | `.cf-vignette` | Oscurece los bordes para empujar la mirada al centro. Sutil: si se nota, está mal calibrada |
+| **Resplandor** | `.cf-glow` | Halo cálido permanente en la acción primaria |
+| **Reflejo del cursor** | `.cf-spotlight` | Luz suave que sigue al puntero, con `--mx`/`--my` |
+| **Borde luminoso** | `.cf-border-glow` | El contorno se enciende cerca del cursor |
+| **Brillo** | `.cf-shine` | Franja clara que cruza el botón al pasar |
+| **Revelado** | `.cf-enter` | Entrada escalonada en **CSS puro** |
+
+**Regla de `box-shadow`** — V-2 prohibía la sombra de **elevación**: la sombra gris que finge profundidad proyectando una silueta oscura sobre el plano. Un **halo de color** no es elevación, es emisión: no proyecta silueta y refuerza la tesis "la profundidad es luz". `.cf-glow` y el `inset` de `.cf-glass` están permitidos por eso.
+
+**Coste medido, aceptado conscientemente.** Con el suelo del instrumento presente (sin grano = 16.9 ms):
+
+| Estado | Mediana |
+|---|---|
+| Con grano | 21.3 ms |
+| Sin grano | 16.9 ms |
+| `mix-blend-mode: normal` en vez de `overlay` | 18.6 ms |
+
+El grano cuesta **~4.4 ms por frame** y el `overlay` es más de la mitad. **Se acepta**: en esta etapa el objetivo es la estética, no los 60 fps. Queda anotado como el primer candidato a recortar si el lienzo necesita esos milisegundos.
+
+**Animación como mejora, nunca como requisito.** `.cf-enter` usa `animation` con `animation-fill-mode: both`, no clases que añade JavaScript. La versión anterior dependía de un `useEffect` con temporizadores y **medido en el navegador dejaba el titular, la descripción y los botones en `opacity: 0` durante casi tres segundos**. Con la animación en CSS el contenido no puede quedarse invisible: si el JS no corriera, la peor consecuencia sería no tener animación.
+
 ---
 
 ## 3. Componentes
@@ -162,7 +191,7 @@ La v1 era una barra de ancho completo con borde inferior: el patrón genérico d
 | Clase | Fondo | Blur | Uso |
 |---|---|---|---|
 | `.cf-panel` | `--cf-surface` | no | panel sólido |
-| `.cf-glass` | `--cf-fill` | **sí, 19px** | **presupuesto: 3** — nav, paleta, inspector, barra |
+| `.cf-glass` | `--cf-fill` | **sí, 19px** | **presupuesto: 4** — nav, barra, paleta, inspector |
 | `.cf-tile` | `--cf-fill-dim` | no | tarjetas en rejilla densa (biblioteca, proyectos) |
 
 Sin `box-shadow` de elevación en ninguna.
@@ -212,7 +241,7 @@ Píldora, altura 36px, relleno translúcido. Sobre fondo oscuro un campo sólido
 |---|---|---|
 | **M-1** | Revelado de titular letra por letra con desenfoque | Títulos de sección. **Nunca en el editor.** |
 | **M-2** | Botón con text roll | Todos los botones |
-| **M-3** | Superficie glass | Presupuesto de 3 |
+| **M-3** | Superficie glass | Presupuesto de 4 |
 | **M-4** | Entrada del inspector | Editor |
 | **M-5** | LED y flujo de corriente | Editor, en simulación |
 | **M-6** | **Entrada escalonada de bloques** (v2) | Portada: desplazamiento de 14px, retardos de 70ms por bloque |
@@ -246,7 +275,7 @@ Píldora, altura 36px, relleno translúcido. Sobre fondo oscuro un campo sólido
 | Barra de nav de ancho completo | Patrón genérico de dashboard | Píldora flotante |
 | Número o unidad en Inter | Rompe la legibilidad técnica | `--cf-font-mono` |
 | Estado solo por color | Viola WCAG 1.4.1 | Icono + texto |
-| `backdrop-filter` en >3 superficies | Degrada el arrastre | `.cf-tile` |
+| `backdrop-filter` en >4 superficies | Degrada el arrastre | `.cf-tile` |
 | Animación sin `prefers-reduced-motion` | Viola RNF-4 | Bloque de tokens.css |
 | Degradado púrpura, tarjetas uniformes | Estética AI genérica | Este sistema |
 
@@ -261,7 +290,7 @@ Antes de dar una superficie por terminada:
 - [ ] `--cf-ease-pop` solo junto a `transform`.
 - [ ] Todo número y unidad en `--cf-font-mono`.
 - [ ] Todo estado con icono además de color.
-- [ ] `backdrop-filter` en ≤ 3 superficies.
+- [ ] `backdrop-filter` en ≤ 4 superficies.
 - [ ] Radios dentro de la rampa `sm/md/lg/xl/full`.
 - [ ] Base neutra: el `body` computa `rgb(16, 16, 16)`.
 - [ ] `prefers-reduced-motion` respetado.

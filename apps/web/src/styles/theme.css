@@ -149,13 +149,47 @@ body {
  * Presupuesto: 3 superficies. `backdrop-filter` obliga a la GPU a releer el
  * fondo en cada frame y el lienzo necesita esos ciclos.
  */
+/*
+ * Superficie glass (M-3) — el patron dominante de la referencia.
+ *
+ * El filo interior (`inset 0 1px 0`) simula la luz que recoge el borde superior
+ * de un cristal. Es lo que hace que el panel se lea como una lamina y no como un
+ * rectangulo translucido.
+ *
+ * El grano entra por `::before` (`.cf-grain`), no por el fondo: asi la textura
+ * se dibuja encima del blur y no queda desenfocada con el.
+ */
 .cf-glass {
+  position: relative;
+  isolation: isolate;
   background: var(--cf-fill);
   backdrop-filter: blur(var(--cf-glass-blur)) saturate(var(--cf-glass-sat));
   -webkit-backdrop-filter: blur(var(--cf-glass-blur)) saturate(var(--cf-glass-sat));
   border: var(--cf-border-panel);
   border-radius: var(--cf-radius-xl);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.05);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06);
+  overflow: hidden;
+}
+
+/*
+ * Grano sobre el cristal.
+ *
+ * `z-index: 0` y NO `-1`: con `isolation: isolate` en el panel, un indice
+ * negativo situaria el pseudo-elemento detras del propio fondo del contenedor y
+ * el grano quedaria invisible. El contenido va por encima porque en el arbol
+ * viene despues.
+ */
+.cf-glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: var(--cf-grain);
+  background-repeat: repeat;
+  opacity: calc(var(--cf-grain-opacity) * 0.7);
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  z-index: 0;
 }
 
 @supports not (backdrop-filter: blur(1px)) {
