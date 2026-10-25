@@ -2,6 +2,50 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+---
+
+## Estado de ejecución
+
+**Última actualización:** 2026-10-25
+
+### Completado
+
+| Etapa | Tareas | Estado | Evidencia |
+|---|---|---|---|
+| **F0** — Andamiaje | Monorepo pnpm + Turborepo, Biome, TypeScript estricto, CI, Vitest | ✅ **hecho** | `pnpm install` limpio; `biome check` sin hallazgos; CI con 5 gates |
+| **F1** — Dominio | Task 1 (`netlist`), Task 2 (`validation`) | ✅ **hecho** | **30 tests en verde** (11 + 19); typecheck y build OK |
+
+**Commits:** `0f8392f` (monorepo), `d4c5d9b` (netlist), `cf04baa` (validation), `b129191` (docs). Rama `main`.
+
+**Puerta de salida de F0 cumplida:** `biome check .` sin hallazgos, `tsc --noEmit` sin errores, tests en verde.
+
+### Desviaciones respecto a este plan (aplicadas)
+
+Estas son decisiones tomadas durante la ejecución que **modifican** lo escrito abajo. El plan original se conserva como referencia.
+
+| # | El plan decía | Se hizo | Motivo |
+|---|---|---|---|
+| **D-1** | `packages/netlist` con `connectPins` y 4 tests | Igual, más **11 tests** y el campo `nextNetSeq` en `Project` | La revisión encontró 2 bugs: (a) conectar un pin consigo mismo no lanzaba porque ambos `netId` eran `null`; (b) los ids de net se reciclaban tras un merge, creando *aliasing*. El contador persistido resuelve (b): el máximo histórico no es reconstruible desde el estado actual. |
+| **D-2** | `canConnect(a: PinRef, b: PinRef)` | `canConnect(a: PinEndpoint, b: PinEndpoint)` | Un `PinRef` no identifica a qué componente pertenece, así que no permite localizar el pin de forma unívoca. `PinEndpoint` (componentId + pinId) sí. |
+| **D-3** | `ComponentType` importado de `component-library` | `CatalogEntry` declarado localmente en `validation` | Evita un ciclo de dependencias en runtime y mantiene `validation` sin acoplarse a la biblioteca. |
+| **D-4** | Tareas con `git commit` por tarea | Igual, con **4 commits atómicos** por unidad lógica | Un commit por tarea produce ruido; se agrupó por paquete. |
+| **D-5** | `npm`/`pnpm test` en los comandos | `.tools/verify.cmd` y `.tools/cf.cmd` | En esta máquina los shims de `node_modules/.bin` no son ejecutables y `npm` está dañado. Ver `docs/dev-environment.md`. **El CI no se ve afectado** (Ubuntu usa `pnpm` normal). |
+| **D-6** | *(no contemplado)* | `docs/design/DESIGN.md` | Prerrequisito del frontend: el design system que los prompts de Stitch daban por pendiente. |
+
+### Añadido fuera del plan
+
+- **`docs/design/DESIGN.md`** — sistema visual completo (tokens + 5 patrones de movimiento). Sustituye la sección 0 de los prompts de Stitch.
+- **`docs/design/2026-10-25-analisis-visual-referencia.md`** — análisis con evidencia del que salen los tokens.
+- **`docs/dev-environment.md`** — toolchain y las dos desviaciones del entorno.
+
+### Siguiente
+
+**F2** (`packages/ui`: tokens del design system, tema oscuro, primitivas) o **F3** (lienzo R3F). Antes de F2 conviene decidir si `packages/ui` consume `DESIGN.md` como fuente de tokens generados.
+
+> **Nota sobre el Tech Stack de abajo:** dice `Node.js + Express`. El stack aprobado (`docs/specs/2026-10-25-circuitforge-stack.md`, ADR-003) usa **Fastify**, con Express como alternativa aceptable. Afecta a la Task 13.
+
+---
+
 **Goal:** Entregar el editor de circuitos con arrastrar y soltar, la biblioteca parametrizable de componentes, la validación de conexiones y el motor de simulación DC/digital corriendo en el navegador, cumpliendo OE-1, OE-2 y OE-3 del documento de avance.
 
 **Architecture:** El **netlist es la fuente de verdad** (D-1); el lienzo, los símbolos y los cables son vistas derivadas. La lógica de dominio vive en paquetes puros de TypeScript (`packages/*`) sin dependencias de React ni del DOM, para que sea testeable en Node. El solver corre en un Web Worker (D-5) y la biblioteca de componentes son datos JSON (D-6). El 3D, la física y el firmware Arduino quedan fuera de alcance (fase 2, ADR en el spec).
@@ -35,7 +79,10 @@ Las cinco clases de entrada que el spec implica pero que ningún requisito enume
 
 ---
 
-### Task 1: Esqueleto del monorepo y paquete `netlist`
+### Task 1: Esqueleto del monorepo y paquete `netlist` ✅ COMPLETADA
+
+> **Estado:** implementada. 11 tests en verde (el plan pedía 4). Ver "Estado de ejecución" arriba y la desviación **D-1**.
+> **Añadido no previsto:** campo `nextNetSeq` en `Project` para que los ids de net no se reciclen tras un merge.
 
 **Files:**
 - Create: `package.json`, `pnpm-workspace.yaml`, `tsconfig.base.json`
@@ -133,7 +180,11 @@ git commit -m "feat(netlist): add project/pin types and connectPins merge semant
 
 ---
 
-### Task 2: Validador de conexiones (reglas V-1..V-6)
+### Task 2: Validador de conexiones (reglas V-1..V-6) ✅ COMPLETADA
+
+> **Estado:** implementada. 19 tests en verde (el plan pedía 5). Ver desviaciones **D-2** y **D-3**.
+> **Cambio de firma:** `canConnect` toma `PinEndpoint`, no `PinRef`.
+> **Decisión de diseño:** V-4 y V-6 se abstienen cuando faltan datos (catálogo o tensiones) en vez de avisar en falso.
 
 **Files:**
 - Create: `packages/validation/src/rules.ts`
