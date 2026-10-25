@@ -41,6 +41,14 @@ const SharedPage = lazy(() =>
 )
 
 /**
+ * Comparador de fondos. TEMPORAL — se elimina cuando la eleccion este hecha.
+ * Va en diferido como el resto para no cargar nada en la landing.
+ */
+const BackdropLab = lazy(() =>
+  import('@/routes/variantes/BackdropLab').then((m) => ({ default: m.BackdropLab })),
+)
+
+/**
  * Espera mientras se descarga un fragmento.
  *
  * Es un `div` con altura mínima en vez de un spinner: el salto de layout al
@@ -86,6 +94,15 @@ export const router = createBrowserRouter([
         element: (
           <Suspense fallback={<RouteFallback />}>
             <SharedPage />
+          </Suspense>
+        ),
+      },
+      {
+        // Ruta de trabajo: comparador de fondos. Se elimina al decidir.
+        path: 'variantes',
+        element: (
+          <Suspense fallback={<RouteFallback />}>
+            <BackdropLab />
           </Suspense>
         ),
       },

@@ -20,6 +20,7 @@
       "!**/*.md",
       "!**/.github",
       "!**/.review",
+      "!**/skills",
       "!**/*.cmd",
       "!**/*.min.js",
       "!**/pnpm-lock.yaml"
@@ -107,16 +108,6 @@
     }
   },
   "overrides": [
-    {
-      "includes": ["apps/web/src/features/editor/CanvasStage.tsx"],
-      "linter": {
-        "rules": {
-          "a11y": {
-            "useSemanticElements": "off"
-          }
-        }
-      }
-    },
     {
       "includes": ["apps/web/src/ui/ViolationMessage.tsx"],
       "linter": {

@@ -8,6 +8,7 @@
  * aparezca el segundo consumidor; hoy serian ceremonia sin beneficio.
  */
 
+export type { AtmosphereBackdrop, AtmosphereProps } from './Atmosphere'
 export { Atmosphere } from './Atmosphere'
 export { Button, IconButton, LinkButton } from './Button'
 export { CatalogCard } from './CatalogCard'

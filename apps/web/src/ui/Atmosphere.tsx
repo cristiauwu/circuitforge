@@ -1,35 +1,77 @@
 /**
  * Capa atmosferica del sitio.
  *
- * Se monta UNA vez en el shell, no por ruta: asi el fondo con aurora, el grano
- * y la vineta son continuos entre navegaciones. Si vivieran en cada pagina, al
- * cambiar de ruta se reiniciarian las animaciones de deriva y el usuario veria
- * un salto en el fondo.
+ * Se monta UNA vez en el shell, no por ruta: asi el fondo es continuo entre
+ * navegaciones. Si viviera en cada pagina, al cambiar de ruta se reiniciarian las
+ * animaciones y el usuario veria un salto.
  *
- * Todo es decorativo y esta oculto a lectores de pantalla. El grano y la vineta
- * van por encima del fondo pero por debajo del contenido (`z-index` 0 y 1, y el
- * contenido en el flujo normal), y ninguno intercepta el puntero.
+ * # Por que NO son manchas de color
+ *
+ * La primera version eran tres halos radiales difusos. Se descarto por dos
+ * motivos:
+ *
+ *  1. **Es el recurso mas repetido de los ultimos anos.** Manchas de color
+ *     difusas no dicen nada del producto y podrian pertenecer a cualquier
+ *     aplicacion. La guia de interfaces lo lista entre los patrones de "estetica
+ *     generada por IA": *excessive gradients*.
+ *  2. **Un simulador de circuitos tiene lenguaje grafico propio.** La placa, la
+ *     senal, la reticula de medida: son cosas que el usuario ya esta mirando.
+ *     Usarlas como fondo convierte la decoracion en contexto.
+ *
+ * # Las tres alternativas
+ *
+ * | Clave | Que dibuja | Caracter |
+ * |---|---|---|
+ * | `pcb` | Pistas ortogonales con vias | El mas literal y el mas caracteristico |
+ * | `scope` | Onda sobre reticula de osciloscopio | Atmosferico, dice "aqui se mide" |
+ * | `grid` | Reticula con marcas de regla | El mas sobrio, el que menos compite |
+ *
+ * Las tres comparten las mismas reglas: `aria-hidden`, sin captura de puntero, y
+ * bajo `prefers-reduced-motion` se quedan quietas.
  */
+
+import type { ReactNode } from 'react'
+import { EngineeringGrid } from './atmosphere/EngineeringGrid'
+import { PcbTraces } from './atmosphere/PcbTraces'
+import { ScopeSignal } from './atmosphere/ScopeSignal'
+
+/** Clave de la alternativa de fondo. */
+export type AtmosphereBackdrop = 'pcb' | 'scope' | 'grid'
 
 export interface AtmosphereProps {
   /**
-   * Intensidad de la aurora.
+   * Intensidad del fondo.
    *
-   * El editor usa `soft`: el lienzo ya tiene su propia iluminacion y un fondo
-   * muy cargado le robaria contraste a los cables de colores.
+   * El editor usa `soft`: el lienzo ya tiene su propia reticula y un fondo
+   * cargado le robaria contraste a los cables de colores.
    */
   intensity?: 'full' | 'soft'
+  /** Que alternativa dibujar. */
+  backdrop?: AtmosphereBackdrop
 }
 
-export function Atmosphere({ intensity = 'full' }: AtmosphereProps) {
+/** Opacidad del dibujo segun la intensidad. */
+const OPACITY: Record<'full' | 'soft', number> = {
+  full: 0.55,
+  soft: 0.28,
+}
+
+function Backdrop({
+  backdrop,
+  opacity,
+}: {
+  backdrop: AtmosphereBackdrop
+  opacity: number
+}): ReactNode {
+  if (backdrop === 'scope') return <ScopeSignal opacity={opacity} />
+  if (backdrop === 'grid') return <EngineeringGrid opacity={opacity} />
+  return <PcbTraces opacity={opacity} />
+}
+
+export function Atmosphere({ intensity = 'full', backdrop = 'pcb' }: AtmosphereProps) {
   return (
-    <div aria-hidden="true" data-intensity={intensity}>
-      {/* Halos de color que derivan lentamente */}
-      <div className="cf-aurora" style={intensity === 'soft' ? { opacity: 0.45 } : undefined}>
-        <div className="cf-aurora__halo cf-aurora__halo--1" />
-        <div className="cf-aurora__halo cf-aurora__halo--2" />
-        <div className="cf-aurora__halo cf-aurora__halo--3" />
-      </div>
+    <div aria-hidden="true" data-intensity={intensity} data-backdrop={backdrop}>
+      <Backdrop backdrop={backdrop} opacity={OPACITY[intensity]} />
 
       {/* Grano de pelicula sobre todo el viewport */}
       <div className="cf-grain-layer" />
