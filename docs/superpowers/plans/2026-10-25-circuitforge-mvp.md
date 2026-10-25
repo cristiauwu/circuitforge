@@ -14,10 +14,32 @@
 |---|---|---|---|
 | **F0** — Andamiaje | Monorepo pnpm + Turborepo, Biome, TypeScript estricto, CI, Vitest | ✅ **hecho** | `pnpm install` limpio; `biome check` sin hallazgos; CI con 5 gates |
 | **F1** — Dominio | Task 1 (`netlist`), Task 2 (`validation`) | ✅ **hecho** | **30 tests en verde** (11 + 19); typecheck y build OK |
+| **UI-1** — Shell navegable | Portada, editor, biblioteca, proyectos, compartido, 404 | ✅ **hecho** | 6 rutas verificadas en navegador real; consola limpia; reduced-motion y responsive OK |
 
-**Commits:** `0f8392f` (monorepo), `d4c5d9b` (netlist), `cf04baa` (validation), `b129191` (docs). Rama `main`.
+**Commits:** `0f8392f` (monorepo), `d4c5d9b` (netlist), `cf04baa` (validation), `b129191` (docs/design), `388ca64` (plan), `23bcc5c` (shell UI-1). Rama `main`, 68 archivos.
 
 **Puerta de salida de F0 cumplida:** `biome check .` sin hallazgos, `tsc --noEmit` sin errores, tests en verde.
+
+### Etapa UI-1 — detalle
+
+Las interfaces y su navegación, **sin lógica de dominio** (el solver, la simulación y el arrastre llegan después). Documento de diseño: `docs/design/2026-10-25-shell-navegable.md`.
+
+| Ruta | Pantalla | Estado |
+|---|---|---|
+| `/` | Portada con el circuito SVG que se ensambla (opción A) | Completa |
+| `/editor` | Paleta + lienzo + inspector | Estructura, sin arrastrar |
+| `/biblioteca` | Catálogo con filtros y buscador | Datos de mentira |
+| `/proyectos` | Lista de proyectos | Datos de mentira + estado vacío |
+| `/compartido/:id` | Vista de solo lectura | Estructura |
+| `*` | 404 | Completa |
+
+**Verificado en navegador real** (CDP, no inspección de código): 6 rutas montan con 1 `h1` cada una y consola limpia; `prefers-reduced-motion` deja las 38 letras visibles sin blur y el LED encendido; 16 casos de responsive (4 rutas × 4 anchos) sin desbordamiento; el editor cabe en el viewport (900 = 57 + 57 + 786) y la paleta desplaza por dentro.
+
+**Bugs corregidos durante la verificación:** 3 desbordamientos a 320 px, el circuito no llegaba al GND (`--len` 300 vs trazo de 376), 26 palabras sin tilde, el editor sin `h1`, y el lienzo a 1389 px por usar `min-h-dvh` en el shell.
+
+**Bundle inicial:** 116 KB gzip de 200 de presupuesto (mi código son 11.6 KB).
+
+**Diferido a propósito:** `three.js`/R3F (la portada es SVG y el lienzo es CSS), `zustand`, `@tanstack/react-query`, `zod` y `shadcn/ui` — ninguno tiene consumidor todavía.
 
 ### Desviaciones respecto a este plan (aplicadas)
 
@@ -40,7 +62,7 @@ Estas son decisiones tomadas durante la ejecución que **modifican** lo escrito 
 
 ### Siguiente
 
-**F2** (`packages/ui`: tokens del design system, tema oscuro, primitivas) o **F3** (lienzo R3F). Antes de F2 conviene decidir si `packages/ui` consume `DESIGN.md` como fuente de tokens generados.
+**F2** (`packages/ui`: extraer las primitivas cuando aparezca el segundo consumidor) o **F3** (lienzo R3F con arrastrar y soltar).
 
 > **Nota sobre el Tech Stack de abajo:** dice `Node.js + Express`. El stack aprobado (`docs/specs/2026-10-25-circuitforge-stack.md`, ADR-003) usa **Fastify**, con Express como alternativa aceptable. Afecta a la Task 13.
 
