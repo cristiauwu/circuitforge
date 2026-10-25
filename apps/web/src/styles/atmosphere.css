@@ -45,6 +45,85 @@
 }
 
 /* ---------------------------------------------------------------------------
+ * Fondo con aurora
+ *
+ * Tres halos radiales que derivan lentamente. El movimiento es MUY lento (34 s
+ * por ciclo) a proposito: no debe leerse como animacion, debe notarse como que
+ * la superficie "respira". A 34 s el ojo no detecta el bucle.
+ *
+ * Los halos se pintan en un contenedor de 160 % del tamano y se desplazan con
+ * `transform`: al ser mas grande que el viewport, nunca se ve un borde.
+ * ------------------------------------------------------------------------- */
+
+.cf-aurora {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.cf-aurora__halo {
+  position: absolute;
+  width: 160%;
+  height: 160%;
+  top: -30%;
+  left: -30%;
+  opacity: 0.9;
+  will-change: transform;
+}
+
+.cf-aurora__halo--1 {
+  background: radial-gradient(circle at 25% 20%, var(--cf-aurora-1) 0%, transparent 42%);
+  animation: cf-drift-1 var(--cf-aurora-duration) ease-in-out infinite;
+}
+
+.cf-aurora__halo--2 {
+  background: radial-gradient(circle at 78% 30%, var(--cf-aurora-2) 0%, transparent 46%);
+  animation: cf-drift-2 calc(var(--cf-aurora-duration) * 1.25) ease-in-out infinite;
+}
+
+.cf-aurora__halo--3 {
+  background: radial-gradient(circle at 55% 85%, var(--cf-aurora-3) 0%, transparent 44%);
+  animation: cf-drift-3 calc(var(--cf-aurora-duration) * 0.85) ease-in-out infinite;
+}
+
+/*
+ * Derivas. Cada halo recorre un camino distinto y desfasado, para que las tres
+ * capas no se muevan en bloque (que se leeria como un solo objeto moviendose).
+ * Se usa `translate3d` para forzar la capa de composicion.
+ */
+@keyframes cf-drift-1 {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(6%, 4%, 0) scale(1.12);
+  }
+}
+
+@keyframes cf-drift-2 {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.08);
+  }
+  50% {
+    transform: translate3d(-7%, 5%, 0) scale(1);
+  }
+}
+
+@keyframes cf-drift-3 {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.05);
+  }
+  50% {
+    transform: translate3d(4%, -6%, 0) scale(1.15);
+  }
+}
+
+/* ---------------------------------------------------------------------------
  * Grano global
  *
  * Se aplica sobre el shell entero para que TODAS las rutas tengan textura, no
@@ -358,6 +437,7 @@
  * ------------------------------------------------------------------------- */
 
 @media (prefers-reduced-motion: reduce) {
+  .cf-aurora__halo,
   .cf-float,
   .cf-live-dot::after,
   .cf-pulse-ring::before {

@@ -1,6 +1,6 @@
-import { Outlet, useLocation, useSearchParams } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import { SiteHeader } from '@/features/navigation/SiteHeader'
-import { Atmosphere, type AtmosphereBackdrop } from '@/ui'
+import { Atmosphere } from '@/ui'
 
 /**
  * Layout raiz — patron de *app shell* de altura fija.
@@ -23,31 +23,17 @@ import { Atmosphere, type AtmosphereBackdrop } from '@/ui'
  */
 export function AppShell() {
   const { pathname } = useLocation()
-  const [searchParams] = useSearchParams()
 
-  /*
-   * Un solo punto decide que fondo se pinta.
-   *
-   * El shell es el unico que monta la capa de atmosfera. La pagina del comparador
-   * pide su variante por la URL (`?fondo=scope`) en vez de montar una segunda
-   * capa: con dos, el fondo anterior queda visible por debajo. Medido en el
-   * navegador: el documento tenia dos contenedores `[data-backdrop]` y las pistas
-   * de placa seguian viendose bajo la onda del osciloscopio.
-   */
-  const requested = searchParams.get('fondo')
-  const backdrop: AtmosphereBackdrop =
-    requested === 'scope' || requested === 'grid' || requested === 'pcb' ? requested : 'pcb'
-
-  // La portada y el comparador van sin cabecera: son superficies donde el fondo
-  // es el protagonista y una barra encima rompe la escena.
-  const isLanding = pathname === '/' || pathname === '/variantes'
+  // La portada va sin cabecera: es donde el fondo es el protagonista y una barra
+  // encima rompe la escena.
+  const isLanding = pathname === '/'
   // El editor gestiona su propio scroll: sus paneles desplazan por dentro y el
   // lienzo debe ocupar el alto disponible sin que la pagina se mueva.
   const isEditor = pathname === '/editor'
 
   return (
     <div className="relative flex h-dvh flex-col overflow-hidden bg-bg">
-      <Atmosphere intensity={isEditor ? 'soft' : 'full'} backdrop={backdrop} />
+      <Atmosphere intensity={isEditor ? 'soft' : 'full'} />
 
       {/*
         El contenido va en su propia capa por encima de la atmosfera. Sin este
