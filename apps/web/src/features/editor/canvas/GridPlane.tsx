@@ -10,6 +10,7 @@
  */
 
 import { Grid } from '@react-three/drei'
+import { resolveTokenColor } from './tokenColor'
 import { GRID_SIZE } from './useGridSnap'
 
 /** Lado de la cuadrícula, en unidades de mundo. */
@@ -27,10 +28,10 @@ export function GridPlane() {
       args={[GRID_EXTENT, GRID_EXTENT]}
       cellSize={GRID_SIZE}
       cellThickness={0.6}
-      cellColor="var(--cf-grid)"
+      cellColor={resolveTokenColor('--cf-grid', 0x242426)}
       sectionSize={GRID_SIZE * SECTION_EVERY}
       sectionThickness={1}
-      sectionColor="var(--cf-hairline-strong)"
+      sectionColor={resolveTokenColor('--cf-hairline-strong', 0x5a5a5e)}
       // Sin atenuación por distancia: la cámara es ortográfica y el lienzo debe
       // leerse igual de nítido en cualquier punto, como una hoja de papel
       // milimetrado. Un fundido por distancia daría sensación de 3D que aquí

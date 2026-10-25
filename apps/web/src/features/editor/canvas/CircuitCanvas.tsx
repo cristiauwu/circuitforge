@@ -17,8 +17,8 @@
  */
 
 import { OrthographicCamera } from '@react-three/drei'
-import { Canvas } from '@react-three/fiber'
-import type { ReactNode } from 'react'
+import { Canvas, useThree } from '@react-three/fiber'
+import { type ReactNode, useEffect } from 'react'
 import { GridPlane } from './GridPlane'
 
 export interface CircuitCanvasProps {
@@ -49,8 +49,7 @@ export function CircuitCanvas({ children, onPointerMissed }: CircuitCanvasProps)
         // cuadruplica sin ganancia visible en una escena de lineas planas.
         dpr={[1, 2]}
         gl={{ antialias: true, alpha: true }}
-        // Sin animacion continua: la escena solo cambia cuando el usuario
-        // interactua. Evita gastar GPU (y bateria) redibujando lo mismo.
+        // EXPERIMENTO TEMPORAL: bucle continuo para diagnosticar el cable.
         frameloop="demand"
         // Se propaga solo si existe: R3F declara la prop como requerida en su
         // firma, y pasar `undefined` explicitamente no es valido con
@@ -74,7 +73,45 @@ export function CircuitCanvas({ children, onPointerMissed }: CircuitCanvasProps)
 
         <GridPlane />
         {children}
+
+        {/*
+          Puente de diagnostico. En desarrollo expone la escena en `window` para
+          poder inspeccionarla desde la consola del navegador.
+
+          Existe por una razon concreta: verificar el cableado necesita saber
+          DONDE caen los pines en coordenadas de mundo, y eso no se puede leer del
+          DOM — la escena vive en WebGL. Navegar el arbol de React desde fuera
+          resulto fragil (las claves internas cambian entre versiones); exponer el
+          estado desde dentro es estable y explicito.
+
+          No llega a produccion: `import.meta.env.DEV` se sustituye por `false` en
+          el build y el bloque entero se elimina al minificar.
+        */}
+        <SceneBridge />
       </Canvas>
     </div>
   )
+}
+
+/** Expone la escena de Three.js en `window.__scene` solo en desarrollo. */
+function SceneBridge() {
+  const scene = useThree((s) => s.scene)
+  const camera = useThree((s) => s.camera)
+  const invalidate = useThree((s) => s.invalidate)
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return
+    const bridge = globalThis as unknown as {
+      __scene?: unknown
+      __camera?: unknown
+      __invalidate?: unknown
+    }
+    bridge.__scene = scene
+    bridge.__camera = camera
+    // `invalidate` es imprescindible con `frameloop="demand"`: sin el, cualquier
+    // cambio hecho desde la consola no se dibuja hasta que algo mas lo dispare.
+    bridge.__invalidate = invalidate
+  }, [scene, camera, invalidate])
+
+  return null
 }

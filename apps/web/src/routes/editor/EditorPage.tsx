@@ -6,8 +6,11 @@ import type { EditorAction } from '@/features/editor/canvas/keyboardShortcuts'
 import { resolveShortcut, toKeyEventLike } from '@/features/editor/canvas/keyboardShortcuts'
 import { SceneComponent } from '@/features/editor/canvas/SceneComponent'
 import type { OrthoCamera, Viewport } from '@/features/editor/canvas/useGridSnap'
+import { useWiringProvider, WiringProviderContext } from '@/features/editor/canvas/useWiring'
+import { WireLayer } from '@/features/editor/canvas/WireLayer'
 import { Inspector } from '@/features/editor/Inspector'
 import { Palette } from '@/features/editor/Palette'
+import { cx } from '@/lib/cx'
 import { useEditorStore } from '@/lib/editor/useEditorStore'
 import { Button, IconButton, PanelGlass } from '@/ui'
 
@@ -39,6 +42,16 @@ export function EditorPage() {
 
   const canvasRef = useRef<HTMLDivElement>(null)
   const [viewport, setViewport] = useState<Viewport>({ width: 1200, height: 700 })
+
+  /**
+   * Estado del cableado.
+   *
+   * Vive AQUI y no en cada `SceneComponent` porque es compartido: el primer clic
+   * se registra en un componente y el segundo llega a otro distinto. Con el
+   * estado dentro del componente, el pin de origen se perderia entre los dos
+   * clics y el cable nunca se completaria.
+   */
+  const wiring = useWiringProvider()
 
   /**
    * El viewport se mide del DOM en vez de asumirlo: la conversion
@@ -87,6 +100,21 @@ export function EditorPage() {
     }
 
     const onKeyDown = (event: KeyboardEvent) => {
+      /*
+       * Escape cancela el cableado en curso.
+       *
+       * Se comprueba ANTES que los demas atajos y sin pasar por
+       * `resolveShortcut`: es un atajo contextual que solo existe mientras hay
+       * un cable a medias, y meterlo en la tabla pura obligaria a pasarle el
+       * estado del cableado, ensuciando una funcion que hoy solo depende de la
+       * tecla y la seleccion.
+       */
+      if (event.key === 'Escape' && wiring.pending !== null) {
+        event.preventDefault()
+        wiring.cancel()
+        return
+      }
+
       const action = resolveShortcut(toKeyEventLike(event), { hasSelection: selectedId !== null })
       if (action.kind === 'none') return
       event.preventDefault()
@@ -95,7 +123,7 @@ export function EditorPage() {
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [selectedId, removeComponent, rotateComponent, undo, redo])
+  }, [selectedId, removeComponent, rotateComponent, undo, redo, wiring])
 
   /**
    * Añade un componente en el primer hueco libre del lienzo.
@@ -191,7 +219,14 @@ export function EditorPage() {
         </PanelGlass>
 
         {/* Lienzo R3F, aislado tras un limite de errores */}
-        <div ref={canvasRef} className="order-1 flex min-h-[420px] min-w-0 flex-col lg:order-2">
+        {/*
+          `relative` es necesario: el aviso de cableado se posiciona en absoluto
+          respecto a este contenedor, no a la pagina.
+        */}
+        <div
+          ref={canvasRef}
+          className="relative order-1 flex min-h-[420px] min-w-0 flex-col lg:order-2"
+        >
           {/*
             El limite aisla un fallo de WebGL: sin el, el error sube al
             ErrorBoundary de la ruta y tumba toda la pantalla del editor. Con el,
@@ -199,17 +234,48 @@ export function EditorPage() {
             navegacion.
           */}
           <CanvasErrorBoundary>
-            <CircuitCanvas onPointerMissed={() => selectComponent(null)}>
-              {project.components.map((component) => (
-                <SceneComponent
-                  key={component.id}
-                  componentId={component.id}
-                  camera={camera}
-                  viewport={viewport}
-                />
-              ))}
-            </CircuitCanvas>
+            {/*
+              El proveedor de cableado envuelve SOLO el canvas: los pines viven
+              dentro de la escena, y montarlo mas arriba expondria el contexto a
+              la paleta y al inspector, que no lo necesitan.
+            */}
+            <WiringProviderContext.Provider value={wiring}>
+              <CircuitCanvas
+                onPointerMissed={() => {
+                  // Pulsar el vacio deselecciona Y cancela el cableado: si el
+                  // usuario hace clic fuera, lo que quiere es salir de lo que
+                  // estaba haciendo.
+                  selectComponent(null)
+                  if (wiring.pending !== null) wiring.cancel()
+                }}
+              >
+                {/* Cables: se dibujan ANTES que los componentes para que queden
+                    por debajo de los simbolos y no tapen los pines. */}
+                <WireLayer components={project.components} nets={project.nets} />
+
+                {project.components.map((component) => (
+                  <SceneComponent
+                    key={component.id}
+                    componentId={component.id}
+                    camera={camera}
+                    viewport={viewport}
+                  />
+                ))}
+              </CircuitCanvas>
+            </WiringProviderContext.Provider>
           </CanvasErrorBoundary>
+
+          {/*
+            Aviso del cableado en curso.
+            Va fuera del canvas, sobre el lienzo, porque un mensaje dentro de la
+            escena 3D no seria accesible: los lectores de pantalla no leen
+            texturas. Aqui es HTML real, con `role="status"` para que se anuncie.
+          */}
+          <WiringHint
+            pending={wiring.pending !== null}
+            error={wiring.error}
+            onCancel={wiring.cancel}
+          />
         </div>
 
         {/* Inspector — superficie glass 3 de 3 */}
@@ -234,6 +300,80 @@ function Reading({ label, value, unit }: { label: string; value: string; unit: s
       <dt className="cf-eyebrow">{label}</dt>
       <dd className="cf-mono text-sm font-medium text-text-strong">{value}</dd>
       <dd className="cf-mono text-2xs text-text-muted">{unit}</dd>
+    </div>
+  )
+}
+
+/**
+ * Aviso flotante del cableado.
+ *
+ * Aparece sobre el lienzo cuando hay un cable a medias o cuando el ultimo intento
+ * fue rechazado. Se monta en HTML y no dentro de la escena 3D por accesibilidad:
+ * un mensaje dibujado como textura no lo lee un lector de pantalla, y `role`
+ * tampoco se aplica a una malla de Three.js.
+ *
+ * Tres estados, en orden de prioridad:
+ *  1. **Error**: la conexion se rechazo. Se explica por que (V-1, V-4...) y se
+ *     recuerda que el pin de origen sigue activo, que es lo que el usuario no
+ *     puede deducir de la pantalla.
+ *  2. **En curso**: hay un pin de origen. Se dice que hacer a continuacion.
+ *  3. **Oculto**: no pasa nada, no se muestra nada.
+ */
+function WiringHint({
+  pending,
+  error,
+  onCancel,
+}: {
+  pending: boolean
+  error: string | null
+  onCancel: () => void
+}) {
+  if (!pending && error === null) return null
+
+  const isError = error !== null
+
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="pointer-events-none absolute inset-x-3 bottom-3 flex justify-center"
+    >
+      <div
+        className={cx(
+          'cf-glass pointer-events-auto flex max-w-[560px] items-center gap-3 px-4 py-2.5',
+          isError ? 'border-warning' : 'border-accent',
+        )}
+      >
+        <span
+          aria-hidden="true"
+          className={cx('size-2 shrink-0 rounded-pill', isError ? 'bg-warning' : 'bg-accent')}
+        />
+
+        <p className="min-w-0 text-xs leading-snug text-text">
+          {isError ? (
+            <>
+              <span className="font-medium text-warning">{error}</span>
+              <span className="text-text-secondary"> · elige otro destino</span>
+            </>
+          ) : (
+            <>
+              <span className="font-medium text-accent">Cableando</span>
+              <span className="text-text-secondary">
+                {' '}
+                · pulsa otro pin para conectar, o Escape para cancelar
+              </span>
+            </>
+          )}
+        </p>
+
+        <button
+          type="button"
+          onClick={onCancel}
+          className="shrink-0 rounded-pill px-2 py-1 text-2xs font-medium text-text-muted transition-colors duration-fast hover:bg-[var(--cf-fill-dim)] hover:text-text"
+        >
+          Cancelar
+        </button>
+      </div>
     </div>
   )
 }

@@ -19,10 +19,14 @@ import type { ThreeEvent } from '@react-three/fiber'
 import { useCallback } from 'react'
 import { useEditorStore } from '@/lib/editor/useEditorStore'
 import { CATALOG_INDEX } from '@/lib/fixtures/components'
+import { basePinPosition } from './pinGeometry'
+import { ScenePin } from './ScenePin'
 import { SymbolSprite } from './SymbolSprite'
+import { resolveTokenColor } from './tokenColor'
 import { useDragComponent } from './useDragComponent'
 import type { OrthoCamera, Viewport } from './useGridSnap'
 import { screenToSnappedWorld } from './useGridSnap'
+import { useWiring } from './useWiring'
 
 export interface SceneComponentProps {
   componentId: string
@@ -63,6 +67,8 @@ export function SceneComponent({ componentId, camera, viewport }: SceneComponent
     },
     [camera, viewport],
   )
+
+  const wiring = useWiring()
 
   const onSelect = useCallback((id: string) => selectComponent(id), [selectComponent])
 
@@ -108,11 +114,51 @@ export function SceneComponent({ componentId, camera, viewport }: SceneComponent
       {isSelected && (
         <mesh position={[0, 0, -0.1]}>
           <planeGeometry args={[HIT_WIDTH + 8, HIT_HEIGHT + 8]} />
-          <meshBasicMaterial color="var(--cf-accent)" transparent opacity={0.18} />
+          <meshBasicMaterial
+            color={resolveTokenColor('--cf-accent', 0xff6b35)}
+            transparent
+            opacity={0.18}
+          />
         </mesh>
       )}
 
       <SymbolSprite typeId={component.typeId} />
+
+      {/*
+        Pines clicables.
+
+        Se dibujan DENTRO del grupo del componente, asi que heredan su rotacion y
+        su posicion: al rotar el componente los pines rotan con el sin ningun
+        calculo extra. La posicion de cada uno sale de `basePinPosition` en
+        coordenadas LOCALES (relativas al centro), que es justo lo que `<group>`
+        espera.
+
+        Orden importante: van DESPUES del simbolo y de la malla de impacto. En
+        Three.js el orden de dibujo a igual profundidad lo decide el orden en el
+        arbol, y los pines deben quedar por encima del cuerpo para poder pulsarlos.
+      */}
+      {component.pins.map((pin, index) => {
+        const local = basePinPosition(
+          { position: { x: 0, y: 0, rotation: 0 } },
+          index,
+          component.pins.length,
+        )
+        const endpoint = { componentId: component.id, pinId: pin.pinId }
+
+        return (
+          <ScenePin
+            key={pin.pinId}
+            endpoint={endpoint}
+            position={[local.x, local.y, 0.2]}
+            isPending={
+              wiring.pending?.componentId === component.id && wiring.pending?.pinId === pin.pinId
+            }
+            isConnected={pin.netId !== null}
+            wiring={wiring.pending !== null}
+            onActivate={wiring.onPinClick}
+          />
+        )
+      })}
 
       {/*
         Identificador del componente (R1, D1, U1...).
@@ -128,7 +174,7 @@ export function SceneComponent({ componentId, camera, viewport }: SceneComponent
       <SceneText
         position={[0, HIT_HEIGHT / 2 + 6, 0.1]}
         fontSize={11}
-        color="var(--cf-signal)"
+        color={resolveTokenColor('--cf-signal', 0x22d3ee)}
         anchorX="center"
         anchorY="middle"
         // Sin esto, el texto se dibuja con el material por defecto y puede quedar
@@ -155,7 +201,7 @@ export function SceneComponent({ componentId, camera, viewport }: SceneComponent
         <SceneText
           position={[0, -HIT_HEIGHT / 2 - 7, 0.1]}
           fontSize={9}
-          color="var(--cf-text-muted)"
+          color={resolveTokenColor('--cf-text-muted', 0x6b6b70)}
           anchorX="center"
           anchorY="middle"
           depthOffset={-1}
@@ -169,7 +215,11 @@ export function SceneComponent({ componentId, camera, viewport }: SceneComponent
       {isDragging && (
         <mesh position={[0, 0, 0.1]}>
           <planeGeometry args={[HIT_WIDTH, HIT_HEIGHT]} />
-          <meshBasicMaterial color="var(--cf-accent)" transparent opacity={0.08} />
+          <meshBasicMaterial
+            color={resolveTokenColor('--cf-accent', 0xff6b35)}
+            transparent
+            opacity={0.08}
+          />
         </mesh>
       )}
     </group>

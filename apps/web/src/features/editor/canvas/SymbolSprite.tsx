@@ -40,6 +40,7 @@
 
 import { Line } from '@react-three/drei'
 import { useMemo } from 'react'
+import { resolveTokenColor } from './tokenColor'
 
 export interface SymbolSpriteProps {
   typeId: string
@@ -388,7 +389,12 @@ export function SymbolSprite({ typeId, width = SYMBOL_WIDTH }: SymbolSpriteProps
         `lineWidth` funciona porque LineSegments2 usa LineMaterial; el `<line>`
         nativo de three lo ignora en WebGL y todas las lineas salen de 1 px.
       */}
-      <Line points={points} color="var(--cf-text)" lineWidth={STROKE_WIDTH * 2} segments />
+      <Line
+        points={points}
+        color={resolveTokenColor('--cf-text', 0xdddee3)}
+        lineWidth={STROKE_WIDTH * 2}
+        segments
+      />
     </group>
   )
 }
