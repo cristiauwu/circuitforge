@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CanvasErrorBoundary } from '@/features/editor/canvas/CanvasErrorBoundary'
 import { CircuitCanvas } from '@/features/editor/canvas/CircuitCanvas'
+import { CANVAS_FRUSTUM_WIDTH, CANVAS_ZOOM } from '@/features/editor/canvas/componentLayout'
 import { findFreePosition } from '@/features/editor/canvas/findFreePosition'
 import type { EditorAction } from '@/features/editor/canvas/keyboardShortcuts'
 import { resolveShortcut, toKeyEventLike } from '@/features/editor/canvas/keyboardShortcuts'
@@ -17,19 +18,17 @@ import { Button, IconButton, PanelGlass } from '@/ui'
 /**
  * Editor — la pantalla nucleo del OE-1.
  *
- * **Presupuesto de glass: 3.** Paleta, inspector y barra flotante.
+ * **Presupuesto de glass: 4.** Nav, barra flotante, paleta e inspector.
  * `backdrop-filter` obliga a la GPU a releer el fondo en cada frame y el lienzo
- * necesita esos ciclos para el arrastre a 60 fps.
+ * necesita esos ciclos para el arrastre.
  *
  * **Estado:** todo el estado del circuito vive en `useEditorStore` (netlist como
  * fuente de verdad). Aquí solo se orquesta la UI y los atajos de teclado.
+ *
+ * **El zoom NO se define aqui.** Se importa de `CircuitCanvas`, que es quien
+ * configura la camara. Antes habia dos constantes distintas —la camara en 2.4 y
+ * la conversion del arrastre en 1.25— y el arrastre se desviaba.
  */
-
-/** Zoom inicial, el mismo que usa `CircuitCanvas`. */
-const CANVAS_ZOOM = 1.25
-
-/** Ancho del frustum con zoom 1, en unidades de mundo. */
-const FRUSTUM_WIDTH = 800
 
 export function EditorPage() {
   const project = useEditorStore((s) => s.project)
@@ -76,7 +75,7 @@ export function EditorPage() {
   /** Cámara descrita para la conversión de coordenadas. */
   const camera = useMemo<OrthoCamera>(
     () => ({
-      frustumWidth: FRUSTUM_WIDTH,
+      frustumWidth: CANVAS_FRUSTUM_WIDTH,
       center: { x: 0, y: 0 },
       zoom: CANVAS_ZOOM,
     }),

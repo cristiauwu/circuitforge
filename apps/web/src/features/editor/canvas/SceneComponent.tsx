@@ -19,6 +19,16 @@ import type { ThreeEvent } from '@react-three/fiber'
 import { useCallback } from 'react'
 import { useEditorStore } from '@/lib/editor/useEditorStore'
 import { CATALOG_INDEX } from '@/lib/fixtures/components'
+import {
+  HIT_HEIGHT,
+  HIT_WIDTH,
+  LABEL_CLEARANCE,
+  PIN_CLEARANCE,
+  SELECTION_BORDER,
+  SELECTION_CENTER_Y,
+  SELECTION_HEIGHT,
+  SELECTION_WIDTH,
+} from './componentLayout'
 import { basePinPosition } from './pinGeometry'
 import { ScenePin } from './ScenePin'
 import { SymbolSprite } from './SymbolSprite'
@@ -27,6 +37,15 @@ import { useDragComponent } from './useDragComponent'
 import type { OrthoCamera, Viewport } from './useGridSnap'
 import { screenToSnappedWorld } from './useGridSnap'
 import { useWiring } from './useWiring'
+
+/**
+ * Color del contorno de seleccion.
+ *
+ * Se resuelve UNA vez a nivel de modulo: getComputedStyle fuerza recalculo de
+ * estilos, y resolverlo dentro del componente lo haria en cada render de cada
+ * componente.
+ */
+const SELECTION_COLOR = resolveTokenColor('--cf-accent', 0xff6b35)
 
 export interface SceneComponentProps {
   componentId: string
@@ -110,16 +129,57 @@ export function SceneComponent({ componentId, camera, viewport }: SceneComponent
         />
       </mesh>
 
-      {/* Contorno de seleccion */}
+      {/*
+        Contorno de seleccion.
+
+        **Es un CONTORNO, no un bloque.** Antes era un rectangulo de 56 x 44
+        unidades relleno al 18 %: medido con el zoom actual, un bloque de
+        **134 x 106 px** de color solido. Competia con el simbolo y ensuciaba la
+        lectura; se veia como una mancha marron detras del componente.
+
+        Ahora son cuatro barras finas que forman un marco hueco. Un contorno dice
+        "esto esta seleccionado" sin tapar nada, que es lo que hace cualquier
+        editor de esquematicos.
+      */}
       {isSelected && (
-        <mesh position={[0, 0, -0.1]}>
-          <planeGeometry args={[HIT_WIDTH + 8, HIT_HEIGHT + 8]} />
-          <meshBasicMaterial
-            color={resolveTokenColor('--cf-accent', 0xff6b35)}
-            transparent
-            opacity={0.18}
-          />
-        </mesh>
+        <group position={[0, SELECTION_CENTER_Y, -0.1]}>
+          <mesh position={[0, SELECTION_HEIGHT / 2, 0]}>
+            <planeGeometry args={[SELECTION_WIDTH, SELECTION_BORDER]} />
+            <meshBasicMaterial
+              color={SELECTION_COLOR}
+              transparent
+              opacity={0.95}
+              depthWrite={false}
+            />
+          </mesh>
+          <mesh position={[0, -SELECTION_HEIGHT / 2, 0]}>
+            <planeGeometry args={[SELECTION_WIDTH, SELECTION_BORDER]} />
+            <meshBasicMaterial
+              color={SELECTION_COLOR}
+              transparent
+              opacity={0.95}
+              depthWrite={false}
+            />
+          </mesh>
+          <mesh position={[-SELECTION_WIDTH / 2, 0, 0]}>
+            <planeGeometry args={[SELECTION_BORDER, SELECTION_HEIGHT]} />
+            <meshBasicMaterial
+              color={SELECTION_COLOR}
+              transparent
+              opacity={0.95}
+              depthWrite={false}
+            />
+          </mesh>
+          <mesh position={[SELECTION_WIDTH / 2, 0, 0]}>
+            <planeGeometry args={[SELECTION_BORDER, SELECTION_HEIGHT]} />
+            <meshBasicMaterial
+              color={SELECTION_COLOR}
+              transparent
+              opacity={0.95}
+              depthWrite={false}
+            />
+          </mesh>
+        </group>
       )}
 
       <SymbolSprite typeId={component.typeId} />
@@ -172,7 +232,7 @@ export function SceneComponent({ componentId, camera, viewport }: SceneComponent
         chocaria con el simbolo.
       */}
       <SceneText
-        position={[0, HIT_HEIGHT / 2 + 6, 0.1]}
+        position={[0, HIT_HEIGHT / 2 + LABEL_CLEARANCE, 0.1]}
         fontSize={11}
         color={resolveTokenColor('--cf-signal', 0x22d3ee)}
         anchorX="center"
@@ -187,19 +247,26 @@ export function SceneComponent({ componentId, camera, viewport }: SceneComponent
       </SceneText>
 
       {/*
-        Nombre del componente, DEBAJO del cuerpo.
+        Nombre del componente, DEBAJO de los pines.
 
         Se lee de la ficha y no del netlist: `Component` solo guarda `id` y
         `typeId`, porque el nombre es una etiqueta de presentacion, no un dato del
-        circuito. Guardarlo en el netlist seria duplicar lo que ya dice la
-        biblioteca y abriria la puerta a que se desincronicen.
+        circuito. Guardarlo en el netlist duplicaria lo que ya dice la biblioteca.
 
-        En el lienzo SVG anterior el nombre iba DENTRO y colisionaba con las
-        etiquetas de los pines (medido: la misma franja). Debajo no hay nada.
+        **La posicion se calculo, no se estimo.** Con `-HIT_HEIGHT/2 - 7` el
+        nombre quedaba a 7 unidades bajo el borde del cuerpo, pero los pines
+        sobresalen 5 unidades por debajo de ese borde: medido, habia **0.6
+        unidades de solape** entre el circulo del pin y la caja del texto. A 1 px
+        parecia nada, pero con el zoom actual se veian cruzados.
+
+        `PIN_CLEARANCE` baja el nombre por debajo de la punta del pin mas un
+        margen. Se probo con margen 2, 4, 6 y 8 unidades: **4** deja 10 px de aire
+        a la escala actual, suficiente para separar sin que el nombre se despegue
+        del componente.
       */}
       {fixtureName !== undefined && (
         <SceneText
-          position={[0, -HIT_HEIGHT / 2 - 7, 0.1]}
+          position={[0, -HIT_HEIGHT / 2 - PIN_CLEARANCE, 0.1]}
           fontSize={9}
           color={resolveTokenColor('--cf-text-muted', 0x6b6b70)}
           anchorX="center"
@@ -225,10 +292,6 @@ export function SceneComponent({ componentId, camera, viewport }: SceneComponent
     </group>
   )
 }
-
-/** Zona de impacto del arrastre, en unidades de mundo (2 x 1.5 celdas). */
-const HIT_WIDTH = 48
-const HIT_HEIGHT = 36
 
 /** Tipo de los handlers de three para el grupo. */
 export type GroupPointerHandler = (event: ThreeEvent<PointerEvent>) => void

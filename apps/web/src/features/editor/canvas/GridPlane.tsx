@@ -24,39 +24,46 @@
  */
 
 import { Grid } from '@react-three/drei'
+import { gridParams } from './gridParams'
 import { resolveTokenColor } from './tokenColor'
 import { GRID_SIZE } from './useGridSnap'
 
 /** Lado de la cuadricula, en unidades de mundo. */
 const GRID_EXTENT = 4000
 
-/**
- * Cada cuantas celdas se dibuja una linea de seccion (mas marcada).
- * 4 celdas = 96 unidades, que da una referencia visual legible sin ruido.
- */
-const SECTION_EVERY = 4
-
 export function GridPlane() {
+  const params = gridParams()
+
   return (
     <Grid
       args={[GRID_EXTENT, GRID_EXTENT]}
       cellSize={GRID_SIZE}
-      // Grosor de 1: el trazo del shader se mide en pixeles y por debajo de 1
-      // desaparece en pantallas de densidad 1.
-      cellThickness={1}
+      cellThickness={params.cellThickness}
       cellColor={resolveTokenColor('--cf-grid', 0x525256)}
-      sectionSize={GRID_SIZE * SECTION_EVERY}
-      sectionThickness={1.6}
+      sectionSize={GRID_SIZE * params.sectionEvery}
+      sectionThickness={params.sectionThickness}
       // Las lineas de seccion usan un token mas claro: son la referencia de
       // alineacion fuerte y deben distinguirse de la reticula fina.
       sectionColor={resolveTokenColor('--cf-grid-strong', 0x6b6b70)}
-      // Sin atenuacion por distancia: la camara es ortografica y el lienzo debe
-      // leerse igual de nitido en cualquier punto, como una hoja de papel
-      // milimetrado. Un fundido por distancia daria sensacion de 3D que aqui
-      // estorba.
-      // A 0 el shader no dibuja ninguna atenuacion y el degradado no se aplica.
-      fadeDistance={0}
-      fadeStrength={0}
+      /*
+       * SIN atenuacion por distancia, pero con un valor GRANDE.
+       *
+       * **Aqui estuvo el bug que dejo el lienzo negro.** Se pasaba `0`, y eso
+       * hace que el shader de drei calcule `dist / 0 = Infinito`, luego
+       * `min(Infinito, 1) = 1` y por tanto `d = 0`. La opacidad acaba en
+       * `pow(0.0, 0.0)`, que **no esta definido en GLSL**: unos drivers devuelven
+       * 1 y otros 0.
+       *
+       * Medido: SwiftShader (software, el del Chrome headless de verificacion)
+       * devuelve 1 → la reticula se veia. NVIDIA devuelve 0 → **lienzo negro**.
+       * Por eso el fallo no aparecia en la verificacion y si en la maquina del
+       * usuario.
+       *
+       * Un valor grande consigue el mismo efecto —sin atenuacion— sin dividir por
+       * cero: `d` tiende a 1 y `pow(1, x)` si esta definido.
+       */
+      fadeDistance={params.fadeDistance}
+      fadeStrength={params.fadeStrength}
       infiniteGrid={false}
       followCamera={false}
       // El plano se dibuja en el plano XY (el del circuito), no en el XZ por

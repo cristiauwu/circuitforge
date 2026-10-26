@@ -19,6 +19,7 @@
 import { OrthographicCamera } from '@react-three/drei'
 import { Canvas, useThree } from '@react-three/fiber'
 import { type ReactNode, useEffect } from 'react'
+import { CANVAS_ZOOM } from './componentLayout'
 import { GridPlane } from './GridPlane'
 
 export interface CircuitCanvasProps {
@@ -26,15 +27,6 @@ export interface CircuitCanvasProps {
   /** Se llama al hacer clic en una zona vacia del lienzo. */
   onPointerMissed?: (() => void) | undefined
 }
-
-/**
- * Zoom inicial de la camara.
- *
- * Con `zoom = 1` una celda de 24 unidades mide 24 px, que es legible pero algo
- * apretado para trabajar. Con 1.25 la celda ronda los 30 px, que es la densidad
- * comoda de un editor de esquematicos.
- */
-const INITIAL_ZOOM = 1.25
 
 export function CircuitCanvas({ children, onPointerMissed }: CircuitCanvasProps) {
   return (
@@ -60,7 +52,7 @@ export function CircuitCanvas({ children, onPointerMissed }: CircuitCanvasProps)
         <OrthographicCamera
           makeDefault
           position={[0, 0, 100]}
-          zoom={INITIAL_ZOOM}
+          zoom={CANVAS_ZOOM}
           near={0.1}
           far={1000}
         />
