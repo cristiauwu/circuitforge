@@ -154,6 +154,32 @@ El grano cuesta **~4.4 ms por frame** y el `overlay` es más de la mitad. **Se a
 
 ---
 
+### 2.8 Extracción v3 — medición fresca con REA (2026-10-26)
+
+Segunda pasada sobre `https://www.iyo.ai/` con el MCP de REA, esta vez midiendo **tipografía, movimiento y anatomía de controles** en lugar de solo colores. El sitio puede cambiar, así que los valores se volvieron a leer en vivo.
+
+**Lo que se adoptó:**
+
+| Hallazgo | Valor medido en la referencia | Qué se hizo |
+|---|---|---|
+| **Dos recetas de glass** | nav `rgba(56,56,56,.6)` + `blur(20px)`; tarjetas `rgba(33,33,33,.69)` + `blur(19px)` | `--cf-fill` para lo que flota, `--cf-fill-deep` para lo que se apoya. `.cf-tile` pasa a la receta profunda |
+| **Tercera curva** | `cubic-bezier(0.625, 0.05, …)` | `--cf-ease-soft`, para movimientos cortos donde la curva firma arranca demasiado brusca |
+| **Dos duraciones más** | `0.4s` y `0.7s` junto a `0.3s`/`0.6s` | `--cf-dur-slower` (400 ms) y `--cf-dur-grand` (700 ms) |
+
+**Lo que se descartó, y por qué:**
+
+| Lo que hace la referencia | Por qué NO se copia |
+|---|---|
+| Anima `width` y `height` (4 usos cada uno) | Fuerza *re-layout* en cada fotograma. La regla **V-3** ya lo prohíbe, y el sistema es mejor en esto |
+| `transition: all` (8 usos) | Anima propiedades que no pretendías y esconde errores. Nunca se usa un comodín |
+| Escala tipográfica con decimales (`33.6`, `14.4`, `18.193`, `11.074`) | Salen de `clamp()` o de unidades `vw`. Nuestra escala de 7 pasos discretos es más mantenible y cubre los mismos tamaños |
+| Controles de 51–64 px con radio 14.4 px | Son más grandes que los nuestros (32–48 px) y **no son píldoras**. CircuitForge usa píldora porque el botón convive con chips y pines, que también lo son; mezclar radios en la misma franja se ve sucio |
+| `Arial` como fuente dominante (156 usos) | Es el *fallback* del navegador, no una decisión. Sus fuentes reales (Magnetik, Roobert, Nbarchitek) son **comerciales**; Inter y JetBrains Mono son la sustitución libre |
+
+**Nota metodológica.** El primer análisis (v2) había tomado los tokens pero no la anatomía; el resultado fue una interfaz con los colores de la referencia y geometría inventada. Esta pasada mide `getComputedStyle` sobre **elementos reales** —controles, tarjetas, textos— y no sobre `:root`. Es la diferencia entre extraer un tema y extraer un sistema.
+
+---
+
 ## 3. Componentes
 
 Medidos, no inventados.

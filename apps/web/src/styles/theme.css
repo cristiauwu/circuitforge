@@ -211,7 +211,19 @@ body {
   display: flex;
   flex-direction: column;
   padding: var(--cf-space-4);
-  background: var(--cf-fill-dim);
+  /*
+   * Relleno PROFUNDO, no el de las superficies flotantes.
+   *
+   * Medido en la referencia: sus tarjetas usan `rgba(33,33,33,.69)` —un negro
+   * mas oscuro y mas opaco— mientras su navegacion usa `rgba(56,56,56,.6)`. Con
+   * un valor unico hay que elegir entre que la barra se vea sucia o que las
+   * tarjetas se vean lavadas.
+   *
+   * La tarjeta esta APOYADA sobre el fondo, asi que su contenido debe mandar: de
+   * ahi que sea mas oscura. La barra esta FLOTANDO sobre contenido, y necesita
+   * algo de luz para separarse.
+   */
+  background: var(--cf-fill-deep);
   border: var(--cf-border-panel);
   border-radius: var(--cf-radius-lg);
   transition:

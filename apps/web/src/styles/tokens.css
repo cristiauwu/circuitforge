@@ -43,9 +43,6 @@
   --cf-grid: #525256;
   --cf-grid-strong: #6b6b70;
 
-  /* Relleno translucido de tarjeta — el valor medido literalmente */
-  --cf-fill: rgb(56 56 56 / 0.6);
-
   /* ── Texto ──────────────────────────────────────────────────────────────
    * Evidencia: --pearl-white #dddee3 (42 usos, el dominante),
    * --almost-white #edeced, --white #f9f9fb (reservado a UI).
@@ -91,15 +88,32 @@
    * Evidencia del borde: 1px rgba(138,138,138,.1) — un GRIS neutro al 10%, no
    * blanco. Un borde blanco sobre fondo calido se ve lechoso; el gris se
    * funde y solo deja el filo.
-   * Evidencia del blur: backdrop-filter blur(19px) en 12 elementos.
+   *
+   * Evidencia del blur: `blur(19px)` en 12 elementos, y `blur(20px)` en la
+   * navegacion.
+   *
+   * **Dos recetas de glass, no una.** Medido en iyo.ai: su navegacion usa
+   * `rgba(56,56,56,.6)` con 20px de blur, pero sus tarjetas usan un negro **mas
+   * oscuro y mas opaco**, `rgba(33,33,33,.69)`, con 19px. Con un valor unico hay
+   * que elegir entre que la barra se vea sucia o que las tarjetas se vean
+   * lavadas.
+   *
+   * `--cf-fill` es para superficies FLOTANTES sobre contenido (barra, nav):
+   * algo de luz las separa del fondo. `--cf-fill-deep` es para tarjetas
+   * APOYADAS sobre el fondo: mas oscuras, para que el contenido de dentro mande.
    */
   --cf-glass-blur: 19px;
+  --cf-glass-blur-nav: 20px;
   --cf-glass-sat: 130%;
   --cf-hairline: rgb(138 138 138 / 0.12);
   --cf-hairline-strong: rgb(138 138 138 / 0.22);
+  --cf-fill: rgb(56 56 56 / 0.6);
+  --cf-fill-deep: rgb(33 33 33 / 0.69);
   --cf-scrim: rgb(16 16 16 / 0.72);
   --cf-fill-dim: rgb(56 56 56 / 0.35);
   --cf-fill-strong: rgb(56 56 56 / 0.85);
+  --cf-border-hairline: 1px solid var(--cf-hairline);
+  --cf-border-panel: 1px solid var(--cf-hairline);
 
   /* ── Velos de estado ────────────────────────────────────────────────────*/
   --cf-error-veil: rgb(248 113 113 / 0.1);
@@ -161,23 +175,31 @@
   --cf-radius-xl: 1.75rem;
   --cf-radius-full: 9999px;
 
-  --cf-border-hairline: 1px solid var(--cf-hairline);
-  --cf-border-panel: 1px solid var(--cf-hairline);
   --cf-border-focus: 2px solid var(--cf-accent);
 
   /* ── Movimiento ─────────────────────────────────────────────────────────
    * Evidencia: cubic-bezier(0.77,0,0.175,1) x11 (la firma), y las duraciones
    * 0.6s / 0.3s dominantes. El sobrepaso cubic-bezier(0.48,0.01,0,1.08) x3,
    * siempre en transform.
+   *
+   * `--cf-ease-soft` es nueva: medida en la referencia como
+   * `cubic-bezier(0.625, 0.05, ...)`, un ease-out mas suave que el firma. Se usa
+   * para movimientos cortos —entradas de panel— donde la curva firma resulta
+   * demasiado brusca de arranque.
    */
   --cf-ease-out: cubic-bezier(0.77, 0, 0.175, 1);
   --cf-ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
+  --cf-ease-soft: cubic-bezier(0.625, 0.05, 0.15, 1);
   --cf-ease-pop: cubic-bezier(0.48, 0.01, 0, 1.08);
 
+  /* Duraciones. La escala es corta a proposito: cuatro pasos cubren todo y no
+   * obligan a decidir entre 280 y 320 ms en cada componente. */
   --cf-dur-instant: 100ms;
   --cf-dur-fast: 200ms;
   --cf-dur-base: 300ms;
+  --cf-dur-slower: 400ms;
   --cf-dur-slow: 600ms;
+  --cf-dur-grand: 700ms;
 
   /* ── Textura de grano ───────────────────────────────────────────────────
    * La referencia tiene grano sobre el negro en lugar de una superficie lisa.
