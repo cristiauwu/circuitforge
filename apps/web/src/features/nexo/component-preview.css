@@ -5,10 +5,10 @@
   flex: 0 0 auto;
   overflow: hidden;
   isolation: isolate;
-  background: #efeee9;
-  border: 1px solid rgb(71 70 61 / 7%);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--nx-line, rgba(255, 255, 255, 0.08));
   border-radius: 14px;
-  color: #74736b;
+  color: var(--nx-muted, #8e95a5);
 }
 
 .component-preview--compact {
@@ -42,7 +42,7 @@
   font-size: 10px;
   font-weight: 500;
   line-height: 1.35;
-  color: #66665e;
+  color: var(--nx-muted, #8e95a5);
 }
 
 .component-preview--detail .component-preview__unavailable {

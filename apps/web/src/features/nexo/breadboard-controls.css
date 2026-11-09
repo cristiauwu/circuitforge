@@ -26,7 +26,7 @@
   background: var(--nx-paper);
   color: var(--nx-ink);
   font: inherit;
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 .nx-breadboard-contacts select:hover {

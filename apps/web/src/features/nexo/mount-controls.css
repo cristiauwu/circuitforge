@@ -32,17 +32,17 @@
   border-radius: 4px;
   background: var(--nx-paper);
   color: var(--nx-ink);
-  color-scheme: light;
+  color-scheme: dark;
   font: inherit;
   font-variant-numeric: tabular-nums;
-  caret-color: var(--nx-ink);
+  caret-color: var(--nx-accent);
 }
 
 .nx-parameter-field input[type="checkbox"] {
   width: 24px;
   height: 24px;
   margin: 10px 0;
-  accent-color: var(--nx-ink);
+  accent-color: var(--nx-accent);
   cursor: pointer;
 }
 

@@ -6,7 +6,6 @@ export function AppShell() {
   const { pathname } = useLocation()
   const mainRef = useRef<HTMLElement>(null)
   const previousPath = useRef(pathname)
-  const isLanding = pathname === '/'
   const isEditor = /^\/editor\/*$/i.test(pathname)
 
   useEffect(() => {
@@ -20,7 +19,7 @@ export function AppShell() {
   return (
     <div
       className={`nexo-app${isEditor ? ' nexo-app-editor' : ''}`}
-      data-theme={isLanding ? 'dark' : 'light'}
+      data-theme="dark"
     >
       <a className="nx-skip" href="#main-content">
         Saltar al contenido
