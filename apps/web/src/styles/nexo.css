@@ -391,6 +391,198 @@ button:active:not(:disabled),
   color: inherit;
   font-size: 14px;
 }
+
+/* ── HUD Flotante de Inspección 3D (Noomo Labs Style) ────────────── */
+.nx-hero-hud {
+  position: absolute;
+  bottom: 24px;
+  right: 28px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(340px, calc(100% - 40px));
+  background: rgba(14, 17, 24, 0.85);
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  border: 1px solid var(--nx-line-strong);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 20px 48px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  color: var(--nx-ink);
+  pointer-events: auto;
+  font-size: 12px;
+}
+.nx-hud-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--nx-line);
+}
+.nx-hud-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: -0.01em;
+  color: var(--nx-text-strong);
+}
+.nx-hud-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #38bdf8;
+  background: rgba(0, 240, 255, 0.08);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  border-radius: 9999px;
+  padding: 3px 8px;
+  font-variant-numeric: tabular-nums;
+}
+.nx-hud-badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #00f0ff;
+  box-shadow: 0 0 8px #00f0ff;
+  animation: nx-pulse-dot 2s ease-in-out infinite;
+}
+@keyframes nx-pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+.nx-hud-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.nx-hud-label {
+  font-size: 11px;
+  color: var(--nx-muted);
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+}
+.nx-hud-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.nx-hud-pill {
+  border: 1px solid var(--nx-line);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--nx-muted);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 550;
+  cursor: pointer;
+  transition: all 140ms var(--nx-ease-out);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.nx-hud-pill:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--nx-line-strong);
+  color: var(--nx-ink);
+}
+.nx-hud-pill:active {
+  transform: scale(0.97);
+}
+.nx-hud-pill[aria-pressed="true"] {
+  background: rgba(0, 240, 255, 0.12);
+  border-color: rgba(0, 240, 255, 0.45);
+  color: var(--nx-accent);
+  box-shadow: 0 0 12px -2px rgba(0, 240, 255, 0.3);
+}
+.nx-hud-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--nx-line);
+  font-size: 11px;
+  color: var(--nx-muted);
+}
+.nx-hero-features {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+.nx-feature-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--nx-line);
+  color: var(--nx-muted);
+  transition: border-color 160ms var(--nx-ease-out), color 160ms var(--nx-ease-out);
+}
+.nx-feature-chip:hover {
+  border-color: var(--nx-line-strong);
+  color: var(--nx-ink);
+}
+.nx-feature-chip svg {
+  color: var(--nx-accent);
+}
+.nx-pillars-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 48px;
+  margin-bottom: 40px;
+}
+.nx-pillar-card {
+  background: rgba(18, 21, 29, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--nx-line);
+  border-radius: 16px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: transform 200ms var(--nx-ease-out), border-color 200ms var(--nx-ease-out), box-shadow 200ms var(--nx-ease-out);
+}
+.nx-pillar-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(0, 240, 255, 0.35);
+  box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.5), 0 0 20px -4px rgba(0, 240, 255, 0.15);
+}
+.nx-pillar-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 240, 255, 0.08);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  color: var(--nx-accent);
+}
+.nx-pillar-card h3 {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--nx-text-strong);
+  letter-spacing: -0.015em;
+}
+.nx-pillar-card p {
+  font-size: 13px;
+  color: var(--nx-muted);
+  line-height: 1.65;
+}
+
 .nx-hero-bottom {
   position: absolute;
   bottom: 32px;
@@ -1299,6 +1491,9 @@ button:active:not(:disabled),
   .nx-header-action {
     margin-left: 0;
   }
+  .nx-pillars-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 @media (max-width: 650px) {
   .nx-header {
@@ -1347,9 +1542,17 @@ button:active:not(:disabled),
     min-height: 0;
   }
   .nx-hero-object .nx-caption {
-    bottom: -36px;
-    left: 24px;
-    right: auto;
+    display: none;
+  }
+  .nx-hero-hud {
+    position: static;
+    margin: 16px 0 0;
+    width: 100%;
+    padding: 12px;
+  }
+  .nx-pillars-grid {
+    grid-template-columns: 1fr;
+    margin-top: 28px;
   }
   .nx-hero-bottom {
     bottom: 24px;

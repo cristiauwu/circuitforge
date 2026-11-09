@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { NexoHeader } from '@/features/nexo/NexoHeader'
+import { Atmosphere } from '@/ui/Atmosphere'
 
 export function AppShell() {
   const { pathname } = useLocation()
@@ -21,6 +22,7 @@ export function AppShell() {
       className={`nexo-app${isEditor ? ' nexo-app-editor' : ''}`}
       data-theme="dark"
     >
+      <Atmosphere intensity={isEditor ? 'soft' : 'full'} />
       <a className="nx-skip" href="#main-content">
         Saltar al contenido
       </a>

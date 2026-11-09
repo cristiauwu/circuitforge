@@ -66,13 +66,13 @@
   transform: translate3d(0, 100%, 0);
 }
 
-.cf-btn:hover .cf-btn__text,
-.cf-btn:focus-visible .cf-btn__text {
+:is(.cf-btn, .nx-button):hover .cf-btn__text,
+:is(.cf-btn, .nx-button):focus-visible .cf-btn__text {
   transform: translate3d(0, -100%, 0);
 }
 
-.cf-btn:hover .cf-btn__text + .cf-btn__text,
-.cf-btn:focus-visible .cf-btn__text + .cf-btn__text {
+:is(.cf-btn, .nx-button):hover .cf-btn__text + .cf-btn__text,
+:is(.cf-btn, .nx-button):focus-visible .cf-btn__text + .cf-btn__text {
   transform: translate3d(0, 0, 0);
 }
 
