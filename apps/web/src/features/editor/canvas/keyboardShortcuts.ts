@@ -42,21 +42,19 @@ export interface ShortcutContext {
 /**
  * Decide la accion de una tecla.
  *
- * El orden importa: los atajos con modificador se comprueban **antes** del
- * filtro de campo de texto, porque deshacer debe funcionar aunque el foco este
- * en un input. Las teclas sueltas si se filtran.
+ * El filtro de campo editable va primero: deshacer y rehacer deben quedar en
+ * manos del control nativo, sin modificar el historial del circuito.
  */
 export function resolveShortcut(event: KeyEventLike, context: ShortcutContext): EditorAction {
+  if (isTypingTarget(event)) return { kind: 'none' }
+
   const key = event.key.toLowerCase()
   const modifier = event.ctrlKey || event.metaKey
 
-  // Deshacer y rehacer: funcionan con el foco en cualquier sitio.
+  // Fuera de los campos, deshacer y rehacer no requieren selección.
   if (modifier && key === 'z' && !event.shiftKey) return { kind: 'undo' }
   if (modifier && key === 'z' && event.shiftKey) return { kind: 'redo' }
   if (modifier && key === 'y') return { kind: 'redo' }
-
-  // A partir de aqui, escribir en un campo no debe disparar nada.
-  if (isTypingTarget(event)) return { kind: 'none' }
 
   if (!context.hasSelection) return { kind: 'none' }
 

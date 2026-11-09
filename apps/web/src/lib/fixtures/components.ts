@@ -1,25 +1,25 @@
-/**
- * Fixtures de la biblioteca de componentes.
- *
- * Son datos de mentira, pero **tipados con los tipos reales** de
- * `@circuitforge/netlist`: si el modelo del dominio cambia, el compilador avisa
- * en vez de dejar pasar una ficha obsoleta.
- *
- * Cubren las 9 categorías del OE-3 con al menos una ficha cada una, para que el
- * filtro de la biblioteca tenga algo real que filtrar. Las 60 fichas completas
- * llegan en F6.
- */
+/** Web compatibility adapter over the DOM-free domain component registry. */
 
-import type { Category, PinType } from '@circuitforge/netlist'
+import type {
+  Category,
+  ComponentDefinition,
+  ComponentPinDefinition,
+  ParameterDefinition,
+} from '@circuitforge/netlist'
+import { COMPONENT_DEFINITIONS } from '@circuitforge/netlist'
 
 export interface CatalogFixture {
   typeId: string
   name: string
   category: Category
-  /** Descripción corta: que hace el componente. */
   description: string
-  pins: { id: string; type: PinType }[]
-  /** Unidad y valor por defecto del parámetro principal, para el inspector. */
+  pins: ComponentPinDefinition[]
+  parameters: ParameterDefinition[]
+  referencePrefix: string
+  footprint: ComponentDefinition['footprint']
+  visualFamily: string
+  electronic: boolean
+  /** Compatibility view of the first numeric parameter; not a second source of defaults. */
   primaryParam?: { name: string; unit: string; value: number }
 }
 
@@ -47,291 +47,38 @@ export const CATEGORIES: Category[] = [
   'connectivity',
 ]
 
-export const CATALOG: CatalogFixture[] = [
-  // --- Pasivos ---------------------------------------------------------------
-  {
-    typeId: 'resistor',
-    name: 'Resistencia',
-    category: 'passive',
-    description: 'Limita la corriente en una rama.',
-    primaryParam: { name: 'Resistencia', unit: 'ohm', value: 220 },
-    pins: [
-      { id: 'a', type: 'power' },
-      { id: 'b', type: 'power' },
-    ],
-  },
-  {
-    typeId: 'capacitor',
-    name: 'Capacitor',
-    category: 'passive',
-    description: 'Almacena carga y filtra ruido.',
-    primaryParam: { name: 'Capacitancia', unit: 'uF', value: 100 },
-    pins: [
-      { id: 'a', type: 'power' },
-      { id: 'b', type: 'gnd' },
-    ],
-  },
-  {
-    typeId: 'inductor',
-    name: 'Inductor',
-    category: 'passive',
-    description: 'Almacena energía en un campo magnético.',
-    primaryParam: { name: 'Inductancia', unit: 'mH', value: 10 },
-    pins: [
-      { id: 'a', type: 'power' },
-      { id: 'b', type: 'power' },
-    ],
-  },
-  {
-    typeId: 'potentiometer',
-    name: 'Potenciómetro',
-    category: 'passive',
-    description: 'Resistencia variable de tres terminales.',
-    primaryParam: { name: 'Resistencia', unit: 'kohm', value: 10 },
-    pins: [
-      { id: 'a', type: 'power' },
-      { id: 'wiper', type: 'analog' },
-      { id: 'b', type: 'gnd' },
-    ],
-  },
+export const CATALOG: CatalogFixture[] = COMPONENT_DEFINITIONS.map((definition) => {
+  const primary = definition.parameters.find((parameter) => parameter.kind === 'number')
+  return {
+    ...definition,
+    ...(primary
+      ? {
+          primaryParam: {
+            name: primary.label,
+            unit: primary.unit ?? '',
+            value: primary.defaultValue,
+          },
+        }
+      : {}),
+  }
+})
 
-  // --- Semiconductores -------------------------------------------------------
-  {
-    typeId: 'led',
-    name: 'LED',
-    category: 'semiconductor',
-    description: 'Diodo emisor de luz.',
-    pins: [
-      { id: 'anode', type: 'power' },
-      { id: 'cathode', type: 'gnd' },
-    ],
-  },
-  {
-    typeId: 'diode',
-    name: 'Diodo',
-    category: 'semiconductor',
-    description: 'Conduce en un solo sentido.',
-    pins: [
-      { id: 'anode', type: 'power' },
-      { id: 'cathode', type: 'gnd' },
-    ],
-  },
-  {
-    typeId: 'bjt_npn',
-    name: 'Transistor NPN',
-    category: 'semiconductor',
-    description: 'Amplifica o conmuta corriente.',
-    pins: [
-      { id: 'base', type: 'analog' },
-      { id: 'collector', type: 'power' },
-      { id: 'emitter', type: 'gnd' },
-    ],
-  },
+export const CATALOG_INDEX = new Map(CATALOG.map((component) => [component.typeId, component]))
 
-  // --- Microcontroladores ----------------------------------------------------
-  {
-    typeId: 'arduino_uno',
-    name: 'Arduino UNO',
-    category: 'mcu',
-    description: 'Placa de desarrollo ATmega328P.',
-    pins: [
-      { id: '5V', type: 'power' },
-      { id: 'GND', type: 'gnd' },
-      { id: 'D13', type: 'digital' },
-      { id: 'D9', type: 'pwm' },
-      { id: 'A0', type: 'analog' },
-      { id: 'SDA', type: 'i2c_sda' },
-      { id: 'SCL', type: 'i2c_scl' },
-      { id: 'TX', type: 'uart_tx' },
-      { id: 'RX', type: 'uart_rx' },
-    ],
-  },
-  {
-    typeId: 'esp32',
-    name: 'ESP32',
-    category: 'mcu',
-    description: 'Microcontrolador con WiFi y Bluetooth.',
-    pins: [
-      { id: '3V3', type: 'power' },
-      { id: 'GND', type: 'gnd' },
-      { id: 'GPIO2', type: 'digital' },
-      { id: 'GPIO4', type: 'pwm' },
-      { id: 'GPIO34', type: 'analog' },
-    ],
-  },
-
-  // --- Sensores --------------------------------------------------------------
-  {
-    typeId: 'ldr',
-    name: 'Fotorresistencia',
-    category: 'sensor',
-    description: 'Resistencia que varía con la luz.',
-    pins: [
-      { id: 'a', type: 'power' },
-      { id: 'b', type: 'analog' },
-    ],
-  },
-  {
-    typeId: 'dht22',
-    name: 'DHT22',
-    category: 'sensor',
-    description: 'Sensor digital de temperatura y humedad.',
-    pins: [
-      { id: 'VCC', type: 'power' },
-      { id: 'GND', type: 'gnd' },
-      { id: 'DATA', type: 'digital' },
-    ],
-  },
-  {
-    typeId: 'ultrasonic_hc_sr04',
-    name: 'HC-SR04',
-    category: 'sensor',
-    description: 'Sensor de distancia por ultrasonido.',
-    pins: [
-      { id: 'VCC', type: 'power' },
-      { id: 'GND', type: 'gnd' },
-      { id: 'TRIG', type: 'digital' },
-      { id: 'ECHO', type: 'digital' },
-    ],
-  },
-
-  // --- Actuadores ------------------------------------------------------------
-  {
-    typeId: 'servo',
-    name: 'Servomotor',
-    category: 'actuator',
-    description: 'Motor con ángulo controlado por PWM.',
-    pins: [
-      { id: 'VCC', type: 'power' },
-      { id: 'GND', type: 'gnd' },
-      { id: 'SIG', type: 'pwm' },
-    ],
-  },
-  {
-    typeId: 'dc_motor',
-    name: 'Motor DC',
-    category: 'actuator',
-    description: 'Motor de giro continuo.',
-    pins: [
-      { id: 'a', type: 'power' },
-      { id: 'b', type: 'gnd' },
-    ],
-  },
-  {
-    typeId: 'buzzer',
-    name: 'Zumbador',
-    category: 'actuator',
-    description: 'Emite tono cuando recibe señal.',
-    pins: [
-      { id: 'positive', type: 'power' },
-      { id: 'negative', type: 'gnd' },
-    ],
-  },
-
-  // --- ESC -------------------------------------------------------------------
-  {
-    typeId: 'esc_30a',
-    name: 'ESC 30A',
-    category: 'esc',
-    description: 'Controlador de velocidad para motor brushless.',
-    pins: [
-      { id: 'BAT', type: 'power' },
-      { id: 'GND', type: 'gnd' },
-      { id: 'SIG', type: 'pwm' },
-    ],
-  },
-
-  // --- Fuentes ---------------------------------------------------------------
-  {
-    typeId: 'dc_source',
-    name: 'Fuente DC',
-    category: 'source',
-    description: 'Fuente de tensión continua ajustable.',
-    primaryParam: { name: 'Tensión', unit: 'V', value: 5 },
-    pins: [
-      { id: 'positive', type: 'power' },
-      { id: 'negative', type: 'gnd' },
-    ],
-  },
-  {
-    typeId: 'gnd_ref',
-    name: 'Tierra',
-    category: 'source',
-    description: 'Referencia de 0 V del circuito.',
-    pins: [{ id: 'gnd', type: 'gnd' }],
-  },
-
-  // --- Baterías --------------------------------------------------------------
-  {
-    typeId: 'battery_9v',
-    name: 'Batería 9V',
-    category: 'battery',
-    description: 'Batería rectangular de 9 voltios.',
-    primaryParam: { name: 'Tensión', unit: 'V', value: 9 },
-    pins: [
-      { id: 'positive', type: 'power' },
-      { id: 'negative', type: 'gnd' },
-    ],
-  },
-  {
-    typeId: 'lipo_3s',
-    name: 'LiPo 3S',
-    category: 'battery',
-    description: 'Batería de polímero de litio, 11.1 V nominales.',
-    primaryParam: { name: 'Tensión', unit: 'V', value: 11.1 },
-    pins: [
-      { id: 'positive', type: 'power' },
-      { id: 'negative', type: 'gnd' },
-    ],
-  },
-
-  // --- Conectividad ----------------------------------------------------------
-  {
-    typeId: 'i2c_oled',
-    name: 'Pantalla OLED I2C',
-    category: 'connectivity',
-    description: 'Display de 128x64 por bus I2C.',
-    pins: [
-      { id: 'VCC', type: 'power' },
-      { id: 'GND', type: 'gnd' },
-      { id: 'SDA', type: 'i2c_sda' },
-      { id: 'SCL', type: 'i2c_scl' },
-    ],
-  },
-  {
-    typeId: 'spi_flash',
-    name: 'Memoria SPI',
-    category: 'connectivity',
-    description: 'Memoria flash por bus SPI.',
-    pins: [
-      { id: 'VCC', type: 'power' },
-      { id: 'GND', type: 'gnd' },
-      { id: 'MOSI', type: 'spi_mosi' },
-      { id: 'MISO', type: 'spi_miso' },
-      { id: 'SCK', type: 'spi_sck' },
-    ],
-  },
-]
-
-/** Indice por typeId, para busquedas O(1) desde el inspector. */
-export const CATALOG_INDEX = new Map(CATALOG.map((c) => [c.typeId, c]))
-
-/** Fichas de una categoría. */
 export function byCategory(category: Category | 'all'): CatalogFixture[] {
-  return category === 'all' ? CATALOG : CATALOG.filter((c) => c.category === category)
+  return category === 'all'
+    ? CATALOG
+    : CATALOG.filter((component) => component.category === category)
 }
 
-/** Búsqueda por nombre o typeId, insensible a mayusculas y acentos. */
 export function searchCatalog(query: string): CatalogFixture[] {
   const q = normalize(query)
   if (!q) return CATALOG
-  return CATALOG.filter((c) => normalize(c.name).includes(q) || normalize(c.typeId).includes(q))
+  return CATALOG.filter(
+    (component) => normalize(component.name).includes(q) || normalize(component.typeId).includes(q),
+  )
 }
 
-/** Quita acentos y baja a minusculas, para que "batería" encuentre "Batería". */
 function normalize(value: string): string {
-  return value
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
+  return value.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 }

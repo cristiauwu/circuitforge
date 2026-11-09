@@ -21,8 +21,22 @@ build/
 .planning/
 .superpowers/
 skills/
+skills-main/
 *.log
 npm-debug.log*
+
+# Contexto y referencias externas
+ContextoProyecto/
+SitioReferencia/
+
+# Prototipos y herramientas auxiliares no requeridas para producción
+apps/web/prototypes/
+apps/web/tools/
+apps/web/scripts/
+apps/web/.impeccable/
+apps/web/apps/
+docs/design/nexo-*/
+
 
 # Test / cobertura
 coverage/

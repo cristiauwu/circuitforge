@@ -15,7 +15,7 @@
  * la ambiguedad y deja claro en cada uso que es el de la escena 3D.
  */
 import { Text as SceneText } from '@react-three/drei'
-import type { ThreeEvent } from '@react-three/fiber'
+import { type ThreeEvent, useThree } from '@react-three/fiber'
 import { useCallback } from 'react'
 import { useEditorStore } from '@/lib/editor/useEditorStore'
 import { CATALOG_INDEX } from '@/lib/fixtures/components'
@@ -54,6 +54,8 @@ export interface SceneComponentProps {
 }
 
 export function SceneComponent({ componentId, camera, viewport }: SceneComponentProps) {
+  const canvasElement = useThree((s) => s.gl.domElement)
+  const sceneCamera = useThree((s) => s.camera)
   const component = useEditorStore((s) => s.project.components.find((c) => c.id === componentId))
   const isSelected = useEditorStore((s) => s.selectedId === componentId)
   const moveComponent = useEditorStore((s) => s.moveComponent)
@@ -78,13 +80,27 @@ export function SceneComponent({ componentId, camera, viewport }: SceneComponent
    */
   const toSnappedWorld = useCallback(
     (clientX: number, clientY: number) => {
-      const canvas = document.querySelector('[data-testid="circuit-canvas"] canvas')
-      const rect = canvas?.getBoundingClientRect()
-      const localX = clientX - (rect?.left ?? 0)
-      const localY = clientY - (rect?.top ?? 0)
-      return screenToSnappedWorld({ x: localX, y: localY }, camera, viewport)
+      const rect = canvasElement.getBoundingClientRect()
+      const localX = clientX - rect.left
+      const localY = clientY - rect.top
+      const measured =
+        rect.width > 0 && rect.height > 0 ? { width: rect.width, height: rect.height } : viewport
+      const ortho = sceneCamera as unknown as {
+        isOrthographicCamera?: boolean
+        right: number
+        left: number
+        zoom: number
+      }
+      const effectiveCamera = ortho.isOrthographicCamera
+        ? {
+            frustumWidth: ortho.right - ortho.left,
+            center: { x: sceneCamera.position.x, y: sceneCamera.position.y },
+            zoom: ortho.zoom,
+          }
+        : camera
+      return screenToSnappedWorld({ x: localX, y: localY }, effectiveCamera, measured)
     },
-    [camera, viewport],
+    [camera, viewport, canvasElement, sceneCamera],
   )
 
   const wiring = useWiring()

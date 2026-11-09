@@ -28,11 +28,11 @@ describe('resolveShortcut — deshacer y rehacer', () => {
     expect(resolveShortcut(key('y', { ctrlKey: true }), withSelection)).toEqual({ kind: 'redo' })
   })
 
-  it('deshacer funciona incluso escribiendo en un campo', () => {
-    // Un usuario que escribe una resistencia y se arrepiente espera que Ctrl+Z
-    // funcione sin tener que sacar el foco del campo.
-    const event = key('z', { ctrlKey: true, targetTagName: 'INPUT' })
-    expect(resolveShortcut(event, withSelection)).toEqual({ kind: 'undo' })
+  it('Cmd+Shift+Z y Cmd+Y rehacen (Mac)', () => {
+    expect(resolveShortcut(key('Z', { metaKey: true, shiftKey: true }), withoutSelection)).toEqual({
+      kind: 'redo',
+    })
+    expect(resolveShortcut(key('y', { metaKey: true }), withoutSelection)).toEqual({ kind: 'redo' })
   })
 
   it('deshacer funciona sin nada seleccionado', () => {
@@ -64,6 +64,31 @@ describe('resolveShortcut — eliminar y rotar', () => {
 })
 
 describe('resolveShortcut — el filtro de campo de texto', () => {
+  const typingTargets: { name: string; target: Partial<KeyEventLike> }[] = [
+    { name: 'INPUT', target: { targetTagName: 'INPUT' } },
+    { name: 'TEXTAREA', target: { targetTagName: 'TEXTAREA' } },
+    { name: 'SELECT', target: { targetTagName: 'SELECT' } },
+    { name: 'contenteditable', target: { targetTagName: 'DIV', targetIsEditable: true } },
+  ]
+  const shortcuts: { name: string; event: KeyEventLike }[] = [
+    { name: 'Ctrl+Z', event: key('z', { ctrlKey: true }) },
+    { name: 'Cmd+Z', event: key('z', { metaKey: true }) },
+    { name: 'Ctrl+Shift+Z', event: key('Z', { ctrlKey: true, shiftKey: true }) },
+    { name: 'Cmd+Shift+Z', event: key('Z', { metaKey: true, shiftKey: true }) },
+    { name: 'Ctrl+Y', event: key('y', { ctrlKey: true }) },
+    { name: 'Cmd+Y', event: key('y', { metaKey: true }) },
+    { name: 'Delete', event: key('Delete') },
+    { name: 'Backspace', event: key('Backspace') },
+    { name: 'R', event: key('r') },
+  ]
+
+  describe.each(typingTargets)('$name conserva el teclado nativo', ({ target }) => {
+    it.each(shortcuts)('no dispara $name en el editor', ({ event }) => {
+      expect(resolveShortcut({ ...event, ...target }, withSelection)).toEqual({ kind: 'none' })
+      expect(resolveShortcut({ ...event, ...target }, withoutSelection)).toEqual({ kind: 'none' })
+    })
+  })
+
   it('NO rota al escribir «r» en un campo', () => {
     // Este es el bug que el filtro evita: buscar «resistor» en la paleta rotaba
     // el componente seleccionado, y el usuario no sabria por que.

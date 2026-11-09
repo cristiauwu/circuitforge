@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { cx } from '@/lib/cx'
 import { useEditorStore } from '@/lib/editor/useEditorStore'
 import { CATALOG_INDEX } from '@/lib/fixtures/components'
-import { Input, PanelTitle, PinChip, ViolationMessage } from '@/ui'
+import { PanelTitle, PinChip, ViolationMessage } from '@/ui'
 
 /**
  * Inspector de propiedades.
@@ -70,32 +70,20 @@ export function Inspector({ selectedId }: InspectorProps) {
               <Row label="Rotación" value={`${component.position.rotation}°`} />
             </fieldset>
 
-            {/* Parámetros editables */}
+            {/* Valor de referencia del catálogo, no un parámetro editable del proyecto. */}
             {fixture.primaryParam && (
-              <fieldset className="flex flex-col gap-2">
-                <legend className="cf-eyebrow mb-2">Parámetros</legend>
-                <div className="flex items-center justify-between gap-3">
-                  {/*
-                    `htmlFor` explícito en vez de envolver el input: la asociación
-                    por anidamiento se rompe si hay un contenedor en medio, y un
-                    lector de pantalla dejaría de anunciar para qué sirve el campo.
-                  */}
-                  <label htmlFor="param-primary" className="text-sm text-text-secondary">
-                    {fixture.primaryParam.name}
-                  </label>
-                  <span className="flex items-center gap-1.5">
-                    <Input
-                      id="param-primary"
-                      numeric
-                      defaultValue={fixture.primaryParam.value}
-                      className="w-24"
-                    />
-                    <span className="cf-mono w-8 text-xs text-text-muted">
-                      {fixture.primaryParam.unit}
-                    </span>
-                  </span>
-                </div>
-              </fieldset>
+              <section className="flex flex-col gap-2" aria-label="Parámetros del catálogo">
+                <h3 className="cf-eyebrow mb-2">Parámetros del catálogo</h3>
+                <dl>
+                  <Row
+                    label={fixture.primaryParam.name}
+                    value={`${fixture.primaryParam.value} ${fixture.primaryParam.unit}`.trim()}
+                  />
+                </dl>
+                <p className="text-xs text-text-muted">
+                  Valor de referencia del catálogo. Solo lectura.
+                </p>
+              </section>
             )}
 
             {/* Pines */}
@@ -171,7 +159,7 @@ function EmptyInspector() {
         <path d="M9 9h6v6H9z" />
       </svg>
       <p className="max-w-[22ch] text-sm text-text-muted">
-        Selecciona un componente del lienzo para editar sus parámetros y ver sus pines.
+        Selecciona un componente del lienzo para consultar sus propiedades y ver sus pines.
       </p>
     </div>
   )

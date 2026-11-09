@@ -7,7 +7,12 @@
  */
 
 import type { Net, PinEndpoint, PinRef, PinType, Project } from '@circuitforge/netlist'
-import { connectPins } from '@circuitforge/netlist'
+import {
+  BREADBOARD_TYPE_ID,
+  connectPins,
+  getInternalContactPairs,
+  recomputeNets,
+} from '@circuitforge/netlist'
 import type {
   Catalog,
   CatalogEntry,
@@ -43,12 +48,38 @@ function violation(rule: RuleId, extra: Partial<Violation> = {}): Violation {
   return { rule, severity: RULE_SEVERITY[rule], message: RULE_MESSAGES[rule], ...extra }
 }
 
-/** Índice de pines por `componentId:pinId` para resolver tipos de pin. */
-function pinIndex(project: Project): Map<string, PinRef> {
+/** Solo estas cargas tuvieron terminales power/gnd en snapshots antiguos. */
+const LEGACY_PASSIVE_TYPES = new Set([
+  'resistor',
+  'inductor',
+  'led',
+  'diode',
+  'capacitor',
+  'ldr',
+  'potentiometer',
+  'bjt_npn',
+])
+
+/** Resuelve sin migrar el proyecto ni aplicar overrides arbitrarios del catálogo. */
+function effectivePinType(typeId: string, pin: PinRef, catalog: Catalog): PinType {
+  if (
+    LEGACY_PASSIVE_TYPES.has(typeId) &&
+    catalog.get(typeId)?.pins.some((p) => p.id === pin.pinId && p.type === 'passive')
+  ) {
+    return 'passive'
+  }
+  return pin.type
+}
+
+/** Índice efectivo por endpoint completo; nunca modifica los PinRef del proyecto. */
+function pinIndex(project: Project, catalog: Catalog): Map<string, PinRef> {
   const index = new Map<string, PinRef>()
   for (const component of project.components) {
     for (const pin of component.pins) {
-      index.set(`${component.id}:${pin.pinId}`, pin)
+      index.set(JSON.stringify([component.id, pin.pinId]), {
+        ...pin,
+        type: effectivePinType(component.typeId, pin, catalog),
+      })
     }
   }
   return index
@@ -58,7 +89,7 @@ function pinIndex(project: Project): Map<string, PinRef> {
 function netPinRefs(net: Net, index: Map<string, PinRef>): PinRef[] {
   const result: PinRef[] = []
   for (const endpoint of net.pins) {
-    const pin = index.get(`${endpoint.componentId}:${endpoint.pinId}`)
+    const pin = index.get(JSON.stringify([endpoint.componentId, endpoint.pinId]))
     if (pin) result.push(pin)
   }
   return result
@@ -70,8 +101,16 @@ function netPinRefs(net: Net, index: Map<string, PinRef>): PinRef[] {
  * Es la única regla que **bloquea** (RF-1.4): unir alimentación con tierra sin carga
  * produce un cortocircuito.
  */
-export function ruleV1(project: Project, _catalog: Catalog): Violation[] {
-  const index = pinIndex(project)
+export function ruleV1(input: Project, catalog: Catalog): Violation[] {
+  const project =
+    (input.mounts?.length ?? 0) > 0 ||
+    input.components.some(
+      (component) =>
+        component.typeId === BREADBOARD_TYPE_ID || getInternalContactPairs(component).length > 0,
+    )
+      ? recomputeNets(input)
+      : input
+  const index = pinIndex(project, catalog)
   const out: Violation[] = []
 
   for (const net of project.nets) {
@@ -94,13 +133,22 @@ const INCOMPATIBLE_PAIRS: readonly (readonly [PinType, PinType])[] = [
 /**
  * V-2 (warning): dos pines `power` en el mismo net, o un par incompatible.
  */
-export function ruleV2(project: Project, _catalog: Catalog): Violation[] {
-  const index = pinIndex(project)
+export function ruleV2(project: Project, catalog: Catalog): Violation[] {
+  const index = pinIndex(project, catalog)
   const out: Violation[] = []
 
   for (const net of project.nets) {
     const pins = netPinRefs(net, index)
-    const powerCount = pins.filter((p) => p.type === 'power').length
+    const powerCount = net.pins.filter((endpoint) => {
+      const component = project.components.find((item) => item.id === endpoint.componentId)
+      const pin = index.get(JSON.stringify([endpoint.componentId, endpoint.pinId]))
+      if (!component || pin?.type !== 'power') return false
+      const role = catalog
+        .get(component.typeId)
+        ?.pins.find((item) => item.id === endpoint.pinId)?.powerRole
+      // Legacy metadata has no role: retain its historical source warning.
+      return role === undefined || role === 'output'
+    }).length
 
     // Dos pines power en el mismo net → posible conflicto entre fuentes.
     if (powerCount > 1) {
@@ -123,30 +171,76 @@ export function ruleV3(project: Project, _catalog: Catalog): Violation[] {
     .map((net) => violation('V-3', { netId: net.id }))
 }
 
+/** Un endpoint ambiguo o ausente no aporta evidencia de polaridad. */
+function directNet(project: Project, componentId: string, pinId: string): Net | undefined {
+  const nets = project.nets.filter((net) =>
+    net.pins.some((p) => p.componentId === componentId && p.pinId === pinId),
+  )
+  return nets.length === 1 ? nets[0] : undefined
+}
+
+/** Categoría y ambos terminales confirmados: una tierra sola o un MCU no son fuente. */
+function isExternalSource(entry: CatalogEntry): boolean {
+  return (
+    (entry.category === 'source' || entry.category === 'battery') &&
+    entry.pins.some((p) => p.type === 'power') &&
+    entry.pins.some((p) => p.type === 'gnd')
+  )
+}
+
+function hasSourceTerminal(
+  net: Net,
+  source: Project['components'][number],
+  entry: CatalogEntry,
+  type: 'power' | 'gnd',
+): boolean {
+  return net.pins.some(
+    (endpoint) =>
+      endpoint.componentId === source.id &&
+      entry.pins.some((pin) => pin.id === endpoint.pinId && pin.type === type) &&
+      source.pins.some((pin) => pin.pinId === endpoint.pinId && pin.type === type),
+  )
+}
+
 /**
- * V-4 (warning): `anode`/`cathode` invertidos respecto a la fuente.
- *
- * Solo se pronuncia cuando el catálogo confirma que el componente es un diodo/LED.
- * Sin esa información se omite en vez de inventar un fallo.
+ * V-4 (warning): ambos terminales del mismo LED/diodo están invertidos en dos
+ * nets distintos conectados directamente a una misma fuente externa de catálogo.
+ * No deduce tensiones ni recorre resistencias; sin evidencia suficiente se omite.
  */
 export function ruleV4(project: Project, catalog: Catalog): Violation[] {
-  const index = pinIndex(project)
+  const sources = project.components.filter((component) => {
+    const entry = catalog.get(component.typeId)
+    return entry !== undefined && isExternalSource(entry)
+  })
   const out: Violation[] = []
 
-  for (const net of project.nets) {
-    const pins = netPinRefs(net, index)
-    const cathodeOnPower = pins.find((p) => p.type === 'power' && /cathode/i.test(p.pinId))
-    if (!cathodeOnPower) continue
+  for (const component of project.components) {
+    if (component.typeId !== 'led' && component.typeId !== 'diode') continue
+    const entry = catalog.get(component.typeId)
+    const anode = entry?.pins.find((pin) => /^anode$/i.test(pin.id))
+    const cathode = entry?.pins.find((pin) => /^cathode$/i.test(pin.id))
+    if (!anode || !cathode) continue
+    if (
+      !component.pins.some((pin) => pin.pinId === anode.id) ||
+      !component.pins.some((pin) => pin.pinId === cathode.id)
+    )
+      continue
 
-    const endpoint = net.pins.find((e) => e.pinId === cathodeOnPower.pinId)
-    if (!endpoint) continue
+    const anodeNet = directNet(project, component.id, anode.id)
+    const cathodeNet = directNet(project, component.id, cathode.id)
+    if (!anodeNet || !cathodeNet || anodeNet.id === cathodeNet.id) continue
 
-    const component = project.components.find((c) => c.id === endpoint.componentId)
-    if (!component) continue
-
-    const entry: CatalogEntry | undefined = catalog.get(component.typeId)
-    if (entry?.pins.some((p) => /anode|cathode/i.test(p.id))) {
-      out.push(violation('V-4', { netId: net.id, componentId: component.id }))
+    const reversed = sources.some((source) => {
+      if (source.id === component.id) return false
+      const sourceEntry = catalog.get(source.typeId)
+      return (
+        sourceEntry !== undefined &&
+        hasSourceTerminal(anodeNet, source, sourceEntry, 'gnd') &&
+        hasSourceTerminal(cathodeNet, source, sourceEntry, 'power')
+      )
+    })
+    if (reversed) {
+      out.push(violation('V-4', { netId: cathodeNet.id, componentId: component.id }))
     }
   }
   return out
@@ -164,8 +258,14 @@ export function ruleV5(project: Project, catalog: Catalog): Violation[] {
 
   for (const component of project.components) {
     const entry = catalog.get(component.typeId)
-    if (!entry) continue
-    if (component.pins.some((p) => p.netId === null)) {
+    if (!entry || component.typeId === BREADBOARD_TYPE_ID) continue
+    if (
+      entry.pins.some(
+        (definition) =>
+          definition.required !== false &&
+          !component.pins.some((pin) => pin.pinId === definition.id && pin.netId !== null),
+      )
+    ) {
       out.push(violation('V-5', { componentId: component.id }))
     }
   }
@@ -236,8 +336,22 @@ const RULES: readonly ((project: Project, catalog: Catalog) => Violation[])[] = 
  * @returns Lista de violaciones, ordenadas por severidad (`error` primero) y luego
  *          por regla. Nunca lanza.
  */
-export function validateCircuit(project: Project, catalog: Catalog): Violation[] {
+export function validateCircuit(input: Project, catalog: Catalog): Violation[] {
+  let project = input
   if (project.components.length === 0 && project.nets.length === 0) return []
+  if (
+    (project.mounts?.length ?? 0) > 0 ||
+    project.components.some(
+      (component) =>
+        component.typeId === BREADBOARD_TYPE_ID || getInternalContactPairs(component).length > 0,
+    )
+  ) {
+    try {
+      project = recomputeNets(project)
+    } catch {
+      // Diagnostics remain best-effort; canConnect uses the strict blocking rule.
+    }
+  }
 
   const violations: Violation[] = []
   for (const rule of RULES) {
@@ -280,10 +394,12 @@ export function canConnect(
 ): ConnectCheck {
   try {
     const hypothetical = connectPins(project, a, b)
-    const blocking = validateCircuit(hypothetical, catalog).find((v) => v.severity === 'error')
+    // Call the blocking rule directly: validateCircuit intentionally catches rule
+    // failures for diagnostics, but a safety decision must fail closed instead.
+    const blocking = ruleV1(hypothetical, catalog)[0]
     return blocking ? { allowed: false, violation: blocking } : { allowed: true }
   } catch {
-    // Un fallo al construir el net hipotético no debe bloquear la interfaz.
-    return { allowed: true }
+    // Unknown/ambiguous topology is not proof that a connection is safe.
+    return { allowed: false }
   }
 }

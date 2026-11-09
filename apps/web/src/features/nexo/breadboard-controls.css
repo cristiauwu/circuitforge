@@ -1,0 +1,84 @@
+.nx-breadboard-contacts {
+  min-width: 0;
+}
+
+.nx-breadboard-contacts .nx-breadboard-fields {
+  display: grid;
+  gap: 12px;
+  margin-block: 16px;
+}
+
+.nx-breadboard-contacts .nx-breadboard-fields label {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.nx-breadboard-contacts select {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px;
+  border: 1px solid var(--nx-line);
+  border-radius: 4px;
+  background: var(--nx-paper);
+  color: var(--nx-ink);
+  font: inherit;
+  color-scheme: light;
+}
+
+.nx-breadboard-contacts select:hover {
+  border-color: var(--nx-muted);
+}
+
+.nx-breadboard-contacts select:focus-visible,
+.nx-project-wires button:focus-visible {
+  outline: 2px solid var(--nx-focus);
+  outline-offset: 3px;
+}
+
+.nx-breadboard-contacts .nx-breadboard-selection {
+  display: grid;
+  gap: 4px;
+  color: var(--nx-ink);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.nx-breadboard-contacts > .nx-button {
+  width: 100%;
+  min-height: 44px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.nx-project-wires ul {
+  padding: 0;
+  margin: 12px 0 0;
+  list-style: none;
+}
+
+.nx-project-wires li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-block: 12px;
+  border-bottom: 1px solid var(--nx-line);
+}
+
+.nx-project-wires li span {
+  flex: 1 1 160px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.nx-project-wires .nx-button {
+  min-height: 44px;
+  white-space: normal;
+}

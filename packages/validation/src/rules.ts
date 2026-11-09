@@ -42,7 +42,12 @@ export interface ConnectCheck {
 export interface CatalogEntry {
   typeId: string
   category: string
-  pins: { id: string; type: string }[]
+  pins: {
+    id: string
+    type: string
+    required?: boolean
+    powerRole?: 'input' | 'output' | 'reference'
+  }[]
   /** Tensión máxima admitida por el componente, para V-6. Opcional. */
   maxVoltage?: number
 }

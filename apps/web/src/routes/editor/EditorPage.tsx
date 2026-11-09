@@ -1,378 +1,905 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { CanvasErrorBoundary } from '@/features/editor/canvas/CanvasErrorBoundary'
-import { CircuitCanvas } from '@/features/editor/canvas/CircuitCanvas'
-import { CANVAS_FRUSTUM_WIDTH, CANVAS_ZOOM } from '@/features/editor/canvas/componentLayout'
-import { findFreePosition } from '@/features/editor/canvas/findFreePosition'
-import type { EditorAction } from '@/features/editor/canvas/keyboardShortcuts'
+import { BREADBOARD_TYPE_ID, type Category, type Wire } from '@circuitforge/netlist'
+import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { resolveShortcut, toKeyEventLike } from '@/features/editor/canvas/keyboardShortcuts'
-import { SceneComponent } from '@/features/editor/canvas/SceneComponent'
-import type { OrthoCamera, Viewport } from '@/features/editor/canvas/useGridSnap'
-import { useWiringProvider, WiringProviderContext } from '@/features/editor/canvas/useWiring'
-import { WireLayer } from '@/features/editor/canvas/WireLayer'
-import { Inspector } from '@/features/editor/Inspector'
-import { Palette } from '@/features/editor/Palette'
-import { cx } from '@/lib/cx'
-import { useEditorStore } from '@/lib/editor/useEditorStore'
-import { Button, IconButton, PanelGlass } from '@/ui'
+import { WorkspaceSplit } from '@/features/editor/workspace/WorkspaceSplit'
+import { canShowSplit, clampSplitWidth } from '@/features/editor/workspace/workspaceLayout'
+import { BreadboardContacts } from '@/features/nexo/BreadboardContacts'
+import { BreadboardMountPanel } from '@/features/nexo/BreadboardMountPanel'
+import { ComponentParameters } from '@/features/nexo/ComponentParameters'
+import { ComponentPreview } from '@/features/nexo/ComponentPreview'
+import { ContextHelp } from '@/features/nexo/ContextHelp'
+import { EDITABLE_TYPE_IDS, isEditableType } from '@/features/nexo/capabilities'
+import { NexoScene, type ProjectSceneActions, type SceneAPI } from '@/features/nexo/NexoScene'
+import { createProjectController, type ProjectSnapshot } from '@/features/nexo/projectController'
+import { useNexoSession } from '@/features/nexo/session'
+import { CATALOG, CATALOG_INDEX, CATEGORIES, CATEGORY_LABELS } from '@/lib/fixtures/components'
 
-/**
- * Editor — la pantalla nucleo del OE-1.
- *
- * **Presupuesto de glass: 4.** Nav, barra flotante, paleta e inspector.
- * `backdrop-filter` obliga a la GPU a releer el fondo en cada frame y el lienzo
- * necesita esos ciclos para el arrastre.
- *
- * **Estado:** todo el estado del circuito vive en `useEditorStore` (netlist como
- * fuente de verdad). Aquí solo se orquesta la UI y los atajos de teclado.
- *
- * **El zoom NO se define aqui.** Se importa de `CircuitCanvas`, que es quien
- * configura la camara. Antes habia dos constantes distintas —la camara en 2.4 y
- * la conversion del arrastre en 1.25— y el arrastre se desviaba.
- */
+function WireList({
+  wires,
+  onRemove,
+  label,
+}: {
+  wires: readonly Wire[]
+  onRemove: (id: string) => void
+  label: string
+}) {
+  if (wires.length === 0) return null
+  return (
+    <section className="nx-project-wires" aria-label={label}>
+      <h3>
+        {label} ({wires.length})
+      </h3>
+      <p>Solo cables añadidos explícitamente, no uniones internas de la protoboard.</p>
+      <ul>
+        {wires.map((wire) => (
+          <li key={wire.id}>
+            <span>
+              {wire.id}: {wire.from.componentId}.{wire.from.pinId} — {wire.to.componentId}.
+              {wire.to.pinId}
+            </span>
+            <button
+              type="button"
+              className="nx-button"
+              aria-label={`Desconectar cable ${wire.id}: ${wire.from.componentId}.${wire.from.pinId} a ${wire.to.componentId}.${wire.to.pinId}`}
+              onClick={() => onRemove(wire.id)}
+            >
+              Desconectar
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
 
 export function EditorPage() {
-  const project = useEditorStore((s) => s.project)
-  const selectedId = useEditorStore((s) => s.selectedId)
-  const selectComponent = useEditorStore((s) => s.selectComponent)
-  const removeComponent = useEditorStore((s) => s.removeComponent)
-  const rotateComponent = useEditorStore((s) => s.rotateComponent)
-  const undo = useEditorStore((s) => s.undo)
-  const redo = useEditorStore((s) => s.redo)
+  const [snapshot, setSnapshot] = useState<ProjectSnapshot | null>(null)
+  const controllerRef = useRef<ReturnType<typeof createProjectController> | null>(null)
+  const sceneRef = useRef<SceneAPI | null>(null)
+  const centerRef = useRef<HTMLDivElement>(null)
+  const [centerWidth, setCenterWidth] = useState(800)
+  const [windowWidth, setWindowWidth] = useState(() => window.innerWidth)
+  const [query, setQuery] = useState('')
+  const [category, setCategory] = useState<Category | 'all'>('all')
+  const [typeId, setTypeId] = useState('esp32')
+  const [tool, setTool] = useState<'project' | 'part'>('part')
+  const [catalogOpen, setCatalogOpen] = useState(false)
+  const [toolsOpen, setToolsOpen] = useState(false)
+  const catalogRef = useRef<HTMLElement>(null)
+  const toolsRef = useRef<HTMLElement>(null)
+  const catalogTriggerRef = useRef<HTMLButtonElement | null>(null)
+  const toolsTriggerRef = useRef<HTMLButtonElement | null>(null)
+  const location = useLocation()
 
-  const canvasRef = useRef<HTMLDivElement>(null)
-  const [viewport, setViewport] = useState<Viewport>({ width: 1200, height: 700 })
-
-  /**
-   * Estado del cableado.
-   *
-   * Vive AQUI y no en cada `SceneComponent` porque es compartido: el primer clic
-   * se registra en un componente y el segundo llega a otro distinto. Con el
-   * estado dentro del componente, el pin de origen se perderia entre los dos
-   * clics y el cable nunca se completaria.
-   */
-  const wiring = useWiringProvider()
-
-  /**
-   * El viewport se mide del DOM en vez de asumirlo: la conversion
-   * pantalla→mundo depende de él, y un valor equivocado desviaria el arrastre
-   * exactamente en la diferencia.
-   */
-  useEffect(() => {
-    const element = canvasRef.current
-    if (!element) return
-
-    const update = () => {
-      const rect = element.getBoundingClientRect()
-      setViewport({ width: rect.width, height: rect.height })
+  const closeDrawer = useCallback((drawer: 'catalog' | 'tools', restoreFocus = true) => {
+    const panel = drawer === 'catalog' ? catalogRef.current : toolsRef.current
+    const trigger = drawer === 'catalog' ? catalogTriggerRef.current : toolsTriggerRef.current
+    const responsive = window.innerWidth <= (drawer === 'catalog' ? 650 : 1000)
+    if (restoreFocus && responsive && panel?.contains(document.activeElement)) {
+      const fallback = document.querySelector<HTMLButtonElement>(
+        '.nx-center-toolbar button[aria-controls="editor-tools"]',
+      )
+      ;(trigger ?? fallback)?.focus({ preventScroll: true })
     }
-
-    update()
-    const observer = new ResizeObserver(update)
-    observer.observe(element)
-    return () => observer.disconnect()
+    if (drawer === 'catalog') setCatalogOpen(false)
+    else setToolsOpen(false)
   }, [])
 
-  /** Cámara descrita para la conversión de coordenadas. */
-  const camera = useMemo<OrthoCamera>(
-    () => ({
-      frustumWidth: CANVAS_FRUSTUM_WIDTH,
-      center: { x: 0, y: 0 },
-      zoom: CANVAS_ZOOM,
-    }),
-    [],
+  const toggleDrawer = (drawer: 'catalog' | 'tools', trigger: HTMLButtonElement) => {
+    useNexoSession.getState().continueWork()
+    if (drawer === 'catalog') {
+      catalogTriggerRef.current = trigger
+      setToolsOpen(false)
+      if (catalogOpen) closeDrawer('catalog')
+      else setCatalogOpen(true)
+    } else {
+      toolsTriggerRef.current = trigger
+      setCatalogOpen(false)
+      if (toolsOpen) closeDrawer('tools')
+      else setToolsOpen(true)
+    }
+  }
+
+  useEffect(() => {
+    if (catalogOpen && window.innerWidth <= 650) catalogRef.current?.focus()
+    if (toolsOpen && window.innerWidth <= 1000) toolsRef.current?.focus()
+  }, [catalogOpen, toolsOpen])
+
+  useEffect(() => {
+    if (new URLSearchParams(location.search).get('help') !== 'idea') return
+    setTool('project')
+    setCatalogOpen(false)
+    setToolsOpen(true)
+    // Run after the router shell's route-change focus effect and the pane render.
+    const frame = requestAnimationFrame(() => {
+      document.getElementById('nexo-notes')?.focus({ preventScroll: true })
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [location])
+  const [diagnosticsOpen, setDiagnosticsOpen] = useState(false)
+  const [message, setMessage] = useState('')
+
+  useEffect(() => {
+    if (!message) return
+    const timer = window.setTimeout(() => setMessage(''), 4500)
+    return () => window.clearTimeout(timer)
+  }, [message])
+  const code = useNexoSession((s) => s.code)
+  const notes = useNexoSession((s) => s.notes)
+  const view = useNexoSession((s) => s.view)
+  const ratio = useNexoSession((s) => s.splitRatio)
+  const setCode = useNexoSession((s) => s.setCode)
+  const setNotes = useNexoSession((s) => s.setNotes)
+  const setView = useNexoSession((s) => s.setView)
+  const setSplitRatio = useNexoSession((s) => s.setSplitRatio)
+  const split = view === 'split' && canShowSplit(centerWidth)
+  const showMount = view !== 'code'
+  const showCode = view === 'code' || split
+  const schematicWidth = clampSplitWidth(centerWidth * ratio, centerWidth)
+  const project = snapshot?.project
+  const selected = project?.components.find((c) => c.id === snapshot?.selectedId)
+  const fixture = CATALOG_INDEX.get(selected?.typeId ?? typeId)
+  const wires = project?.wires ?? []
+  const selectedWires = selected
+    ? wires.filter(
+        (wire) => wire.from.componentId === selected.id || wire.to.componentId === selected.id,
+      )
+    : []
+  const catalog = CATALOG.filter(
+    (item) =>
+      isEditableType(item.typeId) &&
+      (category === 'all' || item.category === category) &&
+      `${item.name} ${item.typeId} ${item.description}`
+        .toLocaleLowerCase('es')
+        .includes(query.toLocaleLowerCase('es')),
   )
 
-  /**
-   * Atajos de teclado.
-   *
-   * Toda la decision vive en `resolveShortcut` y `toKeyEventLike`, que son
-   * funciones puras y por eso **se prueban sin navegador**. Aqui solo queda
-   * ejecutar la accion, y el despacho se hace con una tabla para que anadir un
-   * atajo no anada una rama.
-   */
   useEffect(() => {
-    const actions: Record<Exclude<EditorAction['kind'], 'none'>, () => void> = {
-      undo,
-      redo,
-      delete: () => selectedId !== null && removeComponent(selectedId),
-      rotate: () => selectedId !== null && rotateComponent(selectedId),
+    const controller = createProjectController(setSnapshot, setMessage)
+    controllerRef.current = controller
+    setSnapshot(controller.getSnapshot())
+    return () => {
+      controller.cancel()
+      controller.dispose()
+      controllerRef.current = null
     }
+  }, [])
 
-    const onKeyDown = (event: KeyboardEvent) => {
-      /*
-       * Escape cancela el cableado en curso.
-       *
-       * Se comprueba ANTES que los demas atajos y sin pasar por
-       * `resolveShortcut`: es un atajo contextual que solo existe mientras hay
-       * un cable a medias, y meterlo en la tabla pura obligaria a pasarle el
-       * estado del cableado, ensuciando una funcion que hoy solo depende de la
-       * tecla y la seleccion.
-       */
-      if (event.key === 'Escape' && wiring.pending !== null) {
-        event.preventDefault()
-        wiring.cancel()
-        return
+  useEffect(() => {
+    const center = centerRef.current
+    if (!center) return
+    const observer = new ResizeObserver(() => {
+      const width = center.getBoundingClientRect().width
+      if (width > 0) setCenterWidth(width)
+    })
+    observer.observe(center)
+    const resize = () => setWindowWidth(window.innerWidth)
+    window.addEventListener('resize', resize)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', resize)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!showMount) {
+      sceneRef.current?.cancelGesture()
+      controllerRef.current?.cancel()
+    }
+  }, [showMount])
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || event.isComposing) return
+      const controller = controllerRef.current
+      if (!controller) return
+      if (event.key === 'Escape') {
+        if ((window.innerWidth <= 650 && catalogOpen) || (window.innerWidth <= 1000 && toolsOpen)) {
+          closeDrawer('tools')
+          closeDrawer('catalog')
+          event.preventDefault()
+          return
+        }
+        if (controller.getSnapshot().wiring.pending || controller.getSnapshot().preview) {
+          sceneRef.current?.cancelGesture()
+          controller.cancel()
+          event.preventDefault()
+          return
+        }
+        closeDrawer('tools')
+        closeDrawer('catalog')
       }
-
-      const action = resolveShortcut(toKeyEventLike(event), { hasSelection: selectedId !== null })
+      const action = resolveShortcut(toKeyEventLike(event), {
+        hasSelection: controller.getSnapshot().selectedId !== null,
+      })
       if (action.kind === 'none') return
       event.preventDefault()
+      const actions = {
+        undo: controller.undo,
+        redo: controller.redo,
+        rotate: controller.rotate,
+        delete: controller.remove,
+      }
+      useNexoSession.getState().continueWork()
       actions[action.kind]()
     }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [catalogOpen, toolsOpen, closeDrawer])
 
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [selectedId, removeComponent, rotateComponent, undo, redo, wiring])
-
-  /**
-   * Añade un componente en el primer hueco libre del lienzo.
-   *
-   * **Por qué no al centro sin más:** al añadir varios seguidos, todos caían en
-   * (0,0) y el lienzo mostraba una sola mancha.
-   *
-   * **Por qué lee el estado con `getState()` y no del cierre:** un cierre captura
-   * el valor de `project.components` del render en que se creó. Si el usuario
-   * pulsa dos fichas en el mismo tick —un doble clic, o dos clics rápidos— ambas
-   * llamadas ven la MISMA lista, calculan el mismo hueco y el segundo componente
-   * cae encima del primero. Medido: con clics síncronos, tres componentes daban
-   * una sola posición; con clics espaciados 250 ms, tres posiciones correctas.
-   *
-   * Leyendo del store en el momento de la acción, la segunda llamada ya ve el
-   * componente que añadió la primera. El cierre deja de ser una trampa.
-   *
-   * El arrastre directo desde la paleta al lienzo es una mejora posterior: con el
-   * clic ya se construye un circuito completo, que es lo que exige el OE-1.
-   */
-  const handleAdd = useCallback((typeId: string) => {
-    const current = useEditorStore.getState()
-    const free = findFreePosition(current.project.components.map((c) => c.position))
-    current.addComponent(typeId, free)
+  const pin = useCallback((componentId: string, pinId: string) => {
+    const session = useNexoSession.getState()
+    session.continueWork()
+    const outcome = controllerRef.current?.pin({ componentId, pinId })
+    if (outcome?.kind === 'selected') session.notifyHelp('connect')
+    else if (outcome?.kind === 'connected') setMessage('Conexión creada en el proyecto.')
   }, [])
 
-  return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      {/*
-        Barra de simulacion flotante — superficie glass 1 de 3.
-        El titulo vive aqui, integrado en la barra: da orientacion sin costar
-        altura vertical, que es el recurso escaso en una herramienta de lienzo.
-      */}
-      <div className="px-3 pt-3">
-        <div className="cf-glass mx-auto flex w-full max-w-[1600px] flex-wrap items-center gap-x-4 gap-y-2 rounded-pill px-3 py-2">
-          <h1 className="shrink-0 text-sm font-semibold tracking-tight text-text-strong">Editor</h1>
-
-          <span
-            aria-hidden="true"
-            className="hidden h-5 w-px shrink-0 bg-hairline-strong sm:block"
-          />
-
-          <div className="flex shrink-0 items-center gap-2">
-            <Button variant="primary" size="sm" plain disabled>
-              Simular
-            </Button>
-            <IconButton
-              label="Deshacer"
-              variant="ghost"
-              size="sm"
-              onClick={undo}
-              disabled={!useEditorStore.getState().history.past.length}
-            >
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
-                <path d="M3 3v5h5" />
-              </svg>
-            </IconButton>
-          </div>
-
-          <span
-            aria-hidden="true"
-            className="hidden h-5 w-px shrink-0 bg-hairline-strong sm:block"
-          />
-
-          {/* Lecturas de instrumentacion */}
-          <dl className="flex min-w-0 flex-wrap items-center gap-x-5 gap-y-1">
-            <Reading label="V" value="5.00" unit="V" />
-            <Reading label="I" value="0.00" unit="mA" />
-            <Reading label="P" value="0.00" unit="mW" />
-          </dl>
-
-          <p className="w-full text-xs text-text-muted lg:ml-auto lg:w-auto">
-            {project.components.length} componentes · {project.nets.length} nets
-          </p>
-        </div>
-      </div>
-
-      <div className="mx-auto grid w-full max-w-[1600px] min-h-0 flex-1 grid-cols-1 gap-3 p-3 lg:grid-cols-[248px_minmax(0,1fr)_264px]">
-        {/* Paleta — superficie glass 2 de 3 */}
-        <PanelGlass className="order-2 min-h-0 min-w-0 overflow-hidden lg:order-1">
-          <Palette onAdd={handleAdd} />
-        </PanelGlass>
-
-        {/* Lienzo R3F, aislado tras un limite de errores */}
-        {/*
-          `relative` es necesario: el aviso de cableado se posiciona en absoluto
-          respecto a este contenedor, no a la pagina.
-        */}
-        <div
-          ref={canvasRef}
-          className="relative order-1 flex min-h-[420px] min-w-0 flex-col lg:order-2"
-        >
-          {/*
-            El limite aisla un fallo de WebGL: sin el, el error sube al
-            ErrorBoundary de la ruta y tumba toda la pantalla del editor. Con el,
-            el usuario pierde el lienzo pero conserva la paleta, el inspector y la
-            navegacion.
-          */}
-          <CanvasErrorBoundary>
-            {/*
-              El proveedor de cableado envuelve SOLO el canvas: los pines viven
-              dentro de la escena, y montarlo mas arriba expondria el contexto a
-              la paleta y al inspector, que no lo necesitan.
-            */}
-            <WiringProviderContext.Provider value={wiring}>
-              <CircuitCanvas
-                onPointerMissed={() => {
-                  // Pulsar el vacio deselecciona Y cancela el cableado: si el
-                  // usuario hace clic fuera, lo que quiere es salir de lo que
-                  // estaba haciendo.
-                  selectComponent(null)
-                  if (wiring.pending !== null) wiring.cancel()
-                }}
-              >
-                {/* Cables: se dibujan ANTES que los componentes para que queden
-                    por debajo de los simbolos y no tapen los pines. */}
-                <WireLayer components={project.components} nets={project.nets} />
-
-                {project.components.map((component) => (
-                  <SceneComponent
-                    key={component.id}
-                    componentId={component.id}
-                    camera={camera}
-                    viewport={viewport}
-                  />
-                ))}
-              </CircuitCanvas>
-            </WiringProviderContext.Provider>
-          </CanvasErrorBoundary>
-
-          {/*
-            Aviso del cableado en curso.
-            Va fuera del canvas, sobre el lienzo, porque un mensaje dentro de la
-            escena 3D no seria accesible: los lectores de pantalla no leen
-            texturas. Aqui es HTML real, con `role="status"` para que se anuncie.
-          */}
-          <WiringHint
-            pending={wiring.pending !== null}
-            error={wiring.error}
-            onCancel={wiring.cancel}
-          />
-        </div>
-
-        {/* Inspector — superficie glass 3 de 3 */}
-        <PanelGlass className="order-3 min-h-0 min-w-0 overflow-hidden">
-          <Inspector selectedId={selectedId} />
-        </PanelGlass>
-      </div>
-    </div>
+  const actions = useMemo<ProjectSceneActions>(
+    () => ({
+      onSelect: (id) => {
+        useNexoSession.getState().continueWork()
+        controllerRef.current?.select(id)
+        if (id) setTool('part')
+      },
+      onPin: (endpoint) => pin(endpoint.componentId, endpoint.pinId),
+      onDragStart: (id) => {
+        useNexoSession.getState().continueWork()
+        controllerRef.current?.beginDrag(id)
+      },
+      onDragPreview: (position) => controllerRef.current?.previewDrag(position),
+      onDragCommit: () => controllerRef.current?.commitDrag(),
+      onDragCancel: () => controllerRef.current?.cancelDrag(),
+    }),
+    [pin],
   )
-}
+  const onSceneReady = useCallback((api: SceneAPI | null) => {
+    sceneRef.current = api
+  }, [])
 
-/**
- * Lectura de instrumentacion.
- *
- * Etiqueta en eyebrow y valor en monoespaciada con el color del texto principal.
- * Pintar el valor en cian lo volveria decoracion: con tres lecturas cian, el
- * cian dejaria de significar "esto es una medicion en vivo".
- */
-function Reading({ label, value, unit }: { label: string; value: string; unit: string }) {
+  const add = () => {
+    useNexoSession.getState().continueWork()
+    const id = controllerRef.current?.add(typeId)
+    if (!id) return
+    setMessage(`${id} añadido al proyecto.`)
+    useNexoSession.getState().notifyHelp('add')
+    closeDrawer('catalog')
+    closeDrawer('tools')
+  }
+  const cancel = () => {
+    controllerRef.current?.cancel()
+    setMessage('Conexión cancelada sin modificar el proyecto.')
+    useNexoSession.getState().continueWork()
+  }
+  const download = () => {
+    useNexoSession.getState().continueWork()
+    if (!code.trim()) {
+      setMessage('Escribe un borrador antes de descargarlo.')
+      return
+    }
+    const url = URL.createObjectURL(new Blob([code], { type: 'text/plain' }))
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = 'main.cpp'
+    anchor.click()
+    URL.revokeObjectURL(url)
+  }
+  const selectInstance = (id: string) => {
+    useNexoSession.getState().continueWork()
+    controllerRef.current?.select(id)
+    setTool('part')
+    sceneRef.current?.locateProject(id)
+  }
+  const clearSelection = () => {
+    controllerRef.current?.select(null)
+  }
+  const removeWire = (id: string) => {
+    // The last cable removes its list. Keep focus inside the responsive inspector.
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement
+        .closest<HTMLElement>('.nx-tools-content')
+        ?.focus({ preventScroll: true })
+    }
+    useNexoSession.getState().continueWork()
+    controllerRef.current?.removeWire(id)
+    setMessage(`Cable ${id} desconectado. Puedes deshacer esta acción.`)
+  }
+
   return (
-    <div className="flex items-baseline gap-1.5">
-      <dt className="cf-eyebrow">{label}</dt>
-      <dd className="cf-mono text-sm font-medium text-text-strong">{value}</dd>
-      <dd className="cf-mono text-2xs text-text-muted">{unit}</dd>
-    </div>
-  )
-}
-
-/**
- * Aviso flotante del cableado.
- *
- * Aparece sobre el lienzo cuando hay un cable a medias o cuando el ultimo intento
- * fue rechazado. Se monta en HTML y no dentro de la escena 3D por accesibilidad:
- * un mensaje dibujado como textura no lo lee un lector de pantalla, y `role`
- * tampoco se aplica a una malla de Three.js.
- *
- * Tres estados, en orden de prioridad:
- *  1. **Error**: la conexion se rechazo. Se explica por que (V-1, V-4...) y se
- *     recuerda que el pin de origen sigue activo, que es lo que el usuario no
- *     puede deducir de la pantalla.
- *  2. **En curso**: hay un pin de origen. Se dice que hacer a continuacion.
- *  3. **Oculto**: no pasa nada, no se muestra nada.
- */
-function WiringHint({
-  pending,
-  error,
-  onCancel,
-}: {
-  pending: boolean
-  error: string | null
-  onCancel: () => void
-}) {
-  if (!pending && error === null) return null
-
-  const isError = error !== null
-
-  return (
-    <div
-      role="status"
-      aria-live="polite"
-      className="pointer-events-none absolute inset-x-3 bottom-3 flex justify-center"
-    >
-      <div
-        className={cx(
-          'cf-glass pointer-events-auto flex max-w-[560px] items-center gap-3 px-4 py-2.5',
-          isError ? 'border-warning' : 'border-accent',
-        )}
-      >
-        <span
-          aria-hidden="true"
-          className={cx('size-2 shrink-0 rounded-pill', isError ? 'bg-warning' : 'bg-accent')}
-        />
-
-        <p className="min-w-0 text-xs leading-snug text-text">
-          {isError ? (
-            <>
-              <span className="font-medium text-warning">{error}</span>
-              <span className="text-text-secondary"> · elige otro destino</span>
-            </>
-          ) : (
-            <>
-              <span className="font-medium text-accent">Cableando</span>
-              <span className="text-text-secondary">
-                {' '}
-                · pulsa otro pin para conectar, o Escape para cancelar
-              </span>
-            </>
-          )}
-        </p>
-
+    <div className="nx-editor">
+      <header className="nx-topbar">
+        <Link className="nx-brand" to="/" aria-label="Nexo, volver al inicio">
+          nexo
+          <svg
+            className="nx-brand-mark"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            aria-hidden="true"
+          >
+            <path d="M4 20 20 4M4 4h16v16" />
+          </svg>
+        </Link>
+        <div className="nx-project-name">
+          <strong>{project?.name ?? 'Tu circuito'}</strong>
+          <small>Sesión local · sin guardar</small>
+        </div>
+        <div className="nx-editor-actions">
+          <Link className="nx-button" to="/biblioteca">
+            Biblioteca
+          </Link>
+          <button
+            type="button"
+            className="nx-button"
+            onClick={() => {
+              useNexoSession.getState().continueWork()
+              controllerRef.current?.undo()
+            }}
+            disabled={!snapshot?.canUndo}
+          >
+            Deshacer
+          </button>
+          <button
+            type="button"
+            className="nx-button"
+            onClick={() => {
+              useNexoSession.getState().continueWork()
+              controllerRef.current?.redo()
+            }}
+            disabled={!snapshot?.canRedo}
+          >
+            Rehacer
+          </button>
+          <button
+            type="button"
+            className="nx-button"
+            onClick={() => {
+              useNexoSession.getState().continueWork()
+              setDiagnosticsOpen(!diagnosticsOpen)
+            }}
+            aria-expanded={diagnosticsOpen}
+          >
+            Diagnóstico
+          </button>
+        </div>
+      </header>
+      <div className="nx-compact-tabs">
         <button
           type="button"
-          onClick={onCancel}
-          className="shrink-0 rounded-pill px-2 py-1 text-2xs font-medium text-text-muted transition-colors duration-fast hover:bg-[var(--cf-fill-dim)] hover:text-text"
+          className="nx-button"
+          onClick={(event) => toggleDrawer('catalog', event.currentTarget)}
+          aria-expanded={catalogOpen}
+          aria-controls="editor-catalog"
         >
-          Cancelar
+          Piezas
+        </button>
+        <button
+          type="button"
+          className="nx-button"
+          onClick={(event) => toggleDrawer('tools', event.currentTarget)}
+          aria-expanded={toolsOpen}
+          aria-controls="editor-tools"
+        >
+          Propiedades
         </button>
       </div>
+      <div className="nx-workspace">
+        <aside
+          id="editor-catalog"
+          ref={catalogRef}
+          tabIndex={-1}
+          className="nx-editor-catalog"
+          data-open={catalogOpen}
+          aria-label="Piezas editables"
+          onBlur={(event) => {
+            if (windowWidth <= 650 && !event.currentTarget.contains(event.relatedTarget))
+              closeDrawer('catalog', false)
+          }}
+        >
+          <div className="nx-palette-header">
+            <div className="nx-palette-heading">
+              <h2>Componentes</h2>
+              <button
+                type="button"
+                className="nx-catalog-close nx-button"
+                aria-label="Cerrar componentes"
+                onClick={() => closeDrawer('catalog')}
+              >
+                Cerrar
+              </button>
+            </div>
+            <input
+              id="editor-piece-search"
+              className="nx-input"
+              type="search"
+              aria-label="Buscar pieza editable"
+              placeholder="Buscar una pieza"
+              autoCapitalize="none"
+              enterKeyHint="search"
+              value={query}
+              onChange={(event) => {
+                useNexoSession.getState().continueWork()
+                setQuery(event.target.value)
+              }}
+            />
+            <label className="nx-palette-category" htmlFor="editor-piece-category">
+              Categoría
+              <select
+                id="editor-piece-category"
+                className="nx-input"
+                value={category}
+                onChange={(event) => {
+                  useNexoSession.getState().continueWork()
+                  setCategory(event.target.value as Category | 'all')
+                }}
+              >
+                <option value="all">Todas las piezas</option>
+                {CATEGORIES.filter((item) =>
+                  CATALOG.some((part) => part.category === item && isEditableType(part.typeId)),
+                ).map((item) => (
+                  <option key={item} value={item}>
+                    {CATEGORY_LABELS[item]}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <p className="nx-palette-count" role="status">
+              {catalog.length} {catalog.length === 1 ? 'pieza' : 'piezas'}
+            </p>
+          </div>
+          <section className="nx-palette-results" aria-label="Resultados de componentes">
+            {catalog.map((part) => (
+              <button
+                type="button"
+                key={part.typeId}
+                className="nx-part-row"
+                aria-pressed={typeId === part.typeId}
+                onClick={() => {
+                  useNexoSession.getState().continueWork()
+                  setTypeId(part.typeId)
+                  clearSelection()
+                  setTool('part')
+                }}
+              >
+                <ComponentPreview typeId={part.typeId} name={part.name} size="compact" />
+                <span className="nx-part-copy">
+                  <strong>{part.name}</strong>
+                  <small>
+                    {part.typeId === 'dc_source' || part.typeId === 'gnd_ref'
+                      ? 'Auxiliar eléctrico'
+                      : part.description}
+                  </small>
+                </span>
+              </button>
+            ))}
+            {catalog.length === 0 && (
+              <div className="nx-palette-empty">
+                <p>No hay coincidencias.</p>
+                <button
+                  type="button"
+                  className="nx-button"
+                  onClick={() => {
+                    setQuery('')
+                    setCategory('all')
+                  }}
+                >
+                  Limpiar filtros
+                </button>
+              </div>
+            )}
+          </section>
+          <div className="nx-palette-footer">
+            <button type="button" className="nx-button nx-button-primary" onClick={add}>
+              Añadir {CATALOG_INDEX.get(typeId)?.name ?? 'pieza'}
+            </button>
+            <p className="nx-muted">
+              {EDITABLE_TYPE_IDS.length} editables · {CATALOG.length} fichas
+            </p>
+          </div>
+        </aside>
+        <section className="nx-editor-center" ref={centerRef} aria-label="Montaje y código">
+          <div className="nx-center-toolbar">
+            <button
+              type="button"
+              aria-pressed={split}
+              aria-controls="workspace-schematic workspace-code"
+              disabled={!canShowSplit(centerWidth)}
+              title={
+                !canShowSplit(centerWidth) ? 'Amplía el espacio para ver ambas vistas' : undefined
+              }
+              onClick={() => {
+                useNexoSession.getState().continueWork()
+                setView('split')
+              }}
+            >
+              Ambas vistas
+            </button>
+            <button
+              type="button"
+              aria-pressed={showMount && !split}
+              aria-controls="workspace-schematic"
+              onClick={() => {
+                useNexoSession.getState().continueWork()
+                setView('mount')
+              }}
+            >
+              Montaje
+            </button>
+            <button
+              type="button"
+              aria-pressed={view === 'code'}
+              aria-controls="workspace-code"
+              onClick={() => {
+                useNexoSession.getState().continueWork()
+                setView('code')
+              }}
+            >
+              Código
+            </button>
+            <button
+              type="button"
+              onClick={(event) => toggleDrawer('tools', event.currentTarget)}
+              aria-expanded={toolsOpen}
+              aria-controls="editor-tools"
+            >
+              Propiedades
+            </button>
+            {snapshot?.wiring.pending && (
+              <button type="button" onClick={cancel}>
+                Cancelar conexión
+              </button>
+            )}
+          </div>
+          <div className="nx-split">
+            <section
+              id="workspace-schematic"
+              className="nx-mount"
+              hidden={!showMount}
+              style={split ? ({ flex: `0 0 ${schematicWidth}px` } as CSSProperties) : undefined}
+              aria-label="Montaje 3D editable"
+            >
+              <div className="nx-mount-head">
+                {project?.components.length === 0 ? (
+                  <div>
+                    <h2>
+                      Tu circuito
+                      <br />
+                      empieza aquí.
+                    </h2>
+                    <p>Añade una pieza, sin elegir una plantilla.</p>
+                  </div>
+                ) : (
+                  <span>
+                    {project?.components.length}{' '}
+                    {project?.components.length === 1 ? 'pieza' : 'piezas'} · {wires.length}{' '}
+                    {wires.length === 1 ? 'cable' : 'cables'} · {project?.nets.length}{' '}
+                    {project?.nets.length === 1 ? 'red eléctrica' : 'redes eléctricas'}
+                  </span>
+                )}
+                <span>3D · Sin simulación</span>
+              </div>
+              <NexoScene
+                mode="lab"
+                {...(snapshot ? { snapshot } : {})}
+                actions={actions}
+                onReady={onSceneReady}
+                className="nx-scene-host"
+              />
+            </section>
+            {split && (
+              <WorkspaceSplit
+                width={centerWidth}
+                value={schematicWidth}
+                onChange={(width) => {
+                  useNexoSession.getState().continueWork()
+                  setSplitRatio(width / centerWidth)
+                }}
+              />
+            )}
+            <section
+              id="workspace-code"
+              className="nx-code"
+              hidden={!showCode}
+              aria-label="Borrador C++"
+            >
+              <header>
+                <strong>main.cpp</strong>
+                <span>C++ · Borrador</span>
+              </header>
+              <label className="sr-only" htmlFor="nexo-code">
+                Código C++
+              </label>
+              <textarea
+                id="nexo-code"
+                value={code}
+                onChange={(event) => {
+                  useNexoSession.getState().continueWork()
+                  setCode(event.target.value)
+                }}
+                spellCheck={false}
+                autoCapitalize="none"
+                placeholder="// Tu código empieza aquí. No se compila ni ejecuta todavía."
+              />
+              <p>Conservado entre rutas de esta sesión; se pierde al recargar.</p>
+              <button type="button" className="nx-button" onClick={download}>
+                Descargar main.cpp
+              </button>
+            </section>
+          </div>
+          <div className="nx-workspace-utility">
+            <div className="nx-workspace-controls" hidden={!showMount}>
+              <p className="nx-workspace-hint">
+                Pieza: arrastrar · Fondo: girar · Ctrl + rueda: zoom
+              </p>
+              <section className="nx-camera-actions" aria-label="Cámara del montaje">
+                <button
+                  type="button"
+                  className="nx-button"
+                  onClick={() => {
+                    useNexoSession.getState().continueWork()
+                    sceneRef.current?.setView('top')
+                  }}
+                >
+                  Superior
+                </button>
+                <button
+                  type="button"
+                  className="nx-button"
+                  onClick={() => {
+                    useNexoSession.getState().continueWork()
+                    sceneRef.current?.frameProject()
+                  }}
+                >
+                  Encuadrar
+                </button>
+              </section>
+            </div>
+            <div className="nx-companion-dock">
+              <ContextHelp />
+            </div>
+          </div>
+        </section>
+        <aside
+          id="editor-tools"
+          ref={toolsRef}
+          tabIndex={-1}
+          className="nx-editor-tools"
+          data-open={toolsOpen}
+          aria-label="Contexto del proyecto"
+          onBlur={(event) => {
+            if (windowWidth <= 1000 && !event.currentTarget.contains(event.relatedTarget))
+              closeDrawer('tools', false)
+          }}
+        >
+          <div className="nx-tool-tabs">
+            <button
+              type="button"
+              aria-pressed={tool === 'part'}
+              onClick={() => {
+                useNexoSession.getState().continueWork()
+                setTool('part')
+              }}
+            >
+              La pieza
+            </button>
+            <button
+              type="button"
+              aria-pressed={tool === 'project'}
+              onClick={() => {
+                useNexoSession.getState().continueWork()
+                setTool('project')
+              }}
+            >
+              Tu idea
+            </button>
+            <button
+              type="button"
+              className="nx-tools-close"
+              aria-label="Cerrar propiedades"
+              onClick={() => closeDrawer('tools')}
+            >
+              Cerrar
+            </button>
+          </div>
+          <div className="nx-tools-content" tabIndex={-1} hidden={tool !== 'part'}>
+            {fixture && (
+              <ComponentPreview
+                typeId={fixture.typeId}
+                name={fixture.name}
+                size="detail"
+                className="nx-inspector-preview"
+              />
+            )}
+            <h2>
+              {selected ? `${selected.id} · ` : ''}
+              {fixture?.name ?? 'Selecciona una pieza'}
+            </h2>
+            <p>{fixture?.description}</p>
+            {selected ? (
+              <>
+                <div className="nx-instance-actions">
+                  <button
+                    type="button"
+                    className="nx-button"
+                    disabled={project?.mounts?.some((mount) => mount.componentId === selected.id)}
+                    title={
+                      project?.mounts?.some((mount) => mount.componentId === selected.id)
+                        ? 'Utiliza la orientación de Recolocar para girar una pieza insertada.'
+                        : undefined
+                    }
+                    onClick={() => {
+                      useNexoSession.getState().continueWork()
+                      controllerRef.current?.rotate()
+                    }}
+                  >
+                    Rotar 90°
+                  </button>
+                  <button
+                    type="button"
+                    className="nx-button"
+                    onClick={() => {
+                      useNexoSession.getState().continueWork()
+                      controllerRef.current?.remove()
+                    }}
+                  >
+                    Eliminar
+                  </button>
+                </div>
+                <ComponentParameters
+                  component={selected}
+                  onUpdate={(key, value) => {
+                    useNexoSession.getState().continueWork()
+                    const result = controllerRef.current?.updateParameter(
+                      selected.id,
+                      key,
+                      value,
+                    ) ?? { ok: false, error: 'El proyecto aún no está disponible.' }
+                    if (result.ok)
+                      setMessage(`Parámetro de ${selected.id} actualizado. Sin simulación.`)
+                    return result
+                  }}
+                />
+                {project && (
+                  <BreadboardMountPanel
+                    key={selected.id}
+                    project={project}
+                    component={selected}
+                    onMount={(boardId, anchor, rotation) => {
+                      useNexoSession.getState().continueWork()
+                      const result = controllerRef.current?.mountComponent(
+                        selected.id,
+                        boardId,
+                        anchor,
+                        rotation,
+                      ) ?? { ok: false, error: 'El proyecto aún no está disponible.' }
+                      if (result.ok)
+                        setMessage(
+                          `${selected.id} insertado en ${boardId}.${anchor}. Puedes deshacer esta acción.`,
+                        )
+                      return result
+                    }}
+                    onUnmount={() => {
+                      useNexoSession.getState().continueWork()
+                      const result = controllerRef.current?.unmountComponent(selected.id) ?? {
+                        ok: false,
+                        error: 'El proyecto aún no está disponible.',
+                      }
+                      if (result.ok)
+                        setMessage(
+                          `${selected.id} extraído. Puedes moverlo libremente o deshacer la acción.`,
+                        )
+                      return result
+                    }}
+                  />
+                )}
+                {selected.typeId === BREADBOARD_TYPE_ID ? (
+                  <BreadboardContacts
+                    key={selected.id}
+                    component={selected}
+                    pending={snapshot?.wiring.pending ?? null}
+                    onPin={pin}
+                  />
+                ) : (
+                  <>
+                    <h3>Terminales</h3>
+                    <p>Elige origen y destino. Pines ilustrativos, no certificados.</p>
+                    <div className="nx-pin-list">
+                      {selected.pins.map((terminal) => (
+                        <button
+                          type="button"
+                          className="nx-button"
+                          key={terminal.pinId}
+                          aria-pressed={
+                            snapshot?.wiring.pending?.componentId === selected.id &&
+                            snapshot.wiring.pending.pinId === terminal.pinId
+                          }
+                          onClick={() => pin(selected.id, terminal.pinId)}
+                        >
+                          {terminal.pinId} · {terminal.netId ?? 'sin conectar'}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+                <WireList
+                  wires={selectedWires}
+                  onRemove={removeWire}
+                  label="Cables de esta pieza"
+                />
+              </>
+            ) : (
+              <button type="button" className="nx-button nx-button-primary" onClick={add}>
+                Añadir al montaje
+              </button>
+            )}
+            <h3>En tu montaje</h3>
+            <div className="nx-instance-list">
+              {project?.components.map((part) => (
+                <button
+                  type="button"
+                  className="nx-button"
+                  key={part.id}
+                  aria-pressed={part.id === snapshot?.selectedId}
+                  onClick={() => selectInstance(part.id)}
+                >
+                  {part.id} · {CATALOG_INDEX.get(part.typeId)?.name ?? part.typeId}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="nx-tools-content" tabIndex={-1} hidden={tool !== 'project'}>
+            <h2>¿Qué quieres construir?</h2>
+            <p>Guarda tu intención como nota de sesión. El asistente de IA no está conectado.</p>
+            <label htmlFor="nexo-notes">Tu idea</label>
+            <textarea
+              className="nx-input"
+              id="nexo-notes"
+              rows={7}
+              value={notes}
+              onChange={(event) => {
+                useNexoSession.getState().continueWork()
+                setNotes(event.target.value)
+              }}
+              placeholder="Describe lo que te gustaría que hiciera tu circuito…"
+            />
+            <h3>Conectividad del proyecto</h3>
+            <p>
+              {wires.length} {wires.length === 1 ? 'cable explícito' : 'cables explícitos'} ·{' '}
+              {project?.nets.length ?? 0}{' '}
+              {project?.nets.length === 1 ? 'red eléctrica' : 'redes eléctricas'}. Una red puede
+              unir varios cables y contactos internos.
+            </p>
+            <WireList wires={wires} onRemove={removeWire} label="Cables del proyecto" />
+          </div>
+        </aside>
+      </div>
+      {diagnosticsOpen && (
+        <section className="nx-diagnostics" aria-label="Diagnóstico">
+          <h2>Estado del entorno</h2>
+          <p>Validación al conectar: activa. Compilador y simulador: no integrados.</p>
+          <p>
+            {snapshot?.wiring.error ??
+              'No se ha ejecutado una validación integral ni una simulación.'}
+          </p>
+        </section>
+      )}
+      <footer className="nx-statusbar">
+        <span>Montaje editable · Sin simulación</span>
+        <span role="status">
+          {snapshot?.wiring.error ??
+            (snapshot?.wiring.pending
+              ? `Origen ${snapshot.wiring.pending.componentId}.${snapshot.wiring.pending.pinId}. Elige un destino o cancela.`
+              : message ||
+                (project?.components.length
+                  ? `${project.components.length} ${project.components.length === 1 ? 'pieza' : 'piezas'} · ${wires.length} ${wires.length === 1 ? 'cable' : 'cables'} en esta sesión.`
+                  : snapshot
+                    ? 'Montaje vacío. Elige tu primera pieza.'
+                    : 'Preparando el proyecto…'))}
+        </span>
+        <Link to="/proyectos">Tu sesión</Link>
+      </footer>
     </div>
   )
 }

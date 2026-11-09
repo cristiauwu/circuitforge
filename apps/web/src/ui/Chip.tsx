@@ -48,6 +48,7 @@ export function Chip({ children, active = false, className, type = 'button', ...
  * de literales: un hex suelto en un componente es un token que falta.
  */
 const PIN_STYLES: Record<PinType, string> = {
+  passive: 'text-text-secondary bg-[var(--cf-fill-dim)]',
   power: 'text-error bg-[color-mix(in_srgb,var(--cf-error)_12%,transparent)]',
   gnd: 'text-text-muted bg-[var(--cf-fill-dim)]',
   digital: 'text-[var(--cf-wire-7)] bg-[color-mix(in_srgb,var(--cf-wire-7)_12%,transparent)]',
@@ -64,6 +65,7 @@ const PIN_STYLES: Record<PinType, string> = {
 
 /** Abreviatura del tipo de pin. */
 const PIN_LABELS: Record<PinType, string> = {
+  passive: 'PAS',
   power: 'PWR',
   gnd: 'GND',
   digital: 'DIO',

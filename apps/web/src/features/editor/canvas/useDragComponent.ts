@@ -19,6 +19,11 @@ import type { ThreeEvent } from '@react-three/fiber'
 import { useCallback, useRef, useState } from 'react'
 
 /** Estado del arrastre que no necesita provocar un render. */
+interface CaptureTarget extends EventTarget {
+  setPointerCapture: (pointerId: number) => void
+  releasePointerCapture: (pointerId: number) => void
+}
+
 interface DragState {
   /** Desfase entre el punto de pulsacion y el centro del componente, en mundo. */
   offsetX: number
@@ -79,10 +84,8 @@ export function useDragComponent({
 
       // La captura hace que los eventos sigan llegando al elemento aunque el
       // puntero salga de él, que es lo que permite arrastrar rápido sin perderlo.
-      const target = event.nativeEvent.target
-      if (target instanceof Element) {
-        target.setPointerCapture?.(event.nativeEvent.pointerId)
-      }
+      // La captura debe pasar por R3F para conservar también el objeto del raycast.
+      ;(event.target as CaptureTarget | null)?.setPointerCapture(event.pointerId)
 
       onSelect(componentId)
       setIsDragging(true)
@@ -110,10 +113,7 @@ export function useDragComponent({
     if (drag.current === null) return
     event.stopPropagation()
 
-    const target = event.nativeEvent.target
-    if (target instanceof Element) {
-      target.releasePointerCapture?.(drag.current.pointerId)
-    }
+    ;(event.target as CaptureTarget | null)?.releasePointerCapture(drag.current.pointerId)
 
     drag.current = null
     setIsDragging(false)

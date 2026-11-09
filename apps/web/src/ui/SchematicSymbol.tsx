@@ -298,7 +298,431 @@ function MemoryChip({ className, x, y, width, height }: EmbedProps) {
  * notacion esquematica significa "bloque no especificado". Preferible a no
  * dibujar nada, porque un hueco se lee como un error de render.
  */
-const SYMBOLS: Record<string, (p: EmbedProps) => ReactNode> = {
+function Breadboard({ className, x, y, width, height }: EmbedProps) {
+  return (
+    <Frame className={className} x={x} y={y} width={width} height={height}>
+      <rect x="2" y="3" width="28" height="18" rx="2" />
+      <path d="M4 12h24M7 7v2m6-2v2m6-2v2m6-2v2M7 15v2m6-2v2m6-2v2m6-2v2" />
+    </Frame>
+  )
+}
+
+/** Familias compartidas solo cuando la notacion electrica es la misma. */
+function Thermistor(props: EmbedProps) {
+  return (
+    <Frame {...props}>
+      <path d="M2 12h6M24 12h6M8 8h16v8H8zM10 20 22 4h4" />
+      <text x="3" y="6" stroke="none" fill="currentColor" fontSize="4">
+        −t°
+      </text>
+    </Frame>
+  )
+}
+
+function Varistor(props: EmbedProps) {
+  return (
+    <Frame {...props}>
+      <path d="M2 12h6M24 12h6M8 8h16v8H8zM10 20 22 4h4" />
+      <text x="3" y="6" stroke="none" fill="currentColor" fontSize="4">
+        U
+      </text>
+    </Frame>
+  )
+}
+
+function Fuse(props: EmbedProps) {
+  return (
+    <Frame {...props}>
+      <path d="M2 12h28M8 8h16v8H8z" />
+    </Frame>
+  )
+}
+
+function Crystal(props: EmbedProps) {
+  return (
+    <Frame {...props}>
+      <path d="M2 12h7M9 6v12M12 5h8v14h-8zM23 6v12M23 12h7" />
+    </Frame>
+  )
+}
+
+function Transformer(props: EmbedProps) {
+  return (
+    <Frame {...props}>
+      <path d="M3 3h5M3 21h5M24 3h5M24 21h5M14 3v18M18 3v18" />
+      <path d="M8 3a3 3 0 0 1 0 6 3 3 0 0 1 0 6 3 3 0 0 1 0 6M24 3a3 3 0 0 0 0 6 3 3 0 0 0 0 6 3 3 0 0 0 0 6" />
+    </Frame>
+  )
+}
+
+function SwitchSpst(props: EmbedProps) {
+  return (
+    <Frame {...props}>
+      <path d="M2 15h7m1-1 13-8M24 15h6" />
+      <circle cx="9" cy="15" r="1" />
+      <circle cx="24" cy="15" r="1" />
+    </Frame>
+  )
+}
+
+function SwitchSpdt(props: EmbedProps) {
+  return (
+    <Frame {...props}>
+      <path d="M2 12h7m1 0 12-6M24 5h6M24 19h6" />
+      <circle cx="9" cy="12" r="1" />
+      <circle cx="24" cy="5" r="1" />
+      <circle cx="24" cy="19" r="1" />
+    </Frame>
+  )
+}
+
+function Pushbutton(props: EmbedProps) {
+  return (
+    <Frame {...props}>
+      <path d="M2 15h7M23 15h7M9 10h14M16 10V4M12 4h8" />
+      <circle cx="9" cy="15" r="1" />
+      <circle cx="23" cy="15" r="1" />
+    </Frame>
+  )
+}
+
+function DipSwitch(props: EmbedProps) {
+  return (
+    <Frame {...props}>
+      <rect x="4" y="3" width="24" height="18" rx="1" />
+      {[7, 13, 19, 25].map((cx) => (
+        <path key={cx} d={`M${cx} 1v6m0 10v6m0-14-2 6`} />
+      ))}
+    </Frame>
+  )
+}
+
+function ReedSwitch(props: EmbedProps) {
+  return (
+    <Frame {...props}>
+      <rect x="5" y="7" width="22" height="10" rx="5" />
+      <path d="M2 12h10l8-3M21 12h9M12 3h8m-8 18h8" />
+    </Frame>
+  )
+}
+
+function Encoder(props: EmbedProps) {
+  return (
+    <Frame {...props}>
+      <circle cx="13" cy="12" r="8" />
+      <circle cx="13" cy="12" r="2" />
+      <path d="m8 3 2-2 3 1M6 8l4-3M21 8h9M21 16h9M13 20v3" />
+      <text x="25" y="6" stroke="none" fill="currentColor" fontSize="3">
+        A
+      </text>
+      <text x="25" y="14" stroke="none" fill="currentColor" fontSize="3">
+        B
+      </text>
+    </Frame>
+  )
+}
+
+function Relay(props: EmbedProps) {
+  return (
+    <Frame {...props}>
+      <path d="M2 4h9v16H2zM6 1v3M6 20v3M4 16l5-8M16 14h3l7-8M27 4h3M27 20h3" />
+      <path d="M11 12h8" strokeDasharray="2 2" />
+      <circle cx="27" cy="4" r="1" />
+      <circle cx="27" cy="20" r="1" />
+    </Frame>
+  )
+}
+
+/** La barra doblada identifica Zener; la doble rodilla identifica Schottky. */
+function DiodeVariant({ cathode, ...props }: EmbedProps & { cathode: string }) {
+  return (
+    <Frame {...props}>
+      <path d="M2 12h8M10 5v14l9-7-9-7ZM19 12h11" />
+      <path d={cathode} />
+    </Frame>
+  )
+}
+const Zener = (props: EmbedProps) => <DiodeVariant {...props} cathode="M16 5h3v14h3" />
+const Schottky = (props: EmbedProps) => <DiodeVariant {...props} cathode="M16 8V5h3v14h3v-3" />
+
+function BridgeRectifier(props: EmbedProps) {
+  return (
+    <Frame {...props}>
+      <path d="m16 3 10 9-10 9L6 12 16 3ZM16 1v2M16 21v2M1 12h5M26 12h5" />
+      <path
+        d="m10 9 3-3v4l-3-1Zm3-3 2 2m5 0 3 3h-4l1-3Zm3 3-2 2m-1 4-3 3v-4l3 1Zm-3 3-2-2m-5 0-3-3h4l-1 3Zm-3-3 2-2"
+        strokeWidth="1"
+      />
+      <text x="19" y="4" stroke="none" fill="currentColor" fontSize="4">
+        +
+      </text>
+      <text x="19" y="24" stroke="none" fill="currentColor" fontSize="4">
+        −
+      </text>
+    </Frame>
+  )
+}
+
+function BjtPnp(props: EmbedProps) {
+  return (
+    <Frame {...props}>
+      <circle cx="16" cy="12" r="9" />
+      <path d="M2 12h7M9 6v12m0-9 7-5M9 15l7 5M16 4h5V1M16 20h5v3" />
+      <path d="m11 18v-3l4 1" />
+    </Frame>
+  )
+}
+
+function Mosfet({ channel, ...props }: EmbedProps & { channel: 'n' | 'p' }) {
+  return (
+    <Frame {...props}>
+      <path d="M2 12h7M9 6v12M13 5v4m0 2v2m0 2v4M13 7h10V2M13 17h10v5M23 17v-5h-7" />
+      <path d={channel === 'n' ? 'm17 10-3 2 3 2' : 'm15 10 3 2-3 2'} />
+    </Frame>
+  )
+}
+const MosfetN = (props: EmbedProps) => <Mosfet {...props} channel="n" />
+const MosfetP = (props: EmbedProps) => <Mosfet {...props} channel="p" />
+
+function RgbLed(props: EmbedProps) {
+  return (
+    <Frame {...props}>
+      {[7, 15, 23].map((cx) => (
+        <path key={cx} d={`M${cx} 22v-6m-3-7h6l-3 5-3-5Zm0 5h6m-3 0v2m0-7V6`} />
+      ))}
+      <path d="M7 6h16M15 6V2m10 4 4-3m-2 6 4-3" />
+      <text x="4" y="5" stroke="none" fill="currentColor" fontSize="3">
+        RGB
+      </text>
+    </Frame>
+  )
+}
+
+function Photodiode(props: EmbedProps) {
+  return (
+    <Frame {...props}>
+      <path d="M2 15h8M10 9v12l9-6-9-6ZM19 9v12M19 15h11M22 2l-5 5m0-3v3h3M28 3l-5 5m0-3v3h3" />
+    </Frame>
+  )
+}
+
+function Optocoupler(props: EmbedProps) {
+  return (
+    <Frame {...props}>
+      <rect x="4" y="2" width="24" height="20" rx="1" />
+      <path
+        d="M1 6h7v3m-3 0h6l-3 5-3-5Zm0 5h6M8 14v4H1M22 8v9m0-7 5-4h4m-9 9 5 3h4m-6-2 2 2-3 1M12 8l6 3m-2-3 2 3h-3M12 13l6 3m-2-3 2 3h-3"
+        strokeWidth="1"
+      />
+      <path d="M19 4v16" strokeDasharray="1 2" strokeWidth="0.75" />
+    </Frame>
+  )
+}
+
+/** Bloques funcionales, no modelos de simulacion ni pinouts a escala.
+ * Los nombres de terminales representativos hacen explicita la funcion; los
+ * terminales completos del componente siguen perteneciendo al registro/lienzo.
+ */
+interface BlockDefinition {
+  label: string
+  left: readonly string[]
+  right: readonly string[]
+  detail?: ReactNode
+}
+function functionalBlock(
+  label: string,
+  left: readonly string[],
+  right: readonly string[],
+  detail?: ReactNode,
+): BlockDefinition {
+  return { label, left, right, detail }
+}
+function FunctionalBlock({ label, left, right, detail, ...props }: EmbedProps & BlockDefinition) {
+  return (
+    <Frame {...props}>
+      <rect x="5" y="2" width="22" height="20" rx="1" />
+      <path d="M14 2a2 2 0 0 0 4 0" strokeWidth="1" />
+      <text
+        x="16"
+        y="21"
+        textAnchor="middle"
+        stroke="none"
+        fill="currentColor"
+        fontSize="3"
+        fontFamily="sans-serif"
+      >
+        {label}
+      </text>
+      {left.map((pin, index) => (
+        <g key={pin}>
+          <path d={`M1 ${6 + index * 6}h4`} />
+          <text
+            x="6"
+            y={7 + index * 6}
+            stroke="none"
+            fill="currentColor"
+            fontSize="2.3"
+            fontFamily="sans-serif"
+          >
+            {pin}
+          </text>
+        </g>
+      ))}
+      {right.map((pin, index) => (
+        <g key={pin}>
+          <path d={`M27 ${6 + index * 6}h4`} />
+          <text
+            x="26"
+            y={7 + index * 6}
+            textAnchor="end"
+            stroke="none"
+            fill="currentColor"
+            fontSize="2.3"
+            fontFamily="sans-serif"
+          >
+            {pin}
+          </text>
+        </g>
+      ))}
+      {detail}
+    </Frame>
+  )
+}
+const Timer = functionalBlock('555', ['TRIG', 'THR', 'RST'], ['VCC', 'OUT', 'DIS'])
+const ShiftOut = functionalBlock('S → P', ['SER', 'CLK', 'LAT'], ['VCC', 'QA', 'QH'])
+const ShiftIn = functionalBlock('P → S', ['A–H', 'CLK', 'LD'], ['VCC', 'QH', 'GND'])
+const Regulator = functionalBlock('7805', ['IN'], ['OUT', 'GND'])
+const AdjustableRegulator = functionalBlock('317', ['IN'], ['OUT', 'ADJ'])
+const Buck = functionalBlock('DC ↓ DC', ['IN+', 'IN−'], ['OUT+', 'OUT−'])
+const Boost = functionalBlock('DC ↑ DC', ['IN+', 'IN−'], ['OUT+', 'OUT−'])
+const DarlingtonDriver = functionalBlock('7 × Q', ['IN1', 'IN7', 'GND'], ['OUT1', 'OUT7', 'COM'])
+const HBridgeDriver = functionalBlock('2 × H', ['IN', 'EN', 'VCC'], ['OUT1', 'OUT4', 'GND'])
+
+function Amplifier({ comparator, ...props }: EmbedProps & { comparator: boolean }) {
+  return (
+    <Frame {...props}>
+      <path d="M8 3v18l17-9L8 3ZM2 7h6M2 17h6M25 12h5M15 7V1M15 17v6M10 7h3M10 16h3m-1.5-1.5v3" />
+      {comparator && <path d="M22 11v3h3m-3 0v4" />}
+    </Frame>
+  )
+}
+const OpAmp = (props: EmbedProps) => <Amplifier {...props} comparator={false} />
+const Comparator = (props: EmbedProps) => <Amplifier {...props} comparator />
+
+function Nand(props: EmbedProps) {
+  return (
+    <Frame {...props}>
+      <path d="M2 8h7M2 16h7M9 4v16h6a8 8 0 0 0 0-16H9ZM27 12h3" />
+      <circle cx="25" cy="12" r="2" />
+      <text x="11" y="14" stroke="none" fill="currentColor" fontSize="5">
+        &amp;
+      </text>
+    </Frame>
+  )
+}
+
+function temperatureSensor(output: string) {
+  return functionalBlock(
+    output,
+    ['VCC', 'GND'],
+    ['OUT'],
+    <g strokeWidth="1">
+      <path d="M16 5a1 1 0 0 1 2 0v10a3 3 0 1 1-2 0V5ZM17 10v8" />
+    </g>,
+  )
+}
+const DigitalThermometer = temperatureSensor('1-W')
+const AnalogThermometer = temperatureSensor('°C')
+const PressureSensor = functionalBlock(
+  'P / T',
+  ['VCC', 'GND'],
+  ['SDA', 'SCL'],
+  <path d="M12 17h8m-4-2v5m-2-2 2 2 2-2" strokeWidth="1" />,
+)
+const InertialSensor = functionalBlock(
+  '6 AXIS',
+  ['VCC', 'GND'],
+  ['SDA', 'SCL'],
+  <path d="M14 16v4h6m-6 0 4-4" strokeWidth="1" />,
+)
+const PirSensor = functionalBlock(
+  'PIR',
+  ['VCC', 'GND'],
+  ['OUT'],
+  <path d="M12 17q4-4 8 0m-10 3q6-7 12 0" strokeWidth="1" />,
+)
+const HallSensor = functionalBlock(
+  'HALL',
+  ['VCC', 'GND'],
+  ['OUT'],
+  <path d="M12 16v3h8v-3m-6 0v1h4v-1" strokeWidth="1" />,
+)
+const IrSensor = functionalBlock(
+  'IR',
+  ['VCC', 'GND'],
+  ['OUT'],
+  <path d="m11 17 4 2m-1-2 1 2h-2m4-4 4 2m-1-2 1 2h-2" strokeWidth="1" />,
+)
+
+function Stepper(props: EmbedProps) {
+  return (
+    <Frame {...props}>
+      <circle cx="16" cy="12" r="8" />
+      <path d="M1 8h7M1 16h7M24 8h7M24 16h7M16 20v3M12 14v-4l4 3 4-3v4M12 6h3v2h3V6h2" />
+    </Frame>
+  )
+}
+
+function TerminalBlock(props: EmbedProps) {
+  return (
+    <Frame {...props}>
+      <rect x="5" y="3" width="22" height="18" rx="1" />
+      <path d="M16 3v18M1 12h4M27 12h4M8 14l5-5M19 14l5-5" />
+      <circle cx="10.5" cy="11.5" r="4" />
+      <circle cx="21.5" cy="11.5" r="4" />
+    </Frame>
+  )
+}
+
+function SevenSegment(props: EmbedProps) {
+  return (
+    <Frame {...props}>
+      <rect x="7" y="1" width="18" height="22" rx="1" />
+      <path d="M12 5h7M11 7v3m0 4v3M12 19h7M21 7v3m0 4v3M12 12h7" />
+      <circle cx="22" cy="20" r="0.75" fill="currentColor" stroke="none" />
+      <path d="M2 6h5M2 12h5M2 18h5M25 6h5M25 12h5M25 18h5" />
+    </Frame>
+  )
+}
+
+function Lcd(props: EmbedProps) {
+  return (
+    <Frame {...props}>
+      <rect x="2" y="3" width="28" height="16" rx="1" />
+      <path d="M5 6h22v10H5zM5 19v3m4-3v3m4-3v3m4-3v3m4-3v3m4-3v3" />
+      {[8, 12, 16, 20, 24].map((cx) => (
+        <path key={cx} d={`M${cx} 8v2m0 2v2`} />
+      ))}
+    </Frame>
+  )
+}
+
+function Keypad(props: EmbedProps) {
+  return (
+    <Frame {...props}>
+      <rect x="5" y="1" width="22" height="22" rx="1" />
+      {[5, 10, 15, 20].flatMap((cy) =>
+        [9, 14, 19, 24].map((cx) => (
+          <rect key={`${cx}-${cy}`} x={cx - 1} y={cy - 1} width="2" height="2" strokeWidth="1" />
+        )),
+      )}
+      <path d="M1 6h4M1 10h4M1 14h4M1 18h4M27 6h4M27 10h4M27 14h4M27 18h4" />
+    </Frame>
+  )
+}
+
+const SYMBOLS: Record<string, ((p: EmbedProps) => ReactNode) | BlockDefinition> = {
+  breadboard: Breadboard,
   resistor: Resistor,
   capacitor: Capacitor,
   inductor: Inductor,
@@ -321,6 +745,56 @@ const SYMBOLS: Record<string, (p: EmbedProps) => ReactNode> = {
   lipo_3s: Battery,
   i2c_oled: Display,
   spi_flash: MemoryChip,
+  capacitor_ceramic: Capacitor,
+  capacitor_film: Capacitor,
+  thermistor_ntc: Thermistor,
+  varistor_mov: Varistor,
+  fuse: Fuse,
+  crystal: Crystal,
+  transformer: Transformer,
+  switch_spst: SwitchSpst,
+  switch_spdt: SwitchSpdt,
+  pushbutton: Pushbutton,
+  dip_switch_4: DipSwitch,
+  reed_switch: ReedSwitch,
+  rotary_encoder: Encoder,
+  relay_spdt: Relay,
+  diode_zener: Zener,
+  diode_schottky: Schottky,
+  bridge_rectifier: BridgeRectifier,
+  bjt_pnp: BjtPnp,
+  mosfet_n: MosfetN,
+  mosfet_p: MosfetP,
+  led_rgb: RgbLed,
+  photodiode: Photodiode,
+  optocoupler_pc817: Optocoupler,
+  timer_ne555: Timer,
+  opamp_lm358: OpAmp,
+  comparator_lm393: Comparator,
+  logic_74hc595: ShiftOut,
+  logic_74hc165: ShiftIn,
+  logic_74hc00: Nand,
+  regulator_7805: Regulator,
+  regulator_lm317: AdjustableRegulator,
+  buck_lm2596: Buck,
+  boost_mt3608: Boost,
+  arduino_nano: Microcontroller,
+  raspberry_pi_pico: Microcontroller,
+  attiny85: Microcontroller,
+  ds18b20: DigitalThermometer,
+  lm35: AnalogThermometer,
+  bmp280: PressureSensor,
+  mpu6050: InertialSensor,
+  pir_hcsr501: PirSensor,
+  hall_a3144: HallSensor,
+  ir_receiver_tsop38238: IrSensor,
+  stepper_28byj48: Stepper,
+  driver_uln2003: DarlingtonDriver,
+  driver_l298n: HBridgeDriver,
+  terminal_block_2: TerminalBlock,
+  seven_segment: SevenSegment,
+  lcd1602: Lcd,
+  keypad_4x4: Keypad,
 }
 
 /** Simbolo generico para un typeId sin dibujo propio. */
@@ -355,11 +829,16 @@ export interface SchematicSymbolProps {
  */
 export function SchematicSymbol({ typeId, className, x, y, width, height }: SchematicSymbolProps) {
   // No se llama `Symbol`: sombrearia el global de JS y confunde su origen.
-  const Glyph = SYMBOLS[typeId] ?? Generic
-  return <Glyph className={className} x={x} y={y} width={width} height={height} />
+  const Glyph = Object.hasOwn(SYMBOLS, typeId) ? (SYMBOLS[typeId] ?? Generic) : Generic
+  const props = { className, x, y, width, height }
+  return typeof Glyph === 'function' ? (
+    <Glyph {...props} />
+  ) : (
+    <FunctionalBlock {...props} {...Glyph} />
+  )
 }
 
 /** `true` si el typeId tiene un simbolo propio (util para tests). */
 export function hasSchematicSymbol(typeId: string): boolean {
-  return typeId in SYMBOLS
+  return Object.hasOwn(SYMBOLS, typeId)
 }

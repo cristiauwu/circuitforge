@@ -19,9 +19,10 @@ import { Chip, Input, PanelTitle, SchematicSymbol } from '@/ui'
 export interface PaletteProps {
   /** Añade el componente al lienzo. */
   onAdd: (typeId: string) => void
+  compact?: boolean
 }
 
-export function Palette({ onAdd }: PaletteProps) {
+export function Palette({ onAdd, compact = false }: PaletteProps) {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState<Category | 'all'>('all')
 
@@ -78,6 +79,7 @@ export function Palette({ onAdd }: PaletteProps) {
       */}
       <fieldset
         aria-label="Filtrar por categoría"
+        hidden={compact}
         className="mb-3 flex flex-wrap gap-1.5 border-b border-hairline pb-3"
       >
         <Chip active={category === 'all'} onClick={() => setCategory('all')}>
@@ -132,11 +134,11 @@ export function Palette({ onAdd }: PaletteProps) {
                 title={`${component.name} — ${component.description}`}
                 className={cx(
                   // Fila horizontal: simbolo, nombre y pines en una sola linea
-                  'flex w-full cursor-grab items-center gap-2.5 rounded-lg px-2 py-1.5 text-left',
+                  'flex w-full cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-left',
                   'border border-hairline bg-surface',
                   'transition-[border-color,background-color] duration-fast ease-inout',
                   'hover:border-accent hover:bg-accent-veil',
-                  'active:cursor-grabbing',
+                  'active:bg-accent-veil',
                 )}
               >
                 {/*

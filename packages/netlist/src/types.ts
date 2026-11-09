@@ -10,6 +10,7 @@
 
 /** Tipos de pin del sistema. Lista cerrada — ver Global Constraints del plan. */
 export type PinType =
+  | 'passive'
   | 'power'
   | 'gnd'
   | 'digital'
@@ -67,6 +68,8 @@ export interface Component {
   /** Clave en la biblioteca: "resistor", "led", "arduino_uno". */
   typeId: string
   position: Position
+  /** Optional world-space vertical offset; retained when detaching from a board. */
+  elevation?: number
   params: Record<string, ParamValue>
   /** Derivados de la ficha del tipo en la biblioteca. */
   pins: PinRef[]
@@ -78,6 +81,13 @@ export interface PinEndpoint {
   pinId: string
 }
 
+/** A physical user-authored cable; internal breadboard strips are never wires. */
+export interface Wire {
+  id: string
+  from: PinEndpoint
+  to: PinEndpoint
+}
+
 /**
  * Un nodo eléctrico: todos sus pines comparten un potencial común.
  * Invariante: un pin aparece en como máximo un net.
@@ -86,6 +96,26 @@ export interface Net {
   /** Identificador generado: "N1", "N2", … */
   id: string
   pins: PinEndpoint[]
+}
+
+/** A complete mechanical attachment, not a collection of user-authored wires. */
+export interface MountContact {
+  readonly pinId: string
+  readonly contactId: string
+}
+
+export interface Mount {
+  componentId: string
+  boardId: string
+  anchorContactId: string
+  /** Orientation relative to the board, not the world. */
+  rotation: Rotation
+  contacts: readonly MountContact[]
+}
+
+export interface MountedPose extends Position {
+  /** World-space vertical offset, unlike the x/y domain coordinates (24 units/world). */
+  elevation: number
 }
 
 /** Metadatos del proyecto. */
@@ -102,6 +132,12 @@ export interface Project {
   schemaVersion: number
   components: Component[]
   nets: Net[]
+  /** Missing only for legacy net-only snapshots; [] means no physical cables. */
+  wires?: Wire[]
+  /** Missing in legacy projects is equivalent to no mechanical attachments. */
+  mounts?: Mount[]
+  /** Monotone physical cable id counter, persisted across deletions. */
+  nextWireSeq?: number
   metadata: ProjectMetadata
   /**
    * Contador monótono para generar ids de net.

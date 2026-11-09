@@ -1,0 +1,142 @@
+.nx-component-parameters,
+.nx-breadboard-mount {
+  min-width: 0;
+  margin-block: 28px;
+  color: var(--nx-ink);
+}
+
+.nx-parameter-fields,
+.nx-mount-fields {
+  display: grid;
+  gap: 14px;
+  margin-block: 16px;
+}
+
+.nx-parameter-field,
+.nx-mount-fields label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.nx-parameter-field input:not([type="checkbox"]),
+.nx-parameter-field select,
+.nx-mount-fields select {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px;
+  border: 1px solid var(--nx-line);
+  border-radius: 4px;
+  background: var(--nx-paper);
+  color: var(--nx-ink);
+  color-scheme: light;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  caret-color: var(--nx-ink);
+}
+
+.nx-parameter-field input[type="checkbox"] {
+  width: 24px;
+  height: 24px;
+  margin: 10px 0;
+  accent-color: var(--nx-ink);
+  cursor: pointer;
+}
+
+.nx-parameter-field small,
+.nx-control-note {
+  color: var(--nx-muted);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.nx-parameter-field [aria-invalid="true"] {
+  border-color: var(--nx-ink);
+  border-style: dashed;
+}
+
+.nx-parameter-field [role="alert"],
+.nx-breadboard-mount [role="alert"] {
+  margin: 0;
+  color: var(--nx-ink);
+  font-weight: 600;
+}
+
+.nx-parameter-field :is(input, select):focus-visible,
+.nx-breadboard-mount :is(select, button):focus-visible {
+  outline: 2px solid var(--nx-focus);
+  outline-offset: 3px;
+}
+
+.nx-mount-preview,
+.nx-mounted-status {
+  padding-block: 8px;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+
+.nx-breadboard-mount ul {
+  padding-inline-start: 18px;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.nx-breadboard-mount > .nx-button {
+  width: 100%;
+  min-height: 44px;
+  margin-block: 4px;
+  white-space: normal;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nx-breadboard-mount > .nx-button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.nx-breadboard-mount > .nx-button:disabled {
+  cursor: not-allowed;
+}
+
+.nx-reference-values {
+  display: grid;
+  gap: 6px;
+  margin-block: 12px;
+  font-size: 12px;
+}
+
+.nx-reference-values > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+
+.nx-reference-values dt {
+  font-weight: 600;
+}
+
+.nx-reference-values dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nx-parameter-field :is(input, select):hover,
+  .nx-mount-fields select:hover {
+    border-color: var(--nx-muted);
+  }
+}
+
+@media (pointer: coarse) {
+  .nx-parameter-field input:not([type="checkbox"]),
+  .nx-parameter-field select,
+  .nx-mount-fields select {
+    font-size: 16px;
+  }
+}

@@ -1,148 +1,192 @@
-import type { Category } from '@circuitforge/netlist'
+import {
+  BREADBOARD_CONTACTS,
+  BREADBOARD_GROUPS,
+  BREADBOARD_TYPE_ID,
+  type Category,
+  COMPONENT_DEFINITIONS,
+  COMPONENT_INDEX,
+} from '@circuitforge/netlist'
 import { useMemo, useState } from 'react'
-import { CATALOG, CATEGORIES, CATEGORY_LABELS, searchCatalog } from '@/lib/fixtures/components'
-import { CatalogCard, Chip, Input, PinChip, RevealText, SchematicSymbol } from '@/ui'
+import { useNavigate } from 'react-router-dom'
+import { ComponentPreview } from '@/features/nexo/ComponentPreview'
+import { isEditableType } from '@/features/nexo/capabilities'
+import { findProjectPosition } from '@/features/nexo/editorProjection'
+import { useNexoSession } from '@/features/nexo/session'
+import { useEditorStore } from '@/lib/editor/useEditorStore'
+import { CATEGORIES, CATEGORY_LABELS, searchCatalog } from '@/lib/fixtures/components'
+import '@/features/nexo/mount-controls.css'
 
-/**
- * Biblioteca de componentes (documento de diseño sección 4).
- *
- * Ficha apaisada 4:3 (DESIGN.md sección 3.5): un símbolo esquemático es
- * horizontal, a diferencia del retrato de la referencia, que era para producto
- * fisico.
- *
- * **Sin glass.** Son ~22 fichas visibles; con `backdrop-filter` en cada una se
- * agotaria el presupuesto de GPU. Superficie solida.
- */
+const ELECTRONIC_COUNT = COMPONENT_DEFINITIONS.filter((definition) => definition.electronic).length
+const AUXILIARY_COUNT = COMPONENT_DEFINITIONS.length - ELECTRONIC_COUNT
+
 export function LibraryPage() {
+  const navigate = useNavigate()
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState<Category | 'all'>('all')
-
+  const [error, setError] = useState('')
   const visible = useMemo(() => {
-    const byQuery = searchCatalog(query)
-    return category === 'all' ? byQuery : byQuery.filter((c) => c.category === category)
+    const results = searchCatalog(query)
+    return category === 'all'
+      ? results
+      : results.filter((component) => component.category === category)
   }, [query, category])
 
+  function addToProject(typeId: string) {
+    if (!isEditableType(typeId)) return
+    try {
+      const store = useEditorStore.getState()
+      const position = findProjectPosition(store.project.components, typeId)
+      const id = store.addComponent(typeId, position)
+      useEditorStore.getState().selectComponent(id)
+      useNexoSession.getState().continueWork()
+      useNexoSession.getState().notifyHelp('add')
+      navigate('/editor')
+    } catch {
+      setError('No se pudo añadir la pieza. Tu proyecto no se ha reemplazado; vuelve a intentarlo.')
+    }
+  }
+
+  function clearFilters() {
+    setQuery('')
+    setCategory('all')
+  }
+
   return (
-    <div className="mx-auto w-full max-w-[1600px] px-6 py-8">
-      <header className="mb-6">
-        <p className="cf-eyebrow mb-2">Catálogo</p>
-        <RevealText
-          text="Biblioteca de componentes"
-          as="h1"
-          className="mb-1 text-xl font-semibold tracking-tight text-text-strong"
-        />
-        <p className="text-sm text-text-secondary">
-          {CATALOG.length} fichas tipadas en {CATEGORIES.length} categorías. Cada una declara su
-          símbolo, sus pines y sus parámetros editables.
+    <div className="nx-page">
+      <header className="nx-page-heading">
+        <h1>Biblioteca de componentes</h1>
+        <p className="nx-muted">
+          {ELECTRONIC_COUNT} componentes electrónicos y {AUXILIARY_COUNT} auxiliares para tu
+          montaje. Parámetros y terminales de referencia; sin simulación eléctrica.
         </p>
       </header>
-
-      {/* Filtros */}
-      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="w-full sm:max-w-xs">
-          <label htmlFor="library-search" className="sr-only">
-            Buscar componente
-          </label>
-          <Input
+      <div className="nx-library-controls">
+        <label htmlFor="library-search">
+          Buscar una pieza
+          <input
+            className="nx-input"
             id="library-search"
             type="search"
-            placeholder="Buscar por nombre o tipo…"
+            placeholder="Nombre o identificador…"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(event) => setQuery(event.target.value)}
           />
-        </div>
-
-        {/* `<fieldset>` agrupa los filtros sin necesitar un rol ARIA explicito */}
-        <fieldset aria-label="Filtrar por categoría" className="flex flex-wrap gap-1.5">
-          <Chip active={category === 'all'} onClick={() => setCategory('all')}>
+        </label>
+        <fieldset className="nx-filter-group">
+          <legend>Filtrar por categoría</legend>
+          <button
+            className="nx-filter"
+            type="button"
+            aria-pressed={category === 'all'}
+            onClick={() => setCategory('all')}
+          >
             Todas
-          </Chip>
-          {CATEGORIES.map((cat) => (
-            <Chip key={cat} active={category === cat} onClick={() => setCategory(cat)}>
-              {CATEGORY_LABELS[cat]}
-            </Chip>
+          </button>
+          {CATEGORIES.map((item) => (
+            <button
+              key={item}
+              className="nx-filter"
+              type="button"
+              aria-pressed={category === item}
+              onClick={() => setCategory(item)}
+            >
+              {CATEGORY_LABELS[item]}
+            </button>
           ))}
         </fieldset>
       </div>
-
-      <p className="mb-4 text-xs text-text-muted" role="status">
+      <p className="nx-muted" role="status">
         {visible.length} {visible.length === 1 ? 'resultado' : 'resultados'}
       </p>
-
-      {/* Rejilla de fichas */}
-      {visible.length > 0 ? (
-        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {visible.map((component, index) => (
-            <li key={component.typeId}>
-              {/*
-                `cf-tile` en vez de un div con borde: da el mismo relleno tenue
-                que el glass de la referencia SIN el coste de GPU (no relee el
-                fondo). Con 22 fichas visibles, `backdrop-filter` en cada una
-                agotaria el presupuesto y degradaria el arrastre del lienzo.
-              */}
-              <CatalogCard index={index}>
-                <div className="mb-3 flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <h2 className="truncate text-md font-medium text-text">{component.name}</h2>
-                    <p className="cf-mono truncate text-2xs text-text-muted">{component.typeId}</p>
-                  </div>
-                  {/* Simbolo esquematico real, no la inicial de la ficha */}
-                  <SchematicSymbol
-                    typeId={component.typeId}
-                    className="mt-0.5 h-6 w-9 shrink-0 text-text-muted"
-                  />
-                </div>
-
-                <p className="mb-4 flex-1 text-sm leading-snug text-text-secondary">
-                  {component.description}
-                </p>
-
-                {/* Parámetro principal */}
-                {component.primaryParam && (
-                  <p className="mb-3 flex items-baseline gap-1.5 text-xs">
-                    <span className="text-text-muted">{component.primaryParam.name}</span>
-                    <span className="cf-mono font-medium text-text">
-                      {component.primaryParam.value}
-                    </span>
-                    <span className="cf-mono text-text-muted">{component.primaryParam.unit}</span>
+      {error && <p role="alert">{error}</p>}
+      {visible.length ? (
+        <ul className="nx-catalog-grid">
+          {visible.map((component) => {
+            const supported = isEditableType(component.typeId)
+            const definition = COMPONENT_INDEX.get(component.typeId)
+            return (
+              <li key={component.typeId} className="nx-catalog-row">
+                <ComponentPreview
+                  typeId={component.typeId}
+                  name={component.name}
+                  size="detail"
+                  className="nx-library-preview"
+                />
+                <div className="nx-catalog-copy">
+                  <span className="nx-badge">
+                    {supported ? 'Disponible en montaje' : 'Solo consulta'}
+                  </span>
+                  <h2>{component.name}</h2>
+                  <p className="nx-muted">{component.description}</p>
+                  <p className="nx-catalog-meta">
+                    {CATEGORY_LABELS[component.category]} · <code>{component.typeId}</code>
                   </p>
-                )}
-
-                {/* Pines tipados */}
-                <ul className="flex flex-wrap gap-1" aria-label="Pines">
-                  {component.pins.slice(0, 6).map((pin) => (
-                    <li key={pin.id}>
-                      <PinChip pinType={pin.type} pinName={pin.id} />
-                    </li>
-                  ))}
-                  {component.pins.length > 6 && (
-                    <li className="cf-mono self-center text-2xs text-text-muted">
-                      +{component.pins.length - 6}
-                    </li>
+                  {definition && (
+                    <p className="nx-catalog-meta">
+                      {definition.electronic ? 'Componente electrónico' : 'Auxiliar de montaje'} ·
+                      Referencia {definition.referencePrefix}
+                    </p>
                   )}
-                </ul>
-              </CatalogCard>
-            </li>
-          ))}
+                  {definition && definition.parameters.length > 0 && (
+                    <dl
+                      className="nx-reference-values"
+                      aria-label={`Valores de referencia de ${component.name}`}
+                    >
+                      {definition.parameters.map((parameter) => (
+                        <div key={parameter.key}>
+                          <dt>{parameter.label}</dt>
+                          <dd>
+                            {parameter.kind === 'boolean'
+                              ? parameter.defaultValue
+                                ? 'Sí'
+                                : 'No'
+                              : parameter.kind === 'enum'
+                                ? (parameter.options.find(
+                                    (option) => option.value === parameter.defaultValue,
+                                  )?.label ?? parameter.defaultValue)
+                                : `${parameter.defaultValue}${parameter.unit ? ` ${parameter.unit}` : ''}`}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  )}
+                  {component.typeId === 'relay_spdt' && (
+                    <p className="nx-catalog-meta">
+                      Contactos ideales; estado manual, sin simulación de bobina.
+                    </p>
+                  )}
+                  <p className="nx-catalog-pins">
+                    {component.typeId === BREADBOARD_TYPE_ID
+                      ? `${BREADBOARD_CONTACTS.length} contactos · ${BREADBOARD_GROUPS.length} grupos internos. Regletas de 5; rieles continuos de 30, sin alimentación.`
+                      : `Pines: ${component.pins.map((pin) => pin.id).join(', ')}`}
+                  </p>
+                </div>
+                <button
+                  className="nx-button nx-button-dark"
+                  type="button"
+                  disabled={!supported}
+                  onClick={() => addToProject(component.typeId)}
+                  aria-label={
+                    supported
+                      ? `Añadir ${component.name} al proyecto y abrir el laboratorio`
+                      : `${component.name}: disponible solo para consulta`
+                  }
+                >
+                  {supported ? 'Añadir al proyecto' : 'No disponible en montaje'}
+                </button>
+              </li>
+            )
+          })}
         </ul>
       ) : (
-        <EmptyLibrary query={query} onClear={() => setQuery('')} />
+        <section className="nx-empty" aria-labelledby="library-empty-title">
+          <h2 id="library-empty-title">No encontramos esa pieza</h2>
+          <p className="nx-muted">Prueba otro nombre o elimina el filtro de categoría.</p>
+          <button className="nx-button nx-button-dark" type="button" onClick={clearFilters}>
+            Limpiar búsqueda y filtros
+          </button>
+        </section>
       )}
-    </div>
-  )
-}
-
-/** Estado vacio de la búsqueda: ofrece la salida en vez de dejar la pantalla en blanco. */
-function EmptyLibrary({ query, onClear }: { query: string; onClear: () => void }) {
-  return (
-    <div className="flex flex-col items-center gap-3 rounded-md border border-hairline bg-surface py-16 text-center">
-      <p className="text-md text-text">Ningun componente coincide con «{query}»</p>
-      <p className="max-w-[40ch] text-sm text-text-muted">
-        Prueba con el nombre en espanol o con el identificador técnico, como{' '}
-        <span className="cf-mono text-text-secondary">led</span> o{' '}
-        <span className="cf-mono text-text-secondary">arduino</span>.
-      </p>
-      <Chip onClick={onClear}>Limpiar búsqueda</Chip>
     </div>
   )
 }

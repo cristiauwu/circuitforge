@@ -1,0 +1,51 @@
+.component-preview {
+  display: grid;
+  place-items: center;
+  position: relative;
+  flex: 0 0 auto;
+  overflow: hidden;
+  isolation: isolate;
+  background: #efeee9;
+  border: 1px solid rgb(71 70 61 / 7%);
+  border-radius: 14px;
+  color: #74736b;
+}
+
+.component-preview--compact {
+  width: 88px;
+  height: 88px;
+}
+
+.component-preview--detail {
+  width: 100%;
+  min-width: 0;
+  aspect-ratio: 1;
+  border-radius: 20px;
+}
+
+.component-preview > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+}
+
+.component-preview__unavailable {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: #66665e;
+}
+
+.component-preview--detail .component-preview__unavailable {
+  gap: 12px;
+  font-size: 12px;
+}
