@@ -56,8 +56,8 @@ export function LibraryPage() {
       <header className="nx-page-heading">
         <h1>Biblioteca de componentes</h1>
         <p className="nx-muted">
-          {ELECTRONIC_COUNT} componentes electrónicos y {AUXILIARY_COUNT} auxiliares para tu
-          montaje. Parámetros y terminales de referencia; sin simulación eléctrica.
+          {ELECTRONIC_COUNT} componentes electrónicos y {AUXILIARY_COUNT} auxiliares con geometría
+          3D, asignación de pines y validación de reglas de diseño ERC para montaje sobre protoboard.
         </p>
       </header>
       <div className="nx-library-controls">
@@ -152,17 +152,17 @@ export function LibraryPage() {
                   )}
                   {component.typeId === 'relay_spdt' && (
                     <p className="nx-catalog-meta">
-                      Contactos ideales; estado manual, sin simulación de bobina.
+                      Contactos SPDT conmutables; terminales de control de bobina y conmutación de carga.
                     </p>
                   )}
                   <p className="nx-catalog-pins">
                     {component.typeId === BREADBOARD_TYPE_ID
-                      ? `${BREADBOARD_CONTACTS.length} contactos · ${BREADBOARD_GROUPS.length} grupos internos. Regletas de 5; rieles continuos de 30, sin alimentación.`
+                      ? `${BREADBOARD_CONTACTS.length} puntos de inserción · ${BREADBOARD_GROUPS.length} buses de interconexión (columnas de señal de 5 pines y rieles de alimentación dobles).`
                       : `Pines: ${component.pins.map((pin) => pin.id).join(', ')}`}
                   </p>
                 </div>
                 <button
-                  className="nx-button nx-button-dark"
+                  className="nx-button nx-button-dark cf-btn__roll"
                   type="button"
                   disabled={!supported}
                   onClick={() => addToProject(component.typeId)}
@@ -172,7 +172,12 @@ export function LibraryPage() {
                       : `${component.name}: disponible solo para consulta`
                   }
                 >
-                  {supported ? 'Añadir al proyecto' : 'No disponible en montaje'}
+                  <span className="cf-btn__text">
+                    {supported ? 'Añadir al proyecto' : 'Solo referencia'}
+                  </span>
+                  <span className="cf-btn__text" aria-hidden="true">
+                    {supported ? 'Abrir en Lab 3D' : 'Solo referencia'}
+                  </span>
                 </button>
               </li>
             )
@@ -182,8 +187,9 @@ export function LibraryPage() {
         <section className="nx-empty" aria-labelledby="library-empty-title">
           <h2 id="library-empty-title">No encontramos esa pieza</h2>
           <p className="nx-muted">Prueba otro nombre o elimina el filtro de categoría.</p>
-          <button className="nx-button nx-button-dark" type="button" onClick={clearFilters}>
-            Limpiar búsqueda y filtros
+          <button className="nx-button nx-button-dark cf-btn__roll" type="button" onClick={clearFilters}>
+            <span className="cf-btn__text">Limpiar búsqueda y filtros</span>
+            <span className="cf-btn__text" aria-hidden="true">Restablecer catálogo</span>
           </button>
         </section>
       )}

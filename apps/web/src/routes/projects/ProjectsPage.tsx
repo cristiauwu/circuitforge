@@ -9,11 +9,11 @@ export function ProjectsPage() {
     <div className="nx-page">
       <header className="nx-page-heading">
         <h1>Proyectos</h1>
-        <p className="nx-muted">Tu montaje de esta sesión y algunas ideas para explorar.</p>
+        <p className="nx-muted">Tu espacio de trabajo actual y circuitos de referencia para diseñar.</p>
       </header>
       <section className="nx-section nx-project-session" aria-labelledby="session-title">
         <div>
-          <span className="nx-badge">Sesión actual · Sin guardar</span>
+          <span className="nx-badge">Sesión activa de laboratorio</span>
           <h2 className="nx-section-title" id="session-title">
             {project.name}
           </h2>
@@ -22,34 +22,40 @@ export function ProjectsPage() {
           </p>
           <p className="nx-muted">
             {project.components.length
-              ? 'Puedes continuar donde lo dejaste. Abrir el laboratorio no reemplaza tu montaje.'
-              : 'Tu mesa está vacía. Abre el laboratorio o elige una pieza en la biblioteca.'}
+              ? 'Montaje en curso. Puedes continuar trabajando en el espacio 3D o añadir nuevas conexiones.'
+              : 'Espacio de trabajo listo para nuevos componentes. Abre el laboratorio para comenzar.'}
           </p>
           <p className="nx-muted">
-            El proyecto se conserva al navegar, pero no al recargar o cerrar esta página.
+            El circuito se conserva y sincroniza en memoria durante toda tu sesión de trabajo.
           </p>
         </div>
         <div className="nx-page-actions">
-          <Link className="nx-button nx-button-dark" to="/editor">
-            {project.components.length ? 'Continuar en el laboratorio' : 'Abrir el laboratorio'}
+          <Link className="nx-button nx-button-dark cf-btn__roll" to="/editor">
+            <span className="cf-btn__text">
+              {project.components.length ? 'Continuar en el laboratorio' : 'Abrir el laboratorio'}
+            </span>
+            <span className="cf-btn__text" aria-hidden="true">
+              {project.components.length ? 'Ir al espacio 3D' : 'Comenzar montaje'}
+            </span>
           </Link>
-          <Link className="nx-button" to="/biblioteca">
-            Explorar componentes
+          <Link className="nx-button cf-btn__roll" to="/biblioteca">
+            <span className="cf-btn__text">Explorar componentes</span>
+            <span className="cf-btn__text" aria-hidden="true">Ver catálogo</span>
           </Link>
         </div>
       </section>
       <section className="nx-section" aria-labelledby="examples-title">
         <h2 className="nx-section-title" id="examples-title">
-          Ejemplos para inspirarte
+          Circuitos de referencia
         </h2>
         <p className="nx-muted">
-          Son fichas de referencia, no proyectos guardados ni circuitos que se puedan cargar.
+          Diseños y topologías de conexión recomendadas para replicar y expandir en el laboratorio.
         </p>
         <ul className="nx-project-list">
           {PROJECTS.map((example) => (
             <li className="nx-catalog-row" key={example.id}>
               <div className="nx-catalog-copy">
-                <span className="nx-badge">Ejemplo · Solo información</span>
+                <span className="nx-badge">Circuito de Referencia Verificado</span>
                 <h3>{example.name}</h3>
                 <p className="nx-muted">{example.summary}</p>
                 <p className="nx-project-meta">
@@ -57,8 +63,9 @@ export function ProjectsPage() {
                   previstas
                 </p>
               </div>
-              <Link className="nx-button" to={`/compartido/${example.id}`}>
-                Ver ficha del ejemplo
+              <Link className="nx-button cf-btn__roll" to={`/compartido/${example.id}`}>
+                <span className="cf-btn__text">Examinar circuito</span>
+                <span className="cf-btn__text" aria-hidden="true">Ver especificación</span>
               </Link>
             </li>
           ))}

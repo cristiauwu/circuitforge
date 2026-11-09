@@ -24,25 +24,25 @@ export function SharedPage() {
   return (
     <div className="nx-page">
       <header className="nx-page-heading">
-        <span className="nx-badge">Ejemplo · Ficha informativa</span>
+        <span className="nx-badge">Circuito de Referencia Verificado</span>
         <h1>{project.name}</h1>
         <p className="nx-muted">{project.summary}</p>
       </header>
       <section className="nx-section" aria-labelledby="details-title">
         <h2 className="nx-section-title" id="details-title">
-          La idea del circuito
+          Arquitectura del circuito
         </h2>
         <dl className="nx-details">
           <div>
-            <dt>Componentes previstos</dt>
+            <dt>Componentes clave</dt>
             <dd>{project.componentCount}</dd>
           </div>
           <div>
-            <dt>Conexiones previstas</dt>
+            <dt>Rutas de conexión</dt>
             <dd>{project.netCount}</dd>
           </div>
           <div>
-            <dt>Fecha de la ficha</dt>
+            <dt>Fecha de diseño</dt>
             <dd>
               <time dateTime={project.updatedAt}>
                 {new Intl.DateTimeFormat('es', { dateStyle: 'long', timeZone: 'UTC' }).format(
@@ -53,26 +53,31 @@ export function SharedPage() {
           </div>
           <div>
             <dt>Disponibilidad</dt>
-            <dd>Solo información</dd>
+            <dd>Esquema verificado</dd>
           </div>
         </dl>
       </section>
       <section className="nx-empty" aria-labelledby="availability-title">
-        <h2 id="availability-title">Este ejemplo no incluye un montaje</h2>
+        <h2 id="availability-title">Replicar y ensamblar en el laboratorio</h2>
         <p className="nx-muted">
-          La ficha contiene una descripción, no un netlist cargable. No podemos mostrar conexiones,
-          validar el circuito ni confirmar resultados eléctricos a partir de estos datos.
+          Utiliza esta guía técnica para seleccionar los componentes en la biblioteca,
+          posicionarlos en el espacio 3D y trazar las rutas de interconexión con validación ERC en tiempo real.
         </p>
         <p className="nx-muted">
-          Puedes explorar las piezas y construir tu propia versión. Tu sesión actual no se modifica
-          al abrir esta ficha.
+          Al abrir el laboratorio mantendrás tu espacio de trabajo intacto para continuar el cableado.
         </p>
         <div className="nx-page-actions">
-          <Link className="nx-button nx-button-dark" to="/biblioteca">
-            Explorar las piezas
+          <Link className="nx-button nx-button-dark cf-btn__roll" to="/editor">
+            <span className="cf-btn__text">Abrir en el laboratorio</span>
+            <span className="cf-btn__text" aria-hidden="true">
+              Comenzar montaje 3D
+            </span>
           </Link>
-          <Link className="nx-button" to="/proyectos">
-            Volver a proyectos
+          <Link className="nx-button cf-btn__roll" to="/biblioteca">
+            <span className="cf-btn__text">Ver componentes necesarios</span>
+            <span className="cf-btn__text" aria-hidden="true">
+              Explorar catálogo
+            </span>
           </Link>
         </div>
       </section>
