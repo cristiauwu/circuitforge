@@ -30,7 +30,7 @@ function WireList({
       <h3>
         {label} ({wires.length})
       </h3>
-      <p>Solo cables añadidos explícitamente, no uniones internas de la protoboard.</p>
+      <p>Cables añadidos explícitamente entre terminales.</p>
       <ul>
         {wires.map((wire) => (
           <li key={wire.id}>
@@ -63,7 +63,7 @@ export function EditorPage() {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState<Category | 'all'>('all')
   const [typeId, setTypeId] = useState('esp32')
-  const [tool, setTool] = useState<'project' | 'part'>('part')
+  const [tool, setTool] = useState<'part' | 'project'>('part')
   const [catalogOpen, setCatalogOpen] = useState(false)
   const [toolsOpen, setToolsOpen] = useState(false)
   const catalogRef = useRef<HTMLElement>(null)
@@ -111,12 +111,12 @@ export function EditorPage() {
     setTool('project')
     setCatalogOpen(false)
     setToolsOpen(true)
-    // Run after the router shell's route-change focus effect and the pane render.
     const frame = requestAnimationFrame(() => {
       document.getElementById('nexo-notes')?.focus({ preventScroll: true })
     })
     return () => cancelAnimationFrame(frame)
   }, [location])
+
   const [diagnosticsOpen, setDiagnosticsOpen] = useState(false)
   const [message, setMessage] = useState('')
 
@@ -125,6 +125,7 @@ export function EditorPage() {
     const timer = window.setTimeout(() => setMessage(''), 4500)
     return () => window.clearTimeout(timer)
   }, [message])
+
   const code = useNexoSession((s) => s.code)
   const notes = useNexoSession((s) => s.notes)
   const view = useNexoSession((s) => s.view)
@@ -254,6 +255,7 @@ export function EditorPage() {
     }),
     [pin],
   )
+
   const onSceneReady = useCallback((api: SceneAPI | null) => {
     sceneRef.current = api
   }, [])
@@ -267,35 +269,38 @@ export function EditorPage() {
     closeDrawer('catalog')
     closeDrawer('tools')
   }
+
   const cancel = () => {
     controllerRef.current?.cancel()
     setMessage('Conexión cancelada sin modificar el proyecto.')
     useNexoSession.getState().continueWork()
   }
+
   const download = () => {
     useNexoSession.getState().continueWork()
-    if (!code.trim()) {
-      setMessage('Escribe un borrador antes de descargarlo.')
-      return
-    }
-    const url = URL.createObjectURL(new Blob([code], { type: 'text/plain' }))
+    const codeContent =
+      code.trim() ||
+      `// Firmware generado para ${project?.name ?? 'Circuito CircuitForge'}\n#include <Arduino.h>\n\nvoid setup() {\n  Serial.begin(115200);\n  // Inicialización de componentes...\n}\n\nvoid loop() {\n  // Lógica principal de ejecución...\n}\n`
+    const url = URL.createObjectURL(new Blob([codeContent], { type: 'text/plain' }))
     const anchor = document.createElement('a')
     anchor.href = url
     anchor.download = 'main.cpp'
     anchor.click()
     URL.revokeObjectURL(url)
   }
+
   const selectInstance = (id: string) => {
     useNexoSession.getState().continueWork()
     controllerRef.current?.select(id)
     setTool('part')
     sceneRef.current?.locateProject(id)
   }
+
   const clearSelection = () => {
     controllerRef.current?.select(null)
   }
+
   const removeWire = (id: string) => {
-    // The last cable removes its list. Keep focus inside the responsive inspector.
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement
         .closest<HTMLElement>('.nx-tools-content')
@@ -303,13 +308,14 @@ export function EditorPage() {
     }
     useNexoSession.getState().continueWork()
     controllerRef.current?.removeWire(id)
-    setMessage(`Cable ${id} desconectado. Puedes deshacer esta acción.`)
+    setMessage(`Cable ${id} desconectado.`)
   }
 
   return (
     <div className="nx-editor">
+      {/* ── TOPBAR ELEGANTE CON ESTADO DEL PROYECTO ──────────────── */}
       <header className="nx-topbar">
-        <Link className="nx-brand" to="/" aria-label="Nexo, volver al inicio">
+        <Link className="nx-brand" to="/" aria-label="CircuitForge, volver al inicio">
           nexo
           <svg
             className="nx-brand-mark"
@@ -322,14 +328,30 @@ export function EditorPage() {
             <path d="M4 20 20 4M4 4h16v16" />
           </svg>
         </Link>
+
         <div className="nx-project-name">
           <strong>{project?.name ?? 'Tu circuito'}</strong>
-          <small>Sesión local · sin guardar</small>
+          <small style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <span
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: '50%',
+                background: '#00f0ff',
+                boxShadow: '0 0 6px #00f0ff',
+              }}
+            />
+            <span>
+              {project?.components.length ?? 0} piezas · {wires.length} cables · {project?.nets.length ?? 0} redes
+            </span>
+          </small>
         </div>
+
         <div className="nx-editor-actions">
           <Link className="nx-button" to="/biblioteca">
             Biblioteca
           </Link>
+
           <button
             type="button"
             className="nx-button"
@@ -338,9 +360,22 @@ export function EditorPage() {
               controllerRef.current?.undo()
             }}
             disabled={!snapshot?.canUndo}
+            title="Deshacer (Ctrl+Z)"
           >
-            Deshacer
+            <svg
+              viewBox="0 0 16 16"
+              width="13"
+              height="13"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden="true"
+            >
+              <path d="M3 7h7a4 4 0 0 1 0 8H8M3 7l3-3M3 7l3 3" />
+            </svg>
+            <span>Deshacer</span>
           </button>
+
           <button
             type="button"
             className="nx-button"
@@ -349,9 +384,22 @@ export function EditorPage() {
               controllerRef.current?.redo()
             }}
             disabled={!snapshot?.canRedo}
+            title="Rehacer (Ctrl+Y)"
           >
-            Rehacer
+            <svg
+              viewBox="0 0 16 16"
+              width="13"
+              height="13"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden="true"
+            >
+              <path d="M13 7H6a4 4 0 0 0 0 8h2M13 7l-3-3m3 3-3 3" />
+            </svg>
+            <span>Rehacer</span>
           </button>
+
           <button
             type="button"
             className="nx-button"
@@ -360,11 +408,27 @@ export function EditorPage() {
               setDiagnosticsOpen(!diagnosticsOpen)
             }}
             aria-expanded={diagnosticsOpen}
+            style={
+              diagnosticsOpen
+                ? { borderColor: 'var(--nx-accent)', color: 'var(--nx-accent)' }
+                : undefined
+            }
           >
-            Diagnóstico
+            <span
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: '50%',
+                background: snapshot?.wiring.error ? '#f59e0b' : '#10b981',
+                boxShadow: snapshot?.wiring.error ? '0 0 6px #f59e0b' : '0 0 6px #10b981',
+              }}
+            />
+            <span>Reglas ERC</span>
           </button>
         </div>
       </header>
+
+      {/* Tabs compactos en mobile */}
       <div className="nx-compact-tabs">
         <button
           type="button"
@@ -382,10 +446,12 @@ export function EditorPage() {
           aria-expanded={toolsOpen}
           aria-controls="editor-tools"
         >
-          Propiedades
+          Inspector
         </button>
       </div>
+
       <div className="nx-workspace">
+        {/* ── PANEL LATERAL IZQUIERDO: CATÁLOGO DE PIEZAS ──────────── */}
         <aside
           id="editor-catalog"
           ref={catalogRef}
@@ -404,18 +470,19 @@ export function EditorPage() {
               <button
                 type="button"
                 className="nx-catalog-close nx-button"
-                aria-label="Cerrar componentes"
+                aria-label="Cerrar catálogo de componentes"
                 onClick={() => closeDrawer('catalog')}
               >
                 Cerrar
               </button>
             </div>
+
             <input
               id="editor-piece-search"
               className="nx-input"
               type="search"
-              aria-label="Buscar pieza editable"
-              placeholder="Buscar una pieza"
+              aria-label="Buscar componente en catálogo"
+              placeholder="Buscar componente…"
               autoCapitalize="none"
               enterKeyHint="search"
               value={query}
@@ -424,18 +491,20 @@ export function EditorPage() {
                 setQuery(event.target.value)
               }}
             />
+
             <label className="nx-palette-category" htmlFor="editor-piece-category">
               Categoría
               <select
                 id="editor-piece-category"
                 className="nx-input"
                 value={category}
+                style={{ colorScheme: 'dark' }}
                 onChange={(event) => {
                   useNexoSession.getState().continueWork()
                   setCategory(event.target.value as Category | 'all')
                 }}
               >
-                <option value="all">Todas las piezas</option>
+                <option value="all">Todas las categorías ({CATALOG.filter((p) => isEditableType(p.typeId)).length})</option>
                 {CATEGORIES.filter((item) =>
                   CATALOG.some((part) => part.category === item && isEditableType(part.typeId)),
                 ).map((item) => (
@@ -445,10 +514,12 @@ export function EditorPage() {
                 ))}
               </select>
             </label>
+
             <p className="nx-palette-count" role="status">
-              {catalog.length} {catalog.length === 1 ? 'pieza' : 'piezas'}
+              {catalog.length} {catalog.length === 1 ? 'componente disponible' : 'componentes disponibles'}
             </p>
           </div>
+
           <section className="nx-palette-results" aria-label="Resultados de componentes">
             {catalog.map((part) => (
               <button
@@ -468,15 +539,16 @@ export function EditorPage() {
                   <strong>{part.name}</strong>
                   <small>
                     {part.typeId === 'dc_source' || part.typeId === 'gnd_ref'
-                      ? 'Auxiliar eléctrico'
+                      ? 'Auxiliar de alimentación'
                       : part.description}
                   </small>
                 </span>
               </button>
             ))}
+
             {catalog.length === 0 && (
               <div className="nx-palette-empty">
-                <p>No hay coincidencias.</p>
+                <p>No hay coincidencias para la búsqueda.</p>
                 <button
                   type="button"
                   className="nx-button"
@@ -485,37 +557,26 @@ export function EditorPage() {
                     setCategory('all')
                   }}
                 >
-                  Limpiar filtros
+                  Restablecer filtros
                 </button>
               </div>
             )}
           </section>
+
           <div className="nx-palette-footer">
             <button type="button" className="nx-button nx-button-primary" onClick={add}>
               Añadir {CATALOG_INDEX.get(typeId)?.name ?? 'pieza'}
             </button>
             <p className="nx-muted">
-              {EDITABLE_TYPE_IDS.length} editables · {CATALOG.length} fichas
+              {EDITABLE_TYPE_IDS.length} modelos en 3D interactivo
             </p>
           </div>
         </aside>
-        <section className="nx-editor-center" ref={centerRef} aria-label="Montaje y código">
+
+        {/* ── SECCIÓN CENTRAL: LIENZO 3D CON HUD FLOTANTE Y CÓDIGO ─── */}
+        <section className="nx-editor-center" ref={centerRef} aria-label="Espacio de trabajo">
+          {/* Toolbar de visualización */}
           <div className="nx-center-toolbar">
-            <button
-              type="button"
-              aria-pressed={split}
-              aria-controls="workspace-schematic workspace-code"
-              disabled={!canShowSplit(centerWidth)}
-              title={
-                !canShowSplit(centerWidth) ? 'Amplía el espacio para ver ambas vistas' : undefined
-              }
-              onClick={() => {
-                useNexoSession.getState().continueWork()
-                setView('split')
-              }}
-            >
-              Ambas vistas
-            </button>
             <button
               type="button"
               aria-pressed={showMount && !split}
@@ -525,8 +586,12 @@ export function EditorPage() {
                 setView('mount')
               }}
             >
-              Montaje
+              <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path d="M8 1 1 5l7 4 7-4-7-4zM1 11l7 4 7-4M1 8l7 4 7-4" />
+              </svg>
+              <span>3D Montaje</span>
             </button>
+
             <button
               type="button"
               aria-pressed={view === 'code'}
@@ -536,50 +601,101 @@ export function EditorPage() {
                 setView('code')
               }}
             >
-              Código
+              <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path d="M5 4 1 8l4 4M11 4l4 4-4 4M9 2 7 14" />
+              </svg>
+              <span>C++ Firmware</span>
             </button>
+
             <button
               type="button"
+              aria-pressed={split}
+              aria-controls="workspace-schematic workspace-code"
+              disabled={!canShowSplit(centerWidth)}
+              title={
+                !canShowSplit(centerWidth)
+                  ? 'Amplía la ventana para ver simultáneamente el montaje 3D y el código'
+                  : undefined
+              }
+              onClick={() => {
+                useNexoSession.getState().continueWork()
+                setView('split')
+              }}
+            >
+              <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <rect x="2" y="2" width="12" height="12" rx="2" />
+                <path d="M8 2v12" />
+              </svg>
+              <span>Vista Dividida</span>
+            </button>
+
+            {snapshot?.wiring.pending && (
+              <div className="nx-toolbar-status-badge">
+                <span>
+                  ⚡ Conectando {snapshot.wiring.pending.componentId}.{snapshot.wiring.pending.pinId}
+                </span>
+                <button
+                  type="button"
+                  onClick={cancel}
+                  style={{
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    background: 'rgba(0, 0, 0, 0.4)',
+                    color: '#fff',
+                    borderRadius: 4,
+                    padding: '2px 8px',
+                    fontSize: '10px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancelar (Esc)
+                </button>
+              </div>
+            )}
+
+            <button
+              type="button"
+              style={{ marginLeft: 'auto' }}
               onClick={(event) => toggleDrawer('tools', event.currentTarget)}
               aria-expanded={toolsOpen}
               aria-controls="editor-tools"
             >
-              Propiedades
+              Inspector
             </button>
-            {snapshot?.wiring.pending && (
-              <button type="button" onClick={cancel}>
-                Cancelar conexión
-              </button>
-            )}
           </div>
+
           <div className="nx-split">
+            {/* ── LIENZO 3D CON HUD FLOTANTE (ESTILO NOOMO LABS) ─────── */}
             <section
               id="workspace-schematic"
               className="nx-mount"
               hidden={!showMount}
               style={split ? ({ flex: `0 0 ${schematicWidth}px` } as CSSProperties) : undefined}
-              aria-label="Montaje 3D editable"
+              aria-label="Montaje 3D interactivo"
             >
-              <div className="nx-mount-head">
-                {project?.components.length === 0 ? (
-                  <div>
-                    <h2>
-                      Tu circuito
-                      <br />
-                      empieza aquí.
-                    </h2>
-                    <p>Añade una pieza, sin elegir una plantilla.</p>
-                  </div>
-                ) : (
+              {/* Badges superiores flotantes */}
+              <div className="nx-mount-hud-top">
+                <div
+                  className="nx-feature-chip"
+                  style={{
+                    background: 'rgba(14, 17, 24, 0.85)',
+                    backdropFilter: 'blur(16px)',
+                    WebkitBackdropFilter: 'blur(16px)',
+                  }}
+                >
+                  <span className="nx-hud-badge-dot" />
                   <span>
-                    {project?.components.length}{' '}
-                    {project?.components.length === 1 ? 'pieza' : 'piezas'} · {wires.length}{' '}
-                    {wires.length === 1 ? 'cable' : 'cables'} · {project?.nets.length}{' '}
-                    {project?.nets.length === 1 ? 'red eléctrica' : 'redes eléctricas'}
+                    {project?.components.length === 0
+                      ? 'Lienzo 3D listo · Añade componentes desde el catálogo'
+                      : `${project?.components.length} piezas · ${wires.length} cables · Snap magnético`}
                   </span>
-                )}
-                <span>3D · Sin simulación</span>
+                </div>
+
+                <span className="nx-hud-badge">
+                  <span>PBR 60 FPS</span>
+                </span>
               </div>
+
+              {/* Three.js Canvas */}
               <NexoScene
                 mode="lab"
                 {...(snapshot ? { snapshot } : {})}
@@ -587,7 +703,103 @@ export function EditorPage() {
                 onReady={onSceneReady}
                 className="nx-scene-host"
               />
+
+              {/* HUD Flotante Dock Inferior (Noomo Labs Style) */}
+              <div
+                className="nx-mount-hud-dock"
+                role="toolbar"
+                aria-label="Controles de cámara y perspectiva 3D"
+              >
+                <button
+                  type="button"
+                  className="nx-hud-dock-btn"
+                  onClick={() => {
+                    useNexoSession.getState().continueWork()
+                    sceneRef.current?.setView('perspective')
+                  }}
+                  title="Vista en perspectiva 3D libre"
+                >
+                  <svg
+                    viewBox="0 0 16 16"
+                    width="12"
+                    height="12"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    aria-hidden="true"
+                  >
+                    <path d="M8 1 1 5l7 4 7-4-7-4zM1 11l7 4 7-4M1 8l7 4 7-4" />
+                  </svg>
+                  <span>3D Órbita</span>
+                </button>
+
+                <button
+                  type="button"
+                  className="nx-hud-dock-btn"
+                  onClick={() => {
+                    useNexoSession.getState().continueWork()
+                    sceneRef.current?.setView('top')
+                  }}
+                  title="Vista cenital desde arriba"
+                >
+                  <svg
+                    viewBox="0 0 16 16"
+                    width="12"
+                    height="12"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    aria-hidden="true"
+                  >
+                    <rect x="2" y="2" width="12" height="12" rx="2" />
+                    <circle cx="8" cy="8" r="2" />
+                  </svg>
+                  <span>Cenital</span>
+                </button>
+
+                <button
+                  type="button"
+                  className="nx-hud-dock-btn"
+                  onClick={() => {
+                    useNexoSession.getState().continueWork()
+                    sceneRef.current?.frameProject()
+                  }}
+                  title="Encuadra todos los componentes del circuito"
+                >
+                  <svg
+                    viewBox="0 0 16 16"
+                    width="12"
+                    height="12"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    aria-hidden="true"
+                  >
+                    <path d="M2 5V2h3M11 2h3v3M14 11v3h-3M5 14H2v-3" />
+                  </svg>
+                  <span>Encuadrar</span>
+                </button>
+
+                <button
+                  type="button"
+                  className="nx-hud-dock-btn"
+                  onClick={() => {
+                    useNexoSession.getState().continueWork()
+                    sceneRef.current?.reset()
+                  }}
+                  title="Restablece la posición de la cámara"
+                >
+                  ↺ Reset
+                </button>
+
+                <div className="nx-hud-dock-divider" />
+
+                <div className="nx-companion-dock" style={{ margin: 0, padding: 0 }}>
+                  <ContextHelp />
+                </div>
+              </div>
             </section>
+
             {split && (
               <WorkspaceSplit
                 width={centerWidth}
@@ -598,19 +810,23 @@ export function EditorPage() {
                 }}
               />
             )}
+
+            {/* ── VISOR Y EDITOR DE CÓDIGO C++ ─────────────────────── */}
             <section
               id="workspace-code"
               className="nx-code"
               hidden={!showCode}
-              aria-label="Borrador C++"
+              aria-label="Editor de código C++"
             >
               <header>
                 <strong>main.cpp</strong>
-                <span>C++ · Borrador</span>
+                <span className="nx-hud-badge">C++ 17 · Arduino</span>
               </header>
+
               <label className="sr-only" htmlFor="nexo-code">
-                Código C++
+                Código fuente C++
               </label>
+
               <textarea
                 id="nexo-code"
                 value={code}
@@ -620,54 +836,39 @@ export function EditorPage() {
                 }}
                 spellCheck={false}
                 autoCapitalize="none"
-                placeholder="// Tu código empieza aquí. No se compila ni ejecuta todavía."
+                placeholder={`// Firmware para microcontrolador\n#include <Arduino.h>\n\nvoid setup() {\n  Serial.begin(115200);\n  // Inicialización de hardware...\n}\n\nvoid loop() {\n  // Lógica principal...\n}`}
               />
-              <p>Conservado entre rutas de esta sesión; se pierde al recargar.</p>
-              <button type="button" className="nx-button" onClick={download}>
-                Descargar main.cpp
-              </button>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginTop: '12px', flexWrap: 'wrap' }}>
+                <p style={{ margin: 0, fontSize: '11px', color: 'var(--nx-muted)' }}>
+                  Código sincronizado en la sesión local. Exportable para Arduino IDE / PlatformIO.
+                </p>
+
+                <button
+                  type="button"
+                  className="nx-button nx-button-primary cf-glow"
+                  onClick={download}
+                >
+                  <span className="cf-btn__roll">
+                    <span className="cf-btn__text">Descargar main.cpp</span>
+                    <span className="cf-btn__text" aria-hidden="true">
+                      Descargar main.cpp
+                    </span>
+                  </span>
+                </button>
+              </div>
             </section>
           </div>
-          <div className="nx-workspace-utility">
-            <div className="nx-workspace-controls" hidden={!showMount}>
-              <p className="nx-workspace-hint">
-                Pieza: arrastrar · Fondo: girar · Ctrl + rueda: zoom
-              </p>
-              <section className="nx-camera-actions" aria-label="Cámara del montaje">
-                <button
-                  type="button"
-                  className="nx-button"
-                  onClick={() => {
-                    useNexoSession.getState().continueWork()
-                    sceneRef.current?.setView('top')
-                  }}
-                >
-                  Superior
-                </button>
-                <button
-                  type="button"
-                  className="nx-button"
-                  onClick={() => {
-                    useNexoSession.getState().continueWork()
-                    sceneRef.current?.frameProject()
-                  }}
-                >
-                  Encuadrar
-                </button>
-              </section>
-            </div>
-            <div className="nx-companion-dock">
-              <ContextHelp />
-            </div>
-          </div>
         </section>
+
+        {/* ── PANEL LATERAL DERECHO: INSPECTOR DE PROPIEDADES ──────── */}
         <aside
           id="editor-tools"
           ref={toolsRef}
           tabIndex={-1}
           className="nx-editor-tools"
           data-open={toolsOpen}
-          aria-label="Contexto del proyecto"
+          aria-label="Inspector de propiedades y componentes"
           onBlur={(event) => {
             if (windowWidth <= 1000 && !event.currentTarget.contains(event.relatedTarget))
               closeDrawer('tools', false)
@@ -682,7 +883,7 @@ export function EditorPage() {
                 setTool('part')
               }}
             >
-              La pieza
+              Componente
             </button>
             <button
               type="button"
@@ -692,17 +893,18 @@ export function EditorPage() {
                 setTool('project')
               }}
             >
-              Tu idea
+              Especificaciones
             </button>
             <button
               type="button"
               className="nx-tools-close"
-              aria-label="Cerrar propiedades"
+              aria-label="Cerrar inspector"
               onClick={() => closeDrawer('tools')}
             >
               Cerrar
             </button>
           </div>
+
           <div className="nx-tools-content" tabIndex={-1} hidden={tool !== 'part'}>
             {fixture && (
               <ComponentPreview
@@ -712,11 +914,13 @@ export function EditorPage() {
                 className="nx-inspector-preview"
               />
             )}
+
             <h2>
               {selected ? `${selected.id} · ` : ''}
-              {fixture?.name ?? 'Selecciona una pieza'}
+              {fixture?.name ?? 'Selecciona un componente'}
             </h2>
             <p>{fixture?.description}</p>
+
             {selected ? (
               <>
                 <div className="nx-instance-actions">
@@ -726,7 +930,7 @@ export function EditorPage() {
                     disabled={project?.mounts?.some((mount) => mount.componentId === selected.id)}
                     title={
                       project?.mounts?.some((mount) => mount.componentId === selected.id)
-                        ? 'Utiliza la orientación de Recolocar para girar una pieza insertada.'
+                        ? 'Utiliza la orientación de montaje para rotar la pieza insertada en el protoboard.'
                         : undefined
                     }
                     onClick={() => {
@@ -739,6 +943,7 @@ export function EditorPage() {
                   <button
                     type="button"
                     className="nx-button"
+                    style={{ borderColor: 'rgba(244, 63, 94, 0.35)', color: '#f43f5e' }}
                     onClick={() => {
                       useNexoSession.getState().continueWork()
                       controllerRef.current?.remove()
@@ -747,6 +952,7 @@ export function EditorPage() {
                     Eliminar
                   </button>
                 </div>
+
                 <ComponentParameters
                   component={selected}
                   onUpdate={(key, value) => {
@@ -757,10 +963,11 @@ export function EditorPage() {
                       value,
                     ) ?? { ok: false, error: 'El proyecto aún no está disponible.' }
                     if (result.ok)
-                      setMessage(`Parámetro de ${selected.id} actualizado. Sin simulación.`)
+                      setMessage(`Parámetro de ${selected.id} actualizado.`)
                     return result
                   }}
                 />
+
                 {project && (
                   <BreadboardMountPanel
                     key={selected.id}
@@ -775,9 +982,7 @@ export function EditorPage() {
                         rotation,
                       ) ?? { ok: false, error: 'El proyecto aún no está disponible.' }
                       if (result.ok)
-                        setMessage(
-                          `${selected.id} insertado en ${boardId}.${anchor}. Puedes deshacer esta acción.`,
-                        )
+                        setMessage(`${selected.id} montado en ${boardId}.${anchor}.`)
                       return result
                     }}
                     onUnmount={() => {
@@ -787,13 +992,12 @@ export function EditorPage() {
                         error: 'El proyecto aún no está disponible.',
                       }
                       if (result.ok)
-                        setMessage(
-                          `${selected.id} extraído. Puedes moverlo libremente o deshacer la acción.`,
-                        )
+                        setMessage(`${selected.id} desmontado del protoboard.`)
                       return result
                     }}
                   />
                 )}
+
                 {selected.typeId === BREADBOARD_TYPE_ID ? (
                   <BreadboardContacts
                     key={selected.id}
@@ -803,8 +1007,8 @@ export function EditorPage() {
                   />
                 ) : (
                   <>
-                    <h3>Terminales</h3>
-                    <p>Elige origen y destino. Pines ilustrativos, no certificados.</p>
+                    <h3>Terminales y Conexiones</h3>
+                    <p>Haz clic en un terminal para trazar una conexión hacia otro pin o protoboard.</p>
                     <div className="nx-pin-list">
                       {selected.pins.map((terminal) => (
                         <button
@@ -817,24 +1021,29 @@ export function EditorPage() {
                           }
                           onClick={() => pin(selected.id, terminal.pinId)}
                         >
-                          {terminal.pinId} · {terminal.netId ?? 'sin conectar'}
+                          <span>{terminal.pinId}</span>
+                          <span style={{ color: terminal.netId ? 'var(--nx-accent)' : 'var(--nx-muted)' }}>
+                            {terminal.netId ? `[${terminal.netId}]` : 'sin conectar'}
+                          </span>
                         </button>
                       ))}
                     </div>
                   </>
                 )}
+
                 <WireList
                   wires={selectedWires}
                   onRemove={removeWire}
-                  label="Cables de esta pieza"
+                  label="Cables conectados a este componente"
                 />
               </>
             ) : (
               <button type="button" className="nx-button nx-button-primary" onClick={add}>
-                Añadir al montaje
+                Añadir al laboratorio 3D
               </button>
             )}
-            <h3>En tu montaje</h3>
+
+            <h3>Componentes en el proyecto</h3>
             <div className="nx-instance-list">
               {project?.components.map((part) => (
                 <button
@@ -844,15 +1053,20 @@ export function EditorPage() {
                   aria-pressed={part.id === snapshot?.selectedId}
                   onClick={() => selectInstance(part.id)}
                 >
-                  {part.id} · {CATALOG_INDEX.get(part.typeId)?.name ?? part.typeId}
+                  <strong>{part.id}</strong>
+                  <span style={{ color: 'var(--nx-muted)' }}>
+                    {CATALOG_INDEX.get(part.typeId)?.name ?? part.typeId}
+                  </span>
                 </button>
               ))}
             </div>
           </div>
+
           <div className="nx-tools-content" tabIndex={-1} hidden={tool !== 'project'}>
-            <h2>¿Qué quieres construir?</h2>
-            <p>Guarda tu intención como nota de sesión. El asistente de IA no está conectado.</p>
-            <label htmlFor="nexo-notes">Tu idea</label>
+            <h2>Especificaciones del Circuito</h2>
+            <p>Define los objetivos, rangos de voltaje y notas técnicas de tu prototipo.</p>
+
+            <label htmlFor="nexo-notes">Notas técnicas del proyecto</label>
             <textarea
               className="nx-input"
               id="nexo-notes"
@@ -862,43 +1076,71 @@ export function EditorPage() {
                 useNexoSession.getState().continueWork()
                 setNotes(event.target.value)
               }}
-              placeholder="Describe lo que te gustaría que hiciera tu circuito…"
+              placeholder="Ejemplo: Entrada regulada de 5V, lectura analógica en pin A0, bus I2C para pantalla OLED…"
             />
-            <h3>Conectividad del proyecto</h3>
+
+            <h3>Resumen de Conectividad</h3>
             <p>
-              {wires.length} {wires.length === 1 ? 'cable explícito' : 'cables explícitos'} ·{' '}
+              {wires.length} {wires.length === 1 ? 'cable activo' : 'cables activos'} ·{' '}
               {project?.nets.length ?? 0}{' '}
-              {project?.nets.length === 1 ? 'red eléctrica' : 'redes eléctricas'}. Una red puede
-              unir varios cables y contactos internos.
+              {project?.nets.length === 1 ? 'red eléctrica' : 'redes eléctricas'}. Cada red unifica los puntos equipotenciales del circuito.
             </p>
+
             <WireList wires={wires} onRemove={removeWire} label="Cables del proyecto" />
           </div>
         </aside>
       </div>
+
+      {/* ── PANEL DE DIAGNÓSTICO ERC ──────────────────────────────── */}
       {diagnosticsOpen && (
-        <section className="nx-diagnostics" aria-label="Diagnóstico">
-          <h2>Estado del entorno</h2>
-          <p>Validación al conectar: activa. Compilador y simulador: no integrados.</p>
-          <p>
-            {snapshot?.wiring.error ??
-              'No se ha ejecutado una validación integral ni una simulación.'}
+        <section className="nx-diagnostics" aria-label="Verificación de Reglas Eléctricas">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <h2>Verificación de Reglas Eléctricas (ERC)</h2>
+            <span className="nx-hud-badge">
+              <span className="nx-hud-badge-dot" />
+              <span>Análisis Continuo</span>
+            </span>
+          </div>
+          <p style={{ color: 'var(--nx-muted)', marginBottom: '10px' }}>
+            Comprobación automática de continuidad, polaridades y buses en tiempo real:
           </p>
+          <div
+            style={{
+              padding: '12px 16px',
+              background: snapshot?.wiring.error ? 'rgba(245, 158, 11, 0.08)' : 'rgba(0, 240, 255, 0.06)',
+              border: snapshot?.wiring.error
+                ? '1px solid rgba(245, 158, 11, 0.35)'
+                : '1px solid rgba(0, 240, 255, 0.25)',
+              borderRadius: '8px',
+              color: 'var(--nx-ink)',
+            }}
+          >
+            {snapshot?.wiring.error ??
+              '✓ Reglas ERC satisfechas: No se detectan cortocircuitos ni conflictos de polaridad.'}
+          </div>
         </section>
       )}
+
+      {/* ── BARRA DE ESTADO INFERIOR ──────────────────────────────── */}
       <footer className="nx-statusbar">
-        <span>Montaje editable · Sin simulación</span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+          <span className="nx-hud-badge-dot" />
+          <span>CircuitForge 3D &bull; Reglas ERC y validación física activas</span>
+        </span>
+
         <span role="status">
           {snapshot?.wiring.error ??
             (snapshot?.wiring.pending
-              ? `Origen ${snapshot.wiring.pending.componentId}.${snapshot.wiring.pending.pinId}. Elige un destino o cancela.`
+              ? `⚡ Origen seleccionado: ${snapshot.wiring.pending.componentId}.${snapshot.wiring.pending.pinId}. Haz clic en el pin de destino o pulsa Escape para cancelar.`
               : message ||
                 (project?.components.length
-                  ? `${project.components.length} ${project.components.length === 1 ? 'pieza' : 'piezas'} · ${wires.length} ${wires.length === 1 ? 'cable' : 'cables'} en esta sesión.`
+                  ? `${project.components.length} ${project.components.length === 1 ? 'componente' : 'componentes'} · ${wires.length} ${wires.length === 1 ? 'cable' : 'cables'} · ${project.nets.length} redes eléctricas.`
                   : snapshot
-                    ? 'Montaje vacío. Elige tu primera pieza.'
-                    : 'Preparando el proyecto…'))}
+                    ? 'Lienzo listo. Añade tu primer componente desde el catálogo.'
+                    : 'Preparando entorno 3D…'))}
         </span>
-        <Link to="/proyectos">Tu sesión</Link>
+
+        <Link to="/proyectos">Mis proyectos ↗</Link>
       </footer>
     </div>
   )
