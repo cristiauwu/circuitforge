@@ -14,38 +14,38 @@
  */
 
 :root {
-  /* ── Superficies (Dark Hardware Lab — IYO & Noomo Labs) ──────────────────
-   * Base obsidiana mate profunda con elevaciones sutiles grafito.
-   */
-  --cf-bg: #090a0d;
-  --cf-bg-raised: #111318;
-  --cf-surface: #161922;
-  --cf-surface-alt: #1d212d;
-  --cf-surface-raised: #252b3a;
+  /* ── Superficies (Paleta original: Carbón, Perla y Blanco) ────────────────── */
+  --cf-bg: #121513;
+  --cf-bg-raised: #1c221e;
+  --cf-surface: #242924;
+  --cf-surface-alt: #2c332e;
+  --cf-surface-raised: #38423b;
+  --cf-paper: #ffffff;
+  --cf-pearl: #f0f1ed;
 
-  /* Líneas de la retícula del lienzo (contraste calibrado sobre fondo oscuro) */
-  --cf-grid: #232733;
-  --cf-grid-strong: #384052;
+  /* Líneas de la retícula del lienzo */
+  --cf-grid: #525256;
+  --cf-grid-strong: #6b6b70;
 
-  /* ── Texto (Perla IYO de alta legibilidad, sin deslumbramiento blanco puro) ── */
-  --cf-text: #e2e8f0;
-  --cf-text-strong: #f8fafc;
-  --cf-text-secondary: #94a3b8;
-  --cf-text-muted: #64748b;
+  /* ── Texto ────────────────────────────────────────────────────────────── */
+  --cf-text: #f0f1ed;
+  --cf-text-strong: #ffffff;
+  --cf-text-secondary: #a3aba0;
+  --cf-text-muted: #62685f;
 
-  /* ── Acentos (Electric Cyan de precisión + Ámbar & Naranja Circuital) ──── */
-  --cf-accent: #00f0ff;
-  --cf-accent-hover: #38bdf8;
-  --cf-on-accent: #07080a;
+  /* ── Acentos (Verde lima de CircuitForge + Verde petróleo) ─────────────── */
+  --cf-accent: #d4eb91;
+  --cf-accent-hover: #bde068;
+  --cf-on-accent: #121513;
   --cf-accent-warm: #ff6b35;
 
   /* ── Instrumentación y Señal ─────────────────────────────────────────── */
-  --cf-signal: #00f0ff;
+  --cf-signal: #2f766f;
 
-  /* ── Estado (Semántica eléctrica con luminosidad controlada) ─────────── */
-  --cf-success: #10b981;
-  --cf-warning: #f59e0b;
-  --cf-error: #f43f5e;
+  /* ── Estado (Semántica eléctrica) ─────────────────────────────────────── */
+  --cf-success: #34d399;
+  --cf-warning: #fbbf24;
+  --cf-error: #f87171;
 
   /* ── Paleta de cables (Neón técnico diferenciado) ────────────────────── */
   --cf-wire-1: #f43f5e;

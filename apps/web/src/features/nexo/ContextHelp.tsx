@@ -111,7 +111,7 @@ export function ContextHelp() {
             Ayuda del proyecto
           </h2>
           <p className="nx-muted">
-            Guía local de las herramientas. No usa IA ni analiza tu circuito.
+            Guía rápida de herramientas y atajos para el espacio de trabajo 3D.
           </p>
           {help.context === 'connect' ? (
             <p>

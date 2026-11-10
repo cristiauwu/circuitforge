@@ -119,6 +119,7 @@ export function EditorPage() {
 
   const [diagnosticsOpen, setDiagnosticsOpen] = useState(false)
   const [message, setMessage] = useState('')
+  const [cameraView, setCameraView] = useState<'perspective' | 'top'>('perspective')
 
   useEffect(() => {
     if (!message) return
@@ -713,8 +714,10 @@ export function EditorPage() {
                 <button
                   type="button"
                   className="nx-hud-dock-btn"
+                  aria-pressed={cameraView === 'perspective'}
                   onClick={() => {
                     useNexoSession.getState().continueWork()
+                    setCameraView('perspective')
                     sceneRef.current?.setView('perspective')
                   }}
                   title="Vista en perspectiva 3D libre"
@@ -736,8 +739,10 @@ export function EditorPage() {
                 <button
                   type="button"
                   className="nx-hud-dock-btn"
+                  aria-pressed={cameraView === 'top'}
                   onClick={() => {
                     useNexoSession.getState().continueWork()
+                    setCameraView('top')
                     sceneRef.current?.setView('top')
                   }}
                   title="Vista cenital desde arriba"
@@ -756,6 +761,8 @@ export function EditorPage() {
                   </svg>
                   <span>Cenital</span>
                 </button>
+
+                <div className="nx-hud-dock-divider" />
 
                 <button
                   type="button"
@@ -791,12 +798,11 @@ export function EditorPage() {
                 >
                   ↺ Reset
                 </button>
+              </div>
 
-                <div className="nx-hud-dock-divider" />
-
-                <div className="nx-companion-dock" style={{ margin: 0, padding: 0 }}>
-                  <ContextHelp />
-                </div>
+              {/* Ayuda y guía del proyecto flotante en la esquina inferior */}
+              <div className="nx-companion-floating-dock">
+                <ContextHelp />
               </div>
             </section>
 

@@ -138,7 +138,7 @@ export function ComponentParameters({ component, onUpdate }: ComponentParameters
   return (
     <section className="nx-component-parameters" aria-labelledby={`${id}-title`}>
       <h3 id={`${id}-title`}>Parámetros de {component.id}</h3>
-      <p>Valores de referencia del proyecto; no calculan ni simulan el circuito.</p>
+      <p>Valores nominales de referencia del proyecto para cálculo y reglas ERC.</p>
       {component.typeId === 'relay_spdt' && (
         <p>Contactos ideales: el estado del relé se elige manualmente, no depende de la bobina.</p>
       )}

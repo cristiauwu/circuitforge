@@ -25,7 +25,7 @@ describe('component parameter controls', () => {
       const markup = renderToStaticMarkup(
         <ComponentParameters component={instance(definition.typeId)} onUpdate={update} />,
       )
-      expect(markup).toContain('no calculan ni simulan')
+      expect(markup).toContain('Valores nominales de referencia')
       expect((markup.match(/<label /g) ?? []).length).toBe(definition.parameters.length)
       expect((markup.match(/<input |<select /g) ?? []).length).toBe(definition.parameters.length)
       for (const parameter of definition.parameters) {
