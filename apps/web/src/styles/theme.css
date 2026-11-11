@@ -77,7 +77,7 @@
  * ------------------------------------------------------------------------- */
 
 html {
-  color-scheme: dark;
+  color-scheme: light;
   background-color: var(--cf-bg);
 }
 
@@ -103,16 +103,15 @@ body {
   outline: none;
 }
 
-/* Scrollbar discreta: la de serie sobre fondo oscuro es una barra clara que
- * rompe la superficie. Se estiliza para que se lea como parte del panel. */
+/* Scrollbar discreta adaptada a interfaz clara iOS */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--cf-surface-raised) transparent;
+  scrollbar-color: #cbd5e1 transparent;
 }
 
 *::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
 }
 
 *::-webkit-scrollbar-track {
@@ -120,12 +119,12 @@ body {
 }
 
 *::-webkit-scrollbar-thumb {
-  background-color: var(--cf-surface-raised);
+  background-color: #cbd5e1;
   border-radius: var(--cf-radius-full);
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background-color: var(--cf-hairline-strong);
+  background-color: #94a3b8;
 }
 
 /* ---------------------------------------------------------------------------
@@ -184,10 +183,6 @@ body {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background-image: var(--cf-grain);
-  background-repeat: repeat;
-  opacity: calc(var(--cf-grain-opacity) * 0.7);
-  mix-blend-mode: overlay;
   pointer-events: none;
   z-index: 0;
 }
@@ -240,9 +235,9 @@ body {
  * "esto es la accion principal".
  */
 .cf-tile:hover {
-  background: var(--cf-fill);
-  border-color: var(--cf-hairline-strong);
-  box-shadow: 0 0 28px -10px rgb(237 236 237 / 0.22);
+  background: var(--cf-surface);
+  border-color: rgba(26, 98, 255, 0.3);
+  box-shadow: var(--cf-shadow-elevated);
   transform: translateY(-2px);
 }
 
@@ -264,11 +259,7 @@ a.cf-tile {
   content: "";
   position: absolute;
   inset: 0;
-  background-image: var(--cf-grain);
-  background-repeat: repeat;
-  opacity: var(--cf-grain-opacity);
   pointer-events: none;
-  mix-blend-mode: overlay;
 }
 
 /* ---------------------------------------------------------------------------

@@ -30,7 +30,7 @@ export function ProjectsPage() {
           </p>
         </div>
         <div className="nx-page-actions">
-          <Link className="nx-button nx-button-dark cf-btn__roll" to="/editor">
+          <Link className="nx-button nx-button-primary cf-btn__roll" to="/editor">
             <span className="cf-btn__text">
               {project.components.length ? 'Continuar en el laboratorio' : 'Abrir el laboratorio'}
             </span>

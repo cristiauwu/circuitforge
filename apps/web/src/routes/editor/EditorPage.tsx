@@ -420,7 +420,6 @@ export function EditorPage() {
                 height: 6,
                 borderRadius: '50%',
                 background: snapshot?.wiring.error ? '#f59e0b' : '#10b981',
-                boxShadow: snapshot?.wiring.error ? '0 0 6px #f59e0b' : '0 0 6px #10b981',
               }}
             />
             <span>Reglas ERC</span>
@@ -638,12 +637,13 @@ export function EditorPage() {
                   type="button"
                   onClick={cancel}
                   style={{
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    background: 'rgba(0, 0, 0, 0.4)',
-                    color: '#fff',
-                    borderRadius: 4,
-                    padding: '2px 8px',
-                    fontSize: '10px',
+                    border: '1px solid rgba(26, 98, 255, 0.25)',
+                    background: '#ffffff',
+                    color: '#1a62ff',
+                    borderRadius: 9999,
+                    padding: '2px 10px',
+                    fontSize: '11px',
+                    fontWeight: 600,
                     cursor: 'pointer',
                   }}
                 >
@@ -677,9 +677,12 @@ export function EditorPage() {
                 <div
                   className="nx-feature-chip"
                   style={{
-                    background: 'rgba(14, 17, 24, 0.85)',
-                    backdropFilter: 'blur(16px)',
-                    WebkitBackdropFilter: 'blur(16px)',
+                    background: 'rgba(255, 255, 255, 0.92)',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
+                    color: '#0f172a',
+                    border: '1px solid rgba(0, 0, 0, 0.06)',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
                   }}
                 >
                   <span className="nx-hud-badge-dot" />

@@ -14,7 +14,7 @@ export function SharedPage() {
             ? `No hay una ficha disponible para «${id}». Comprueba el enlace o vuelve a los ejemplos.`
             : 'El enlace no incluye un identificador de proyecto.'}
         </p>
-        <Link className="nx-button nx-button-dark" to="/proyectos">
+        <Link className="nx-button nx-button-secondary" to="/proyectos">
           Volver a proyectos
         </Link>
       </div>
@@ -67,7 +67,7 @@ export function SharedPage() {
           Al abrir el laboratorio mantendrás tu espacio de trabajo intacto para continuar el cableado.
         </p>
         <div className="nx-page-actions">
-          <Link className="nx-button nx-button-dark cf-btn__roll" to="/editor">
+          <Link className="nx-button nx-button-primary cf-btn__roll" to="/editor">
             <span className="cf-btn__text">Abrir en el laboratorio</span>
             <span className="cf-btn__text" aria-hidden="true">
               Comenzar montaje 3D

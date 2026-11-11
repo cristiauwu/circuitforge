@@ -29,10 +29,10 @@
   min-height: 44px;
   padding: 8px;
   border: 1px solid var(--nx-line);
-  border-radius: 4px;
+  border-radius: 10px;
   background: var(--nx-paper);
   color: var(--nx-ink);
-  color-scheme: dark;
+  color-scheme: light;
   font: inherit;
   font-variant-numeric: tabular-nums;
   caret-color: var(--nx-accent);

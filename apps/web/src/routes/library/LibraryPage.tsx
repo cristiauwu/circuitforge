@@ -162,7 +162,7 @@ export function LibraryPage() {
                   </p>
                 </div>
                 <button
-                  className="nx-button nx-button-dark cf-btn__roll"
+                  className="nx-button nx-button-primary cf-btn__roll"
                   type="button"
                   disabled={!supported}
                   onClick={() => addToProject(component.typeId)}
@@ -187,7 +187,7 @@ export function LibraryPage() {
         <section className="nx-empty" aria-labelledby="library-empty-title">
           <h2 id="library-empty-title">No encontramos esa pieza</h2>
           <p className="nx-muted">Prueba otro nombre o elimina el filtro de categoría.</p>
-          <button className="nx-button nx-button-dark cf-btn__roll" type="button" onClick={clearFilters}>
+          <button className="nx-button nx-button-primary cf-btn__roll" type="button" onClick={clearFilters}>
             <span className="cf-btn__text">Limpiar búsqueda y filtros</span>
             <span className="cf-btn__text" aria-hidden="true">Restablecer catálogo</span>
           </button>

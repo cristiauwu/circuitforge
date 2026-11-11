@@ -283,18 +283,18 @@ button:disabled {
   line-height: 1.04;
 }
 .nx-hero-copy p {
-  max-width: 370px;
-  color: #b8c0b2;
-  font-size: 15px;
-  line-height: 1.85;
-  margin-top: 34px;
+  max-width: 440px;
+  color: var(--nx-muted);
+  font-size: 16px;
+  line-height: 1.7;
+  margin-top: 20px;
 }
 .nx-hero-actions {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 16px;
   flex-wrap: wrap;
-  margin-top: 36px;
+  margin-top: 32px;
   pointer-events: auto;
 }
 .nx-hero-actions > a:not(.nx-button) {
@@ -305,11 +305,16 @@ button:disabled {
 }
 .nx-hero-object {
   position: absolute !important;
-  top: 10px;
-  right: 0;
-  width: 65%;
-  height: calc(100% - 120px);
-  min-height: 520px;
+  top: 24px;
+  right: 5%;
+  width: 48%;
+  height: calc(100% - 110px);
+  min-height: 480px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 28px;
+  box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.02);
+  overflow: hidden;
 }
 .nx-hero-scene {
   width: 100%;
@@ -323,12 +328,12 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  color: #bbc3b4;
+  color: var(--nx-muted);
   font-size: 12px;
   pointer-events: none;
 }
 .nx-caption strong {
-  color: inherit;
+  color: var(--nx-ink);
   font-size: 14px;
 }
 .nx-hero-bottom {
@@ -339,7 +344,7 @@ button:disabled {
   display: flex;
   justify-content: space-between;
   gap: 20px;
-  color: #b8c0b2;
+  color: var(--nx-muted);
   font-size: 12px;
   pointer-events: none;
 }
@@ -710,7 +715,8 @@ button:disabled {
   min-width: 0;
 }
 .nx-part-row[aria-pressed="true"] {
-  background: #e6eadf;
+  background: #eef4ff;
+  color: #1a62ff;
 }
 .nx-part-row > .nx-part-copy {
   min-width: 0;
@@ -735,8 +741,10 @@ button:disabled {
   overflow-wrap: anywhere;
 }
 .nx-part-row {
-  padding: 9px 6px;
+  padding: 9px 8px;
   gap: 10px;
+  border-radius: 12px;
+  transition: all 120ms ease;
 }
 .nx-part-row small {
   line-height: 1.45;
@@ -750,22 +758,40 @@ button:disabled {
 .nx-center-toolbar {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
   border-bottom: 1px solid var(--nx-line);
-  padding: 7px 14px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 .nx-center-toolbar button {
-  padding: 8px 12px;
+  padding: 6px 14px;
   min-width: 44px;
-  min-height: 44px;
-  border: 0;
+  min-height: 38px;
+  border: 1px solid transparent;
+  border-radius: 9999px;
   background: transparent;
+  color: var(--nx-muted);
   font-size: 12px;
+  font-weight: 550;
+  transition: all 140ms ease;
+}
+.nx-center-toolbar button:hover {
+  background: #f1f5f9;
+  color: var(--nx-ink);
+}
+.nx-center-toolbar button:active {
+  transform: scale(0.97);
 }
 .nx-center-toolbar button[aria-pressed="true"] {
-  background: #e3e8d9;
-  border-radius: 4px;
+  background: #ffffff;
+  color: #0f172a;
+  border-color: rgba(0, 0, 0, 0.06);
+  border-radius: 9999px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  font-weight: 600;
 }
 .nx-split {
   display: flex;
@@ -888,49 +914,59 @@ button:disabled {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: #f8f9f5;
+  background: #ffffff;
   padding: 20px;
   border-left: 1px solid var(--nx-line);
 }
 .nx-code header {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 12px;
   font-size: 12px;
-  margin-bottom: 18px;
+  margin-bottom: 16px;
+  color: var(--nx-muted);
 }
 .nx-code textarea {
   flex: 1;
   min-height: 120px;
   width: 100%;
   resize: none;
-  border: 0;
-  background: transparent;
-  color: #253c40;
-  font:
-    13px / 1.9 Consolas,
-    monospace;
-  padding: 12px 0;
+  border: 1px solid var(--nx-line);
+  border-radius: 12px;
+  background: #f8fafc;
+  color: #0f172a;
+  font: 13px / 1.7 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  padding: 14px 16px;
+  transition: all 140ms ease;
+}
+.nx-code textarea:focus-visible {
+  outline: 2px solid var(--nx-focus);
+  background: #ffffff;
 }
 .nx-code p {
   font-size: 12px;
   color: var(--nx-muted);
 }
 .nx-editor .ws-divider {
-  flex: 0 0 12px;
-  width: 12px;
+  flex: 0 0 10px;
+  width: 10px;
   margin: 0;
   align-self: stretch;
   height: auto;
   border: 0;
   border-inline: 1px solid var(--nx-line);
-  background: #e7ebe1;
+  background: #f1f5f9;
   cursor: col-resize;
   touch-action: none;
+  transition: background-color 140ms ease;
+}
+.nx-editor .ws-divider:hover {
+  background: #e2e8f0;
 }
 .nx-editor-tools {
   border-left: 1px solid var(--nx-line);
-  background: #fafbf7;
+  background: #ffffff;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -939,20 +975,34 @@ button:disabled {
 }
 .nx-tool-tabs {
   display: flex;
-  gap: 10px;
-  border-bottom: 1px solid var(--nx-line);
+  gap: 6px;
+  padding: 4px;
+  background: #f1f5f9;
+  border-radius: 9999px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
   margin-bottom: 24px;
 }
 .nx-tool-tabs button {
+  flex: 1;
   background: transparent;
   border: 0;
-  min-height: 44px;
-  min-width: 44px;
-  padding: 10px;
+  border-radius: 9999px;
+  min-height: 36px;
+  padding: 6px 14px;
   font-size: 12px;
+  font-weight: 500;
+  color: var(--nx-muted);
+  cursor: pointer;
+  transition: all 140ms ease;
+}
+.nx-tool-tabs button:hover {
+  color: var(--nx-ink);
 }
 .nx-tool-tabs button[aria-pressed="true"] {
-  box-shadow: inset 0 -2px var(--nx-ink);
+  background: #ffffff;
+  color: #0f172a;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 .nx-tools-content h2 {
   font-size: 25px;
@@ -995,12 +1045,25 @@ button:disabled {
 }
 .nx-pin-list button,
 .nx-instance-list button {
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 8px 12px;
   font-size: 12px;
   text-align: left;
+  transition: all 120ms ease;
+}
+.nx-pin-list button:hover,
+.nx-instance-list button:hover {
+  background: #f8fafc;
+  border-color: rgba(26, 98, 255, 0.3);
 }
 .nx-pin-list button[aria-pressed="true"],
 .nx-instance-list button[aria-pressed="true"] {
-  background: var(--nx-lime);
+  background: #eef4ff;
+  border-color: #1a62ff;
+  color: #1a62ff;
+  font-weight: 600;
 }
 .nx-statusbar {
   display: flex;
@@ -1095,11 +1158,8 @@ button:disabled {
   padding: 40px 5%;
 }
 .nexo-app {
-  scrollbar-color: #a7b19b var(--nx-pearl);
+  scrollbar-color: #cbd5e1 transparent;
   scrollbar-width: thin;
-}
-.nexo-app[data-theme="dark"] {
-  scrollbar-color: #5f6957 var(--nx-coal);
 }
 .nx-tools-close,
 .nx-catalog-close {
@@ -1191,7 +1251,7 @@ button:disabled {
     right: 0;
     width: 300px;
     z-index: 20;
-    box-shadow: -10px 0 30px #12151318;
+    box-shadow: -10px 0 30px rgba(15, 23, 42, 0.08);
   }
   .nx-hero-copy {
     width: 52%;
@@ -1330,7 +1390,7 @@ button:disabled {
     left: 0;
     width: 240px;
     z-index: 20;
-    box-shadow: 10px 0 30px #12151318;
+    box-shadow: 10px 0 30px rgba(15, 23, 42, 0.08);
   }
   .nx-editor-tools[data-open="true"] {
     top: 0;
@@ -1413,22 +1473,36 @@ button:disabled {
 
 /* ── COMPONENTES MODERNOS ESTILO APPLE IOS (WASHOS / HUMAN INTERFACE) ── */
 
-/* 1. HUD 3D de Inspección Espacial (Landing Hero) */
-.nx-hero-hud {
+/* 1. HUD y Dock 3D de Inspección Espacial (Landing Hero) */
+.nx-hero-card-top {
   position: absolute;
-  top: 40px;
-  right: 5%;
-  width: 290px;
+  top: 18px;
+  left: 20px;
+  right: 20px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+}
+.nx-hero-dock {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 36px);
+  max-width: 520px;
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  border-radius: 24px;
-  padding: 18px;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  border-radius: 9999px;
+  padding: 6px 12px;
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  box-shadow: 0 20px 48px -12px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.02);
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
   z-index: 10;
   color: #0f172a;
 }
@@ -1754,26 +1828,7 @@ button:disabled {
   pointer-events: auto;
 }
 
-/* 5. Visor C++ Firmware & Badges */
-.nx-code {
-  min-width: 0;
-  min-height: 0;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  background: #0f172a;
-  color: #f8fafc;
-  padding: 20px;
-  border-left: 1px solid rgba(0, 0, 0, 0.06);
-}
-.nx-code header {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  font-size: 12px;
-  margin-bottom: 18px;
-  color: #94a3b8;
-}
+/* 5. Badges y estado */
 .nx-toolbar-status-badge {
   display: inline-flex;
   align-items: center;

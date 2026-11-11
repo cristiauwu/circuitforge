@@ -160,133 +160,83 @@ export function LandingPage() {
             <NexoScene mode="hero" className="nx-hero-scene" onReady={handleSceneReady} />
           </Suspense>
 
-          {/* HUD Flotante Translúcido */}
-          <div className="nx-hero-hud" role="region" aria-label="Controles de inspección 3D">
-            <div className="nx-hud-header">
-              <div className="nx-hud-title">
-                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-                  <path d="M3.27 6.96 12 12.01l8.73-5.05M12 22.08V12" />
+          {/* Badges superiores flotantes dentro de la tarjeta */}
+          <div className="nx-hero-card-top">
+            <div className="nx-feature-chip">
+              <span className="nx-hud-badge-dot" />
+              <span>Inspección espacial 3D</span>
+            </div>
+            <span className="nx-hud-badge">
+              <span>PBR 60 FPS</span>
+            </span>
+          </div>
+
+          {/* Dock flotante inferior integrado estilo Apple iOS */}
+          <div className="nx-hero-dock" role="toolbar" aria-label="Controles de placa y perspectiva 3D">
+            <div className="nx-hud-pills">
+              <button
+                type="button"
+                className="nx-hud-pill"
+                aria-pressed={selectedBoard === 'uno'}
+                onClick={() => handleBoardChange('uno')}
+                title="Inspeccionar Arduino UNO R3"
+              >
+                Arduino UNO R3
+              </button>
+              <button
+                type="button"
+                className="nx-hud-pill"
+                aria-pressed={selectedBoard === 'esp32'}
+                onClick={() => handleBoardChange('esp32')}
+                title="Inspeccionar ESP32 NodeMCU"
+              >
+                ESP32 NodeMCU
+              </button>
+            </div>
+
+            <div className="nx-hud-dock-divider" />
+
+            <div className="nx-hud-pills">
+              <button
+                type="button"
+                className="nx-hud-pill"
+                aria-pressed={isLedOn}
+                onClick={handleToggleLed}
+                title="Conmuta la alimentación del LED de prueba"
+              >
+                <span
+                  style={{
+                    width: 7,
+                    height: 7,
+                    borderRadius: '50%',
+                    background: isLedOn ? '#10b981' : 'var(--nx-faint)',
+                  }}
+                />
+                <span>LED {isLedOn ? '5V ON' : 'OFF'}</span>
+              </button>
+
+              <button
+                type="button"
+                className="nx-hud-pill"
+                aria-pressed={viewMode === 'top'}
+                onClick={() => handleToggleView(viewMode === 'perspective' ? 'top' : 'perspective')}
+                title="Alterna entre perspectiva isométrica y vista cenital"
+              >
+                <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <rect x="2" y="2" width="12" height="12" rx="2" />
+                  <circle cx="8" cy="8" r="2" />
                 </svg>
-                <span>Inspección Espacial 3D</span>
-              </div>
-              <span className="nx-hud-badge">
-                <span className="nx-hud-badge-dot" />
-                <span>PBR 60 FPS</span>
-              </span>
-            </div>
+                <span>{viewMode === 'perspective' ? 'Cenital' : '3D Órbita'}</span>
+              </button>
 
-            {/* Selector de Placa */}
-            <div className="nx-hud-group">
-              <span className="nx-hud-label">Placa de desarrollo:</span>
-              <div className="nx-hud-pills">
-                <button
-                  type="button"
-                  className="nx-hud-pill"
-                  aria-pressed={selectedBoard === 'uno'}
-                  onClick={() => handleBoardChange('uno')}
-                >
-                  Arduino UNO R3
-                </button>
-                <button
-                  type="button"
-                  className="nx-hud-pill"
-                  aria-pressed={selectedBoard === 'esp32'}
-                  onClick={() => handleBoardChange('esp32')}
-                >
-                  ESP32 NodeMCU
-                </button>
-              </div>
-            </div>
-
-            {/* Enfoque de Cámara */}
-            <div className="nx-hud-group">
-              <span className="nx-hud-label">Punto de enfoque:</span>
-              <div className="nx-hud-pills">
-                <button
-                  type="button"
-                  className="nx-hud-pill"
-                  aria-pressed={activeFocus === 'board'}
-                  onClick={() => handleFocusChange('board')}
-                >
-                  Microcontrolador
-                </button>
-                <button
-                  type="button"
-                  className="nx-hud-pill"
-                  aria-pressed={activeFocus === 'breadboard'}
-                  onClick={() => handleFocusChange('breadboard')}
-                >
-                  Protoboard
-                </button>
-                <button
-                  type="button"
-                  className="nx-hud-pill"
-                  aria-pressed={activeFocus === 'led'}
-                  onClick={() => handleFocusChange('led')}
-                >
-                  LED
-                </button>
-                <button
-                  type="button"
-                  className="nx-hud-pill"
-                  aria-pressed={activeFocus === 'wire'}
-                  onClick={() => handleFocusChange('wire')}
-                >
-                  Cables
-                </button>
-              </div>
-            </div>
-
-            {/* Controles de Vista y Señal */}
-            <div className="nx-hud-group">
-              <div className="nx-hud-pills" style={{ justifyContent: 'space-between' }}>
-                <button
-                  type="button"
-                  className="nx-hud-pill"
-                  aria-pressed={isLedOn}
-                  onClick={handleToggleLed}
-                  title="Conmuta la alimentación del LED de prueba"
-                >
-                  <span
-                    style={{
-                      width: 7,
-                      height: 7,
-                      borderRadius: '50%',
-                      background: isLedOn ? '#10b981' : 'var(--nx-faint)',
-                    }}
-                  />
-                  <span>LED {isLedOn ? '5V ON' : 'OFF'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  className="nx-hud-pill"
-                  aria-pressed={viewMode === 'top'}
-                  onClick={() => handleToggleView(viewMode === 'perspective' ? 'top' : 'perspective')}
-                  title="Alterna entre perspectiva isométrica y vista cenital"
-                >
-                  <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                    <rect x="2" y="2" width="12" height="12" rx="2" />
-                    <circle cx="8" cy="8" r="2" />
-                  </svg>
-                  <span>{viewMode === 'perspective' ? 'Cenital' : '3D Órbita'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  className="nx-hud-pill"
-                  onClick={() => sceneApi?.reset()}
-                  title="Restaura la cámara a la posición inicial"
-                >
-                  ↺ Reset
-                </button>
-              </div>
-            </div>
-
-            <div className="nx-hud-footer">
-              <span>Arrastra para rotar · Rueda para zoom</span>
-              <span>Render PBR WebGL</span>
+              <button
+                type="button"
+                className="nx-hud-pill"
+                onClick={() => sceneApi?.reset()}
+                title="Restaura la cámara a la posición inicial"
+              >
+                ↺ Reset
+              </button>
             </div>
           </div>
         </figure>
