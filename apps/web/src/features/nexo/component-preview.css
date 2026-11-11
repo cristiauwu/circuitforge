@@ -5,10 +5,11 @@
   flex: 0 0 auto;
   overflow: hidden;
   isolation: isolate;
-  background: var(--nx-paper, #fff);
-  border: 1px solid var(--nx-line, #d8ddd2);
-  border-radius: 12px;
-  color: var(--nx-muted, #62685f);
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 14px;
+  color: #64748b;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
 .component-preview--compact {
@@ -20,9 +21,9 @@
   width: 100%;
   min-width: 0;
   aspect-ratio: 1;
-  background: var(--nx-paper, #fff);
-  border: 1px solid var(--nx-line, #d8ddd2);
-  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 20px;
   box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.02);
 }
 
@@ -45,7 +46,7 @@
   font-size: 10px;
   font-weight: 500;
   line-height: 1.35;
-  color: var(--nx-muted, #62685f);
+  color: #64748b;
 }
 
 .component-preview--detail .component-preview__unavailable {

@@ -28,7 +28,7 @@ export function NexoHeader() {
             Proyectos
           </NavLink>
         </nav>
-        <Link className="nx-button nx-button-primary nx-header-action cf-glow cf-btn__roll" to="/editor">
+        <Link className="nx-button nx-button-primary nx-header-action cf-btn__roll" to="/editor">
           <span className="cf-btn__text">Abrir laboratorio</span>
           <span className="cf-btn__text" aria-hidden="true">
             Entrar al Lab 3D

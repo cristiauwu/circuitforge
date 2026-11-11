@@ -21,9 +21,8 @@ export function AppShell() {
   return (
     <div
       className={`nexo-app${isEditor ? ' nexo-app-editor' : ''}`}
-      data-theme={isLanding ? 'dark' : 'light'}
+      data-theme="light"
     >
-      {isLanding && <Atmosphere intensity="full" />}
       <a className="nx-skip" href="#main-content">
         Saltar al contenido
       </a>

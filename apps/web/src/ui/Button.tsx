@@ -18,15 +18,12 @@ type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'light'
 type Size = 'sm' | 'md' | 'lg'
 
 const VARIANTS: Record<Variant, string> = {
-  // El primario lleva un halo calido permanente: es la accion principal y debe
-  // leerse como la fuente de luz de la pantalla, no como un boton mas.
-  primary: 'bg-accent text-on-accent hover:bg-accent-hover cf-glow',
+  primary: 'bg-accent text-on-accent hover:bg-accent-hover',
   secondary:
     'bg-[var(--cf-fill)] text-text border border-hairline hover:bg-[var(--cf-fill-strong)] hover:border-hairline-strong',
   ghost: 'bg-transparent text-text-secondary hover:text-text hover:bg-surface-alt',
   danger: 'bg-error text-on-accent hover:brightness-110',
-  // Superficie clara sobre fondo oscuro: el tratamiento de la referencia
-  light: 'bg-text text-bg hover:bg-text-strong cf-glow-light',
+  light: 'bg-text text-bg hover:bg-text-strong',
 }
 
 const SIZES: Record<Size, string> = {
@@ -155,10 +152,10 @@ export interface IconButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonEle
 }
 
 const ICON_VARIANTS = {
-  light: 'bg-text text-bg hover:bg-text-strong cf-glow-light',
+  light: 'bg-text text-bg hover:bg-text-strong',
   dark: 'bg-[var(--cf-fill)] text-text border border-hairline hover:bg-[var(--cf-fill-strong)] hover:border-hairline-strong',
   ghost: 'bg-transparent text-text-secondary hover:text-text hover:bg-surface-alt',
-  accent: 'bg-accent text-on-accent hover:bg-accent-hover cf-glow',
+  accent: 'bg-accent text-on-accent hover:bg-accent-hover',
 } as const
 
 const ICON_SIZES = {

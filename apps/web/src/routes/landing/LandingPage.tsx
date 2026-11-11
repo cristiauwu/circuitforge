@@ -71,12 +71,17 @@ export function LandingPage() {
         <div className="nx-hero-copy">
           <div className="nx-feature-chip" style={{ width: 'fit-content', marginBottom: '16px' }}>
             <span className="nx-hud-badge-dot" />
-            <span>Laboratorio 3D interactivo en tiempo real</span>
+            <span>Laboratorio 3D en vivo</span>
+            <span className="nx-ios-dots">
+              <span className="nx-dot nx-dot--blue" />
+              <span className="nx-dot nx-dot--green" />
+              <span className="nx-dot nx-dot--amber" />
+            </span>
           </div>
 
           <RevealText
             as="h1"
-            text="Diseña circuitos en 3D interactivo."
+            text="Cada componente cuenta."
             className="nx-hero-title"
           />
 
@@ -87,11 +92,11 @@ export function LandingPage() {
           </p>
 
           <div className="nx-hero-actions">
-            <Link className="nx-button nx-button-primary cf-glow" to="/editor">
+            <Link className="nx-button nx-button-primary" to="/editor">
               <span className="cf-btn__roll">
                 <span className="cf-btn__text">Abrir laboratorio 3D</span>
                 <span className="cf-btn__text" aria-hidden="true">
-                  Abrir laboratorio 3D
+                  Entrar al simulador
                 </span>
               </span>
               <svg
@@ -106,11 +111,11 @@ export function LandingPage() {
               </svg>
             </Link>
 
-            <Link className="nx-button" to="/biblioteca">
+            <Link className="nx-button nx-button-secondary" to="/biblioteca">
               <span className="cf-btn__roll">
-                <span className="cf-btn__text">Catálogo de componentes</span>
+                <span className="cf-btn__text">Ver catálogo en vivo</span>
                 <span className="cf-btn__text" aria-hidden="true">
-                  Catálogo de componentes
+                  Explorar 73 piezas
                 </span>
               </span>
               <span aria-hidden="true">↗</span>
@@ -248,8 +253,7 @@ export function LandingPage() {
                       width: 7,
                       height: 7,
                       borderRadius: '50%',
-                      background: isLedOn ? '#00f0ff' : 'var(--nx-faint)',
-                      boxShadow: isLedOn ? '0 0 8px #00f0ff' : 'none',
+                      background: isLedOn ? '#10b981' : 'var(--nx-faint)',
                     }}
                   />
                   <span>LED {isLedOn ? '5V ON' : 'OFF'}</span>

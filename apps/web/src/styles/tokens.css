@@ -1,89 +1,81 @@
 /**
- * CircuitForge — Tokens del sistema visual.
+ * CircuitForge — Tokens del sistema visual (Estilo Apple iOS / Clean Human Interface).
  *
- * Derivados de MEDIR iyo.ai con getComputedStyle, no de estimarlo. Los valores
- * entre parentesis son la evidencia extraida del DOM de la referencia.
- *
- * DECISION CLAVE — base neutra, no azul:
- * la referencia usa grises calidos neutros (rgba(56,56,56,.6), #101010, #151515)
- * y reserva el color para el acento. El azul pizarra anterior era un desvio
- * nuestro: con un fondo azul, cualquier gris de UI se lee sucio, y el naranja de
- * acento pierde contraste. Sobre neutro, el acento manda.
- *
- * Ningun componente escribe un literal de color, radio, tamano o duracion.
+ * Basado en las guías de diseño de Apple y el diseño de referencia adjunto:
+ * - Superficies blancas elevadas sobre lienzo neutro y suave (#f5f6f9).
+ * - Acento Apple System Blue (#1a62ff) en botones píldora principales.
+ * - Tipografía con tinta slate (#0f172a) de alto contraste y legibilidad.
+ * - Píldoras de estado multicolor (azul, esmeralda, ámbar).
+ * - Cero colores neón, cero degradados espaciales genéricos, cero estelas.
  */
 
 :root {
-  /* ── Superficies (Paleta original: Carbón, Perla y Blanco) ────────────────── */
-  --cf-bg: #121513;
-  --cf-bg-raised: #1c221e;
-  --cf-surface: #242924;
-  --cf-surface-alt: #2c332e;
-  --cf-surface-raised: #38423b;
+  /* ── Superficies (Clean iOS Canvas & Card Layer) ────────────────────────── */
+  --cf-bg: #f5f6f9;
+  --cf-bg-raised: #eef1f6;
+  --cf-surface: #ffffff;
+  --cf-surface-alt: #f8fafc;
+  --cf-surface-raised: #ffffff;
   --cf-paper: #ffffff;
-  --cf-pearl: #f0f1ed;
+  --cf-pearl: #f5f6f9;
 
-  /* Líneas de la retícula del lienzo */
-  --cf-grid: #525256;
-  --cf-grid-strong: #6b6b70;
+  /* Líneas sutiles de la retícula del lienzo */
+  --cf-grid: #e2e8f0;
+  --cf-grid-strong: #cbd5e1;
 
-  /* ── Texto ────────────────────────────────────────────────────────────── */
-  --cf-text: #f0f1ed;
-  --cf-text-strong: #ffffff;
-  --cf-text-secondary: #a3aba0;
-  --cf-text-muted: #62685f;
+  /* ── Tipografía (Slate High-Contrast Ink) ──────────────────────────────── */
+  --cf-text: #0f172a;
+  --cf-text-strong: #020617;
+  --cf-text-secondary: #475569;
+  --cf-text-muted: #94a3b8;
 
-  /* ── Acentos (Verde lima de CircuitForge + Verde petróleo) ─────────────── */
-  --cf-accent: #d4eb91;
-  --cf-accent-hover: #bde068;
-  --cf-on-accent: #121513;
-  --cf-accent-warm: #ff6b35;
+  /* ── Acentos (Apple System Blue & Neutral Dark) ───────────────────────── */
+  --cf-accent: #1a62ff;
+  --cf-accent-hover: #1453d8;
+  --cf-on-accent: #ffffff;
+  --cf-accent-subtle: #eef4ff;
+  --cf-accent-warm: #f97316;
 
-  /* ── Instrumentación y Señal ─────────────────────────────────────────── */
-  --cf-signal: #2f766f;
+  /* ── Indicadores y Señal ─────────────────────────────────────────────── */
+  --cf-signal: #0ea5e9;
+  --cf-success: #10b981;
+  --cf-warning: #f59e0b;
+  --cf-error: #ef4444;
 
-  /* ── Estado (Semántica eléctrica) ─────────────────────────────────────── */
-  --cf-success: #34d399;
-  --cf-warning: #fbbf24;
-  --cf-error: #f87171;
-
-  /* ── Paleta de cables (Neón técnico diferenciado) ────────────────────── */
-  --cf-wire-1: #f43f5e;
+  /* ── Paleta de cables (Trazado de ingeniería limpio y legible) ────────── */
+  --cf-wire-1: #ef4444;
   --cf-wire-2: #f59e0b;
   --cf-wire-3: #10b981;
-  --cf-wire-4: #00f0ff;
-  --cf-wire-5: #a855f7;
+  --cf-wire-4: #0ea5e9;
+  --cf-wire-5: #8b5cf6;
   --cf-wire-6: #ec4899;
   --cf-wire-7: #3b82f6;
-  --cf-wire-8: #ff6b35;
+  --cf-wire-8: #f97316;
 
-  /* ── Velo y Glassmorphism (Medición REA sobre IYO) ───────────────────── */
+  /* ── Translucidez y Materiales iOS (Frosted Glass) ─────────────────────── */
   --cf-glass-blur: 20px;
   --cf-glass-blur-nav: 24px;
-  --cf-glass-sat: 140%;
-  --cf-hairline: rgba(255, 255, 255, 0.08);
-  --cf-hairline-strong: rgba(255, 255, 255, 0.16);
-  --cf-fill: rgba(18, 21, 29, 0.72);
-  --cf-fill-deep: rgba(11, 13, 18, 0.82);
-  --cf-scrim: rgba(7, 8, 11, 0.78);
-  --cf-fill-dim: rgba(18, 21, 29, 0.4);
-  --cf-fill-strong: rgba(18, 21, 29, 0.92);
+  --cf-glass-sat: 180%;
+  --cf-hairline: rgba(0, 0, 0, 0.06);
+  --cf-hairline-strong: rgba(0, 0, 0, 0.12);
+  --cf-fill: rgba(255, 255, 255, 0.88);
+  --cf-fill-deep: rgba(255, 255, 255, 0.95);
+  --cf-scrim: rgba(15, 23, 42, 0.4);
+  --cf-fill-dim: rgba(241, 245, 249, 0.7);
+  --cf-fill-strong: #ffffff;
   --cf-border-hairline: 1px solid var(--cf-hairline);
   --cf-border-panel: 1px solid var(--cf-hairline);
-  --cf-border-focus: 2px solid rgba(0, 240, 255, 0.65);
+  --cf-border-focus: 2px solid var(--cf-accent);
 
-  /* ── Velos de estado ────────────────────────────────────────────────────*/
-  --cf-error-veil: rgb(248 113 113 / 0.1);
-  --cf-warning-veil: rgb(251 191 36 / 0.1);
-  --cf-success-veil: rgb(52 211 153 / 0.1);
-  --cf-accent-veil: rgb(255 107 53 / 0.14);
+  /* ── Sombras Apple de Difusión Suave ──────────────────────────────────── */
+  --cf-shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+  --cf-shadow-elevated: 0 12px 32px -4px rgba(0, 0, 0, 0.07), 0 2px 6px rgba(0, 0, 0, 0.02);
+  --cf-shadow-pill: 0 4px 14px rgba(26, 98, 255, 0.22);
+  --cf-shadow-dock: 0 10px 30px rgba(0, 0, 0, 0.06);
 
-  /* ── Tipografia ─────────────────────────────────────────────────────────
-   * Inter y JetBrains Mono sustituyen a Magnetik/Roobert (licencia comercial).
-   * La escala se mantiene corta: 6 pasos.
-   */
-  --cf-font-ui: "Inter", system-ui, -apple-system, sans-serif;
-  --cf-font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+  /* ── Tipografía (Sistema iOS) ─────────────────────────────────────────── */
+  --cf-font-ui: "Manrope", system-ui, -apple-system, sans-serif;
+  --cf-font-mono: ui-monospace, "SF Mono", Menlo, monospace;
 
   --cf-text-2xs: 0.6875rem;
   --cf-text-xs: 0.75rem;
@@ -97,11 +89,10 @@
   --cf-leading-snug: 1.4;
   --cf-leading-base: 1.55;
 
-  --cf-tracking-tight: -0.02em;
-  --cf-tracking-wide: 0.08em;
-  --cf-tracking-wider: 0.14em;
+  --cf-tracking-tight: -0.025em;
+  --cf-tracking-wide: 0.04em;
 
-  /* ── Espaciado (base 4px) ───────────────────────────────────────────────*/
+  /* ── Espaciado (base 4px) ─────────────────────────────────────────────── */
   --cf-space-1: 0.25rem;
   --cf-space-2: 0.5rem;
   --cf-space-3: 0.75rem;
@@ -112,122 +103,38 @@
   --cf-space-12: 3rem;
   --cf-space-16: 4rem;
 
-  /* ── Geometria ──────────────────────────────────────────────────────────
-   * Evidencia de iyo.ai: 17.28px (x8), 12.8px (x6), 32px, 42px, 160px (pildora),
-   * y "100%" para circulos. Traducido a la rampa de Tailwind:
-   *
-   *   sm    8px   → controles compactos
-   *   md   12px   → tarjetas y campos
-   *   lg   20px   → contenedores grandes
-   *   xl   28px   → paneles destacados
-   *   pill 9999px → navegacion, chips, botones de accion
-   *
-   * La rampa es mas amplia que antes (era 8/12/20/9999): la referencia usa
-   * radios grandes con generosidad y esa es una de las razones por las que se
-   * ve suave en vez de rigida.
-   */
-  --cf-radius-sm: 0.5rem;
-  --cf-radius-md: 0.75rem;
-  --cf-radius-lg: 1.25rem;
-  --cf-radius-xl: 1.75rem;
+  /* ── Radios Apple (Píldoras y Tarjetas amplias) ────────────────────────── */
+  --cf-radius-sm: 8px;
+  --cf-radius-md: 14px;
+  --cf-radius-lg: 20px;
+  --cf-radius-xl: 24px;
   --cf-radius-full: 9999px;
 
-  --cf-border-focus: 2px solid var(--cf-accent);
-
-  /* ── Movimiento ─────────────────────────────────────────────────────────
-   * Evidencia: cubic-bezier(0.77,0,0.175,1) x11 (la firma), y las duraciones
-   * 0.6s / 0.3s dominantes. El sobrepaso cubic-bezier(0.48,0.01,0,1.08) x3,
-   * siempre en transform.
-   *
-   * `--cf-ease-soft` es nueva: medida en la referencia como
-   * `cubic-bezier(0.625, 0.05, ...)`, un ease-out mas suave que el firma. Se usa
-   * para movimientos cortos —entradas de panel— donde la curva firma resulta
-   * demasiado brusca de arranque.
-   */
-  --cf-ease-out: cubic-bezier(0.77, 0, 0.175, 1);
+  /* ── Movimiento Físico (Springs & Curvas Human Interface) ─────────────── */
+  --cf-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --cf-ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
-  --cf-ease-soft: cubic-bezier(0.625, 0.05, 0.15, 1);
-  --cf-ease-pop: cubic-bezier(0.48, 0.01, 0, 1.08);
+  --cf-ease-soft: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --cf-ease-pop: cubic-bezier(0.175, 0.885, 0.32, 1.15);
 
-  /* Duraciones. La escala es corta a proposito: cuatro pasos cubren todo y no
-   * obligan a decidir entre 280 y 320 ms en cada componente. */
   --cf-dur-instant: 100ms;
-  --cf-dur-fast: 200ms;
-  --cf-dur-base: 300ms;
-  --cf-dur-slower: 400ms;
-  --cf-dur-slow: 600ms;
-  --cf-dur-grand: 700ms;
-
-  /* ── Textura de grano ───────────────────────────────────────────────────
-   * La referencia tiene grano sobre el negro en lugar de una superficie lisa.
-   * Se genera con un SVG en linea: cero peticiones, cero imagen que cachear.
-   *
-   * `numOctaves` a 3 y `baseFrequency` a 0.85 dan un grano fino, casi de
-   * pelicula. Con menos octavas el ruido sale en manchas grandes y se lee como
-   * suciedad en vez de como textura.
-   */
-  --cf-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.42'/%3E%3C/svg%3E");
-  --cf-grain-opacity: 0.32;
-
-  /* ── Aurora: halos de color del fondo ───────────────────────────────────
-   * El fondo negro plano se lee como "rectangulo de color". Tres halos
-   * radiales muy difusos —naranja del acento, cian de senal y un violeta de
-   * apoyo— dan profundidad y hacen que la superficie parezca tener atmosfera.
-   *
-   * Se pintan con `radial-gradient`, que la GPU compone sin coste de layout, y
-   * se mueven con `transform` sobre un contenedor de tamano fijo.
-   */
-  --cf-aurora-1: rgb(255 107 53 / 0.16);
-  --cf-aurora-2: rgb(34 211 238 / 0.1);
-  --cf-aurora-3: rgb(167 139 250 / 0.12);
-  --cf-aurora-blur: 90px;
-  --cf-aurora-duration: 34s;
-
-  /* ── Resplandor de acento ───────────────────────────────────────────────
-   * Borde luminoso y halo interior para las superficies que deben destacar.
-   * Es "luz", no sombra: mantiene la tesis de la referencia.
-   */
-  --cf-glow-accent: 0 0 0 1px rgb(255 107 53 / 0.3), 0 0 24px -4px rgb(255 107 53 / 0.35);
-  --cf-glow-soft: 0 0 32px -8px rgb(255 107 53 / 0.25);
-  --cf-glow-cyan: 0 0 28px -6px rgb(34 211 238 / 0.3);
-
-  /* ── Trama de fondo ─────────────────────────────────────────────────────
-   * Rejilla tenue para las superficies en modo Operate (biblioteca, proyectos).
-   * Da estructura sin competir con el contenido, y desaparece hacia los bordes
-   * con una mascara radial.
-   */
-  --cf-trama: radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.05) 1px, transparent 0);
-  --cf-trama-size: 28px 28px;
+  --cf-dur-fast: 160ms;
+  --cf-dur-base: 240ms;
+  --cf-dur-slow: 360ms;
 }
 
-/* Accesibilidad del movimiento (RNF-4, obligatorio).
- *
- * Los `!important` son deliberados: este bloque debe ganar a CUALQUIER
- * transicion declarada en cualquier componente, presente o futuro. Es el patron
- * establecido para `prefers-reduced-motion`. Por eso `noImportantStyles` se
- * suprime aqui y solo aqui; en el resto del sistema un `!important` si seria un
- * problema real de cascada.
- */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
-    /* biome-ignore lint/complexity/noImportantStyles: debe sobrescribir toda transicion */
     animation-duration: 0.01ms !important;
-    /* biome-ignore lint/complexity/noImportantStyles: idem */
     animation-iteration-count: 1 !important;
-    /* biome-ignore lint/complexity/noImportantStyles: idem */
     transition-duration: 0.01ms !important;
-    /* biome-ignore lint/complexity/noImportantStyles: idem */
     scroll-behavior: auto !important;
   }
 
   .cf-reveal-letter {
-    /* biome-ignore lint/complexity/noImportantStyles: idem */
     filter: none !important;
-    /* biome-ignore lint/complexity/noImportantStyles: idem */
     opacity: 1 !important;
-    /* biome-ignore lint/complexity/noImportantStyles: idem */
     visibility: visible !important;
   }
 }

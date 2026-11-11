@@ -338,8 +338,7 @@ export function EditorPage() {
                 width: 6,
                 height: 6,
                 borderRadius: '50%',
-                background: '#00f0ff',
-                boxShadow: '0 0 6px #00f0ff',
+                background: '#10b981',
               }}
             />
             <span>
@@ -852,7 +851,7 @@ export function EditorPage() {
 
                 <button
                   type="button"
-                  className="nx-button nx-button-primary cf-glow"
+                  className="nx-button nx-button-primary"
                   onClick={download}
                 >
                   <span className="cf-btn__roll">
@@ -1113,11 +1112,11 @@ export function EditorPage() {
           <div
             style={{
               padding: '12px 16px',
-              background: snapshot?.wiring.error ? 'rgba(245, 158, 11, 0.08)' : 'rgba(0, 240, 255, 0.06)',
+              background: snapshot?.wiring.error ? 'rgba(245, 158, 11, 0.08)' : 'rgba(26, 98, 255, 0.05)',
               border: snapshot?.wiring.error
                 ? '1px solid rgba(245, 158, 11, 0.35)'
-                : '1px solid rgba(0, 240, 255, 0.25)',
-              borderRadius: '8px',
+                : '1px solid rgba(26, 98, 255, 0.18)',
+              borderRadius: '12px',
               color: 'var(--nx-ink)',
             }}
           >
