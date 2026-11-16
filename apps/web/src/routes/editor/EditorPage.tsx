@@ -1,4 +1,5 @@
 import { BREADBOARD_TYPE_ID, type Category, type Wire } from '@circuitforge/netlist'
+import { validateCircuit, type Violation } from '@circuitforge/validation'
 import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { resolveShortcut, toKeyEventLike } from '@/features/editor/canvas/keyboardShortcuts'
@@ -144,6 +145,20 @@ export function EditorPage() {
       executeSimulation(snapshot.project)
     }
   }, [isSimRunning, snapshot?.project, executeSimulation])
+
+  const simResult = useSimulationStore((s) => s.result)
+
+  const ercViolations = useMemo<Violation[]>(() => {
+    if (!snapshot?.project) return []
+    return validateCircuit(
+      {
+        ...snapshot.project,
+        netVoltages: simResult?.voltages,
+      },
+      CATALOG_INDEX,
+    )
+  }, [snapshot?.project, simResult])
+
   const setCode = useNexoSession((s) => s.setCode)
   const setNotes = useNexoSession((s) => s.setNotes)
   const setView = useNexoSession((s) => s.setView)
@@ -432,10 +447,32 @@ export function EditorPage() {
                 width: 6,
                 height: 6,
                 borderRadius: '50%',
-                background: snapshot?.wiring.error ? '#f59e0b' : '#10b981',
+                background: ercViolations.some((v) => v.severity === 'error')
+                  ? '#ef4444'
+                  : ercViolations.length > 0 || snapshot?.wiring.error
+                    ? '#f59e0b'
+                    : '#10b981',
               }}
             />
             <span>Reglas ERC</span>
+            {ercViolations.length > 0 && (
+              <span
+                style={{
+                  padding: '1px 6px',
+                  borderRadius: '9999px',
+                  background: ercViolations.some((v) => v.severity === 'error')
+                    ? '#fee2e2'
+                    : '#fef3c7',
+                  color: ercViolations.some((v) => v.severity === 'error')
+                    ? '#b91c1c'
+                    : '#b45309',
+                  fontSize: '10px',
+                  fontWeight: 700,
+                }}
+              >
+                {ercViolations.length}
+              </span>
+            )}
           </button>
         </div>
       </header>
@@ -1149,20 +1186,79 @@ export function EditorPage() {
           <p style={{ color: 'var(--nx-muted)', marginBottom: '10px' }}>
             Comprobación automática de continuidad, polaridades y buses en tiempo real:
           </p>
-          <div
-            style={{
-              padding: '12px 16px',
-              background: snapshot?.wiring.error ? 'rgba(245, 158, 11, 0.08)' : 'rgba(26, 98, 255, 0.05)',
-              border: snapshot?.wiring.error
-                ? '1px solid rgba(245, 158, 11, 0.35)'
-                : '1px solid rgba(26, 98, 255, 0.18)',
-              borderRadius: '12px',
-              color: 'var(--nx-ink)',
-            }}
-          >
-            {snapshot?.wiring.error ??
-              '✓ Reglas ERC satisfechas: No se detectan cortocircuitos ni conflictos de polaridad.'}
-          </div>
+          {ercViolations.length > 0 ? (
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+              }}
+            >
+              {ercViolations.map((v, i) => (
+                <div
+                  key={`${v.rule}-${v.componentId ?? v.netId ?? i}`}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '10px 14px',
+                    background: v.severity === 'error' ? '#fef2f2' : '#fffbeb',
+                    border: `1px solid ${v.severity === 'error' ? '#fee2e2' : '#fef3c7'}`,
+                    borderRadius: '10px',
+                    fontSize: '12px',
+                    color: '#0f172a',
+                  }}
+                >
+                  <span
+                    style={{
+                      padding: '2px 8px',
+                      borderRadius: '9999px',
+                      background: v.severity === 'error' ? '#ef4444' : '#f59e0b',
+                      color: '#ffffff',
+                      fontWeight: 700,
+                      fontSize: '11px',
+                    }}
+                  >
+                    {v.rule}
+                  </span>
+                  <span style={{ fontWeight: 600 }}>{v.message}</span>
+                  {v.componentId && (
+                    <span style={{ color: '#64748b', fontSize: '11px', marginLeft: 'auto' }}>
+                      Pieza: {v.componentId}
+                    </span>
+                  )}
+                  {v.netId && (
+                    <span style={{ color: '#64748b', fontSize: '11px', marginLeft: v.componentId ? '8px' : 'auto' }}>
+                      Net: {v.netId}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '12px 16px',
+                background: snapshot?.wiring.error ? 'rgba(245, 158, 11, 0.08)' : '#f0fdf4',
+                border: snapshot?.wiring.error
+                  ? '1px solid rgba(245, 158, 11, 0.35)'
+                  : '1px solid #bbf7d0',
+                borderRadius: '12px',
+                color: snapshot?.wiring.error ? '#b45309' : '#166534',
+                fontSize: '13px',
+                fontWeight: 500,
+              }}
+            >
+              <span>{snapshot?.wiring.error ? '⚠️' : '✓'}</span>
+              <span>
+                {snapshot?.wiring.error ??
+                  'Reglas ERC satisfechas: No se detectan cortocircuitos (V-1), conflictos de polaridad (V-4), conexiones sueltas (V-3) ni sobretensiones (V-6).'}
+              </span>
+            </div>
+          )}
         </section>
       )}
 
