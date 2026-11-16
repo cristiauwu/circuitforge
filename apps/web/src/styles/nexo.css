@@ -1851,3 +1851,239 @@ button:disabled {
   font-size: 11px;
   font-weight: 600;
 }
+
+/* 6. Panel de Telemetría y Simulación MNA (Apple iOS Style) */
+.nx-sim-toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #ffffff;
+  color: #0f172a;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.2, 0, 0, 1);
+  margin-left: auto;
+}
+
+.nx-sim-toolbar-btn:hover {
+  background: #f8fafc;
+  border-color: rgba(26, 98, 255, 0.25);
+  color: #1a62ff;
+}
+
+.nx-sim-toolbar-btn.active {
+  background: #ecfdf5;
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #065f46;
+}
+
+.nx-sim-card {
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: #f8fafc;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.nx-sim-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.nx-sim-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nx-sim-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: #94a3b8;
+  display: inline-block;
+}
+
+.nx-sim-dot[data-status="active"] {
+  background: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+.nx-sim-dot[data-status="error"] {
+  background: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+.nx-sim-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+}
+
+.nx-sim-hint {
+  margin: 0;
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.nx-sim-btn-primary {
+  padding: 5px 12px;
+  background: #1a62ff;
+  color: #ffffff;
+  border: none;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1), background-color 0.15s ease;
+}
+
+.nx-sim-btn-primary:hover {
+  background: #1450d0;
+}
+
+.nx-sim-btn-primary:active {
+  transform: scale(0.96);
+}
+
+.nx-sim-btn-stop {
+  padding: 5px 12px;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.nx-sim-btn-stop:hover {
+  background: #e2e8f0;
+}
+
+.nx-sim-btn-stop:active {
+  transform: scale(0.96);
+}
+
+.nx-sim-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #fef2f2;
+  border: 1px solid #fee2e2;
+  border-radius: 8px;
+  font-size: 11px;
+  color: #b91c1c;
+  line-height: 1.35;
+}
+
+.nx-sim-metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.nx-sim-metric-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: 10px;
+}
+
+.nx-sim-metric-item.full-width {
+  grid-column: span 2;
+}
+
+.nx-sim-metric-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.nx-sim-metric-val {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.nx-sim-metric-badge {
+  display: inline-block;
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.nx-sim-metric-badge[data-lit="true"] {
+  color: #10b981;
+}
+
+.nx-sim-pins-list {
+  grid-column: span 2;
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nx-sim-pins-table {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.nx-sim-pin-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  font-size: 11px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+.nx-sim-pin-row:last-child {
+  border-bottom: none;
+}
+
+.nx-sim-pin-name {
+  font-weight: 600;
+  color: #1e293b;
+  min-width: 48px;
+}
+
+.nx-sim-pin-net {
+  color: #64748b;
+  font-size: 10px;
+}
+
+.nx-sim-pin-voltage {
+  font-weight: 600;
+  color: #1a62ff;
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+

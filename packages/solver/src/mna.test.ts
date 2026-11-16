@@ -434,3 +434,101 @@ describe('solveDC – Potentiometer', () => {
     expect(relError(result.voltages[wiperNet]!, 5)).toBeLessThan(0.10)
   })
 })
+
+describe('solveDC – LED with current limiting resistor (RF-2.5)', () => {
+  it('calculates current through LED with 2.0V forward drop', () => {
+    // V1(5V) → R1(220Ω) → LED(anode-cathode) → GND
+    // I = (5.0 - 2.0) / 220 = 3 / 220 ≈ 13.636 mA
+    let p = createEmptyProject('test', 'LED_Series')
+    p = addComponent(p, 'V1', 'dc_source',
+      [{ pinId: 'positive', type: 'power' }, { pinId: 'negative', type: 'gnd' }],
+      { voltage: 5 },
+    )
+    p = addComponent(p, 'R1', 'resistor',
+      [{ pinId: 'a', type: 'passive' }, { pinId: 'b', type: 'passive' }],
+      { resistance: 220 },
+    )
+    p = addComponent(p, 'D1', 'led',
+      [{ pinId: 'anode', type: 'passive' }, { pinId: 'cathode', type: 'passive' }],
+    )
+    p = addComponent(p, 'GND1', 'gnd_ref',
+      [{ pinId: 'gnd', type: 'gnd' }],
+    )
+    p = wire(p, 'V1', 'positive', 'R1', 'a')
+    p = wire(p, 'R1', 'b', 'D1', 'anode')
+    p = wire(p, 'D1', 'cathode', 'GND1', 'gnd')
+    p = wire(p, 'GND1', 'gnd', 'V1', 'negative')
+
+    const result = expectOk(solveDC(p))
+
+    // Expected current ≈ 3 / 220 ≈ 0.013636 A
+    const expectedCurrent = (5 - 2.0) / 220
+    const i = Math.abs(result.currents['V1']!)
+    expect(relError(i, expectedCurrent)).toBeLessThan(0.10)
+
+    // LED anode net voltage should be 2.0V
+    const anodeNet = p.components.find((c) => c.id === 'D1')!
+      .pins.find((pin) => pin.pinId === 'anode')!.netId!
+    expect(relError(result.voltages[anodeNet]!, 2.0)).toBeLessThan(0.10)
+  })
+})
+
+describe('solveDC – Wheatstone bridge (Puente de Wheatstone)', () => {
+  it('balanced bridge yields zero differential voltage between branches', () => {
+    // V1(12V) feeds two parallel branches:
+    // Branch 1: R1(1k) and R2(1k) in series -> midpoint V_C = 6V
+    // Branch 2: R3(2k) and R4(2k) in series -> midpoint V_D = 6V
+    // Bridge differential: V_CD = |V_C - V_D| = 0V
+    let p = createEmptyProject('test', 'Wheatstone')
+    p = addComponent(p, 'V1', 'dc_source',
+      [{ pinId: 'positive', type: 'power' }, { pinId: 'negative', type: 'gnd' }],
+      { voltage: 12 },
+    )
+    p = addComponent(p, 'R1', 'resistor',
+      [{ pinId: 'a', type: 'passive' }, { pinId: 'b', type: 'passive' }],
+      { resistance: 1000 },
+    )
+    p = addComponent(p, 'R2', 'resistor',
+      [{ pinId: 'a', type: 'passive' }, { pinId: 'b', type: 'passive' }],
+      { resistance: 1000 },
+    )
+    p = addComponent(p, 'R3', 'resistor',
+      [{ pinId: 'a', type: 'passive' }, { pinId: 'b', type: 'passive' }],
+      { resistance: 2000 },
+    )
+    p = addComponent(p, 'R4', 'resistor',
+      [{ pinId: 'a', type: 'passive' }, { pinId: 'b', type: 'passive' }],
+      { resistance: 2000 },
+    )
+    p = addComponent(p, 'GND1', 'gnd_ref',
+      [{ pinId: 'gnd', type: 'gnd' }],
+    )
+
+    // Top rail: V1+ connects to R1.a and R3.a
+    p = wire(p, 'V1', 'positive', 'R1', 'a')
+    p = wire(p, 'V1', 'positive', 'R3', 'a')
+
+    // Midpoints
+    p = wire(p, 'R1', 'b', 'R2', 'a')
+    p = wire(p, 'R3', 'b', 'R4', 'a')
+
+    // Bottom rail: R2.b and R4.b connect to GND and V1-
+    p = wire(p, 'R2', 'b', 'GND1', 'gnd')
+    p = wire(p, 'R4', 'b', 'GND1', 'gnd')
+    p = wire(p, 'GND1', 'gnd', 'V1', 'negative')
+
+    const result = expectOk(solveDC(p))
+
+    const mid1Net = p.components.find((c) => c.id === 'R1')!
+      .pins.find((pin) => pin.pinId === 'b')!.netId!
+    const mid2Net = p.components.find((c) => c.id === 'R3')!
+      .pins.find((pin) => pin.pinId === 'b')!.netId!
+
+    const vC = result.voltages[mid1Net]!
+    const vD = result.voltages[mid2Net]!
+
+    expect(relError(vC, 6)).toBeLessThan(0.10)
+    expect(relError(vD, 6)).toBeLessThan(0.10)
+    expect(Math.abs(vC - vD)).toBeLessThan(1e-6)
+  })
+})

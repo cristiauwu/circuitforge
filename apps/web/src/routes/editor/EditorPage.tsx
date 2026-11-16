@@ -13,6 +13,8 @@ import { EDITABLE_TYPE_IDS, isEditableType } from '@/features/nexo/capabilities'
 import { NexoScene, type ProjectSceneActions, type SceneAPI } from '@/features/nexo/NexoScene'
 import { createProjectController, type ProjectSnapshot } from '@/features/nexo/projectController'
 import { useNexoSession } from '@/features/nexo/session'
+import { SimulationInspectorPanel } from '@/features/simulation/SimulationInspectorPanel'
+import { useSimulationStore } from '@/features/simulation/useSimulationStore'
 import { CATALOG, CATALOG_INDEX, CATEGORIES, CATEGORY_LABELS } from '@/lib/fixtures/components'
 
 function WireList({
@@ -131,6 +133,17 @@ export function EditorPage() {
   const notes = useNexoSession((s) => s.notes)
   const view = useNexoSession((s) => s.view)
   const ratio = useNexoSession((s) => s.splitRatio)
+
+  const isSimRunning = useSimulationStore((s) => s.isRunning)
+  const simError = useSimulationStore((s) => s.error)
+  const toggleSimRunning = useSimulationStore((s) => s.toggleRunning)
+  const executeSimulation = useSimulationStore((s) => s.execute)
+
+  useEffect(() => {
+    if (isSimRunning && snapshot?.project) {
+      executeSimulation(snapshot.project)
+    }
+  }, [isSimRunning, snapshot?.project, executeSimulation])
   const setCode = useNexoSession((s) => s.setCode)
   const setNotes = useNexoSession((s) => s.setNotes)
   const setView = useNexoSession((s) => s.setView)
@@ -654,7 +667,23 @@ export function EditorPage() {
 
             <button
               type="button"
-              style={{ marginLeft: 'auto' }}
+              className={`nx-sim-toolbar-btn ${isSimRunning ? 'active' : ''}`}
+              onClick={() => {
+                useNexoSession.getState().continueWork()
+                if (!isSimRunning && snapshot?.project) {
+                  executeSimulation(snapshot.project)
+                }
+                toggleSimRunning()
+              }}
+              title="Ejecutar o pausar la simulación eléctrica MNA en segundo plano (Web Worker)"
+              aria-pressed={isSimRunning}
+            >
+              <span className="nx-sim-dot" data-status={simError ? 'error' : isSimRunning ? 'active' : 'idle'} />
+              <span>{isSimRunning ? 'Simulando' : 'Simular DC'}</span>
+            </button>
+
+            <button
+              type="button"
               onClick={(event) => toggleDrawer('tools', event.currentTarget)}
               aria-expanded={toolsOpen}
               aria-controls="editor-tools"
@@ -1003,6 +1032,14 @@ export function EditorPage() {
                         setMessage(`${selected.id} desmontado del protoboard.`)
                       return result
                     }}
+                  />
+                )}
+
+                {project && (
+                  <SimulationInspectorPanel
+                    key={`sim-${selected.id}`}
+                    component={selected}
+                    project={project}
                   />
                 )}
 
