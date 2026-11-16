@@ -27,6 +27,7 @@
 import type { Component, Net, PinEndpoint, Project } from '@circuitforge/netlist'
 import { COMPONENT_INDEX, getDefaultParameters } from '@circuitforge/netlist'
 import { getInternalContactPairs } from '@circuitforge/netlist'
+import { computeLdrResistance, computeNtcResistance } from './behavioral.js'
 import { solve, zeros, zeroVec } from './matrix.js'
 
 // ─── Public result types ──────────────────────────────────────────────
@@ -146,8 +147,7 @@ function extractElements(project: Project, pinNet: Map<string, string>): Element
 
     switch (comp.typeId) {
       // ── Passive two-terminal resistive ──────────────────────
-      case 'resistor':
-      case 'thermistor_ntc': {
+      case 'resistor': {
         const r = paramNum(comp, 'resistance', 220)
         const unit = def.parameters.find((p) => p.key === 'resistance')?.kind === 'number'
           ? (def.parameters.find((p) => p.key === 'resistance') as { unit?: string }).unit
@@ -165,16 +165,44 @@ function extractElements(project: Project, pinNet: Map<string, string>): Element
         break
       }
 
-      case 'ldr': {
-        // LDR acts as a simple resistor — default 10k
-        const r = paramNum(comp, 'resistance', 10000)
-        if (r > 0) {
+      case 'thermistor_ntc': {
+        let ohms = 10_000
+        if (typeof comp.params['temperature'] === 'number') {
+          ohms = computeNtcResistance(comp.params['temperature'])
+        } else {
+          const r = paramNum(comp, 'resistance', 10)
+          const unit = def.parameters.find((p) => p.key === 'resistance')?.kind === 'number'
+            ? (def.parameters.find((p) => p.key === 'resistance') as { unit?: string }).unit
+            : undefined
+          ohms = unit === 'kohm' ? r * 1000 : r
+        }
+        if (ohms > 0) {
           elements.push({
             kind: 'resistor',
             id: comp.id,
             nodeA: nodeOf(pinNet, comp.id, 'a'),
             nodeB: nodeOf(pinNet, comp.id, 'b'),
-            resistance: r,
+            resistance: ohms,
+          })
+        }
+        break
+      }
+
+      case 'ldr': {
+        // LDR conductual (RF-2.3): varía resistencia con lux o resistencia explícita
+        let ohms = 10_000
+        if (typeof comp.params['lux'] === 'number') {
+          ohms = computeLdrResistance(comp.params['lux'])
+        } else if (typeof comp.params['resistance'] === 'number') {
+          ohms = comp.params['resistance']
+        }
+        if (ohms > 0) {
+          elements.push({
+            kind: 'resistor',
+            id: comp.id,
+            nodeA: nodeOf(pinNet, comp.id, 'a'),
+            nodeB: nodeOf(pinNet, comp.id, 'b'),
+            resistance: ohms,
           })
         }
         break
@@ -235,11 +263,9 @@ function extractElements(project: Project, pinNet: Map<string, string>): Element
         break
       }
 
-      // ── DC voltage sources and batteries ────────────────────
-      case 'dc_source':
-      case 'battery_9v':
-      case 'lipo_3s': {
-        const v = paramNum(comp, 'voltage', comp.typeId === 'dc_source' ? 5 : comp.typeId === 'battery_9v' ? 9 : 11.1)
+      // ── DC voltage sources and batteries (con ESR RF-2.3) ───
+      case 'dc_source': {
+        const v = paramNum(comp, 'voltage', 5)
         elements.push({
           kind: 'vsource',
           id: comp.id,
@@ -247,6 +273,38 @@ function extractElements(project: Project, pinNet: Map<string, string>): Element
           nodeNeg: nodeOf(pinNet, comp.id, 'negative'),
           voltage: v,
         })
+        break
+      }
+
+      case 'battery_9v':
+      case 'lipo_3s': {
+        const v = paramNum(comp, 'voltage', comp.typeId === 'battery_9v' ? 9 : 11.1)
+        const esr = paramNum(comp, 'esr', 0)
+        if (esr > 0) {
+          const intNode = `__esr_${comp.id}`
+          elements.push({
+            kind: 'vsource',
+            id: comp.id,
+            nodePos: intNode,
+            nodeNeg: nodeOf(pinNet, comp.id, 'negative'),
+            voltage: v,
+          })
+          elements.push({
+            kind: 'resistor',
+            id: `${comp.id}_esr`,
+            nodeA: intNode,
+            nodeB: nodeOf(pinNet, comp.id, 'positive'),
+            resistance: esr,
+          })
+        } else {
+          elements.push({
+            kind: 'vsource',
+            id: comp.id,
+            nodePos: nodeOf(pinNet, comp.id, 'positive'),
+            nodeNeg: nodeOf(pinNet, comp.id, 'negative'),
+            voltage: v,
+          })
+        }
         break
       }
 
