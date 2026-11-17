@@ -2197,4 +2197,278 @@ button:disabled {
   line-height: 1.5;
 }
 
+/* 8. Bandeja de Telemetría Flotante (WashOS Dashboard Style) */
+.nx-telemetry-tray {
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 12px 24px;
+  z-index: 30;
+  transition: all 0.25s cubic-bezier(0.2, 0, 0, 1);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.02);
+}
+
+.nx-telemetry-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.nx-telemetry-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nx-telemetry-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+}
+
+.nx-telemetry-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 2px;
+}
+
+.nx-telemetry-dots .dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  display: inline-block;
+}
+
+.nx-telemetry-dots .dot-blue {
+  background: #1a62ff;
+}
+
+.nx-telemetry-dots .dot-amber {
+  background: #f59e0b;
+}
+
+.nx-telemetry-dots .dot-green {
+  background: #10b981;
+}
+
+.nx-telemetry-perf-pill {
+  margin-left: 8px;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: #ecfdf5;
+  color: #065f46;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.nx-telemetry-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  background: #f1f5f9;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  color: #475569;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 120ms cubic-bezier(0.2, 0, 0, 1), background-color 150ms ease;
+}
+
+.nx-telemetry-toggle-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.nx-telemetry-toggle-btn:active {
+  transform: scale(0.97);
+}
+
+.nx-telemetry-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 900px) {
+  .nx-telemetry-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.nx-metric-widget {
+  background: #f8fafc;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.nx-metric-widget:hover {
+  background: #ffffff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+}
+
+.nx-metric-widget-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.nx-metric-widget-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+}
+
+.nx-metric-unit {
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.nx-metric-widget-sub {
+  font-size: 11px;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nx-widget-erc {
+  cursor: pointer;
+}
+
+.nx-widget-erc.safe .nx-erc-clean-text {
+  color: #10b981;
+}
+
+.nx-widget-erc.warning .nx-erc-issue-count {
+  color: #d97706;
+}
+
+.nx-widget-erc.error .nx-erc-issue-count {
+  color: #dc2626;
+}
+
+.nx-telemetry-details {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.nx-telemetry-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+.nx-telemetry-alert.error {
+  background: #fef2f2;
+  border: 1px solid #fee2e2;
+  color: #991b1b;
+}
+
+.nx-violations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nx-violation-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+.nx-violation-card.error {
+  background: #fef2f2;
+  border: 1px solid #fee2e2;
+}
+
+.nx-violation-card.warning {
+  background: #fffbeb;
+  border: 1px solid #fef3c7;
+}
+
+.nx-violation-rule-badge {
+  padding: 2px 7px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.nx-violation-card.error .nx-violation-rule-badge {
+  background: #ef4444;
+}
+
+.nx-violation-card.warning .nx-violation-rule-badge {
+  background: #f59e0b;
+}
+
+.nx-violation-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 12px;
+}
+
+.nx-violation-msg {
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.nx-violation-meta {
+  display: flex;
+  gap: 8px;
+  font-size: 11px;
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.nx-telemetry-clean-state {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  color: #166534;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+
 

@@ -4,7 +4,7 @@ import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState }
 import { useLocation } from 'react-router-dom'
 import { resolveShortcut, toKeyEventLike } from '@/features/editor/canvas/keyboardShortcuts'
 import { EditorCatalogDrawer } from '@/features/editor/components/EditorCatalogDrawer'
-import { EditorDiagnosticsDrawer } from '@/features/editor/components/EditorDiagnosticsDrawer'
+import { TelemetryDashboardTray } from '@/features/editor/components/TelemetryDashboardTray'
 import { EditorFloatingDock } from '@/features/editor/components/EditorFloatingDock'
 import { EditorHeader } from '@/features/editor/components/EditorHeader'
 import { EditorInspectorDrawer } from '@/features/editor/components/EditorInspectorDrawer'
@@ -456,8 +456,13 @@ export function EditorPage() {
         />
       </div>
 
-      <EditorDiagnosticsDrawer
+      <TelemetryDashboardTray
         open={diagnosticsOpen}
+        onToggle={() => {
+          useNexoSession.getState().continueWork()
+          setDiagnosticsOpen(!diagnosticsOpen)
+        }}
+        project={project ?? null}
         violations={ercViolations}
         wiringError={snapshot?.wiring.error}
       />
