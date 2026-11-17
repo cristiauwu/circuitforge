@@ -72,7 +72,8 @@ export function solve(A: Matrix, b: Float64Array): Float64Array | null {
       const factor = aug[pivot]![r]! * diagInv
       if (factor === 0) continue
       for (let c = pivot; c <= n; c++) {
-        aug[c]![r] -= factor * aug[c]![pivot]!
+        const col = aug[c]!
+        col[r] = (col[r] ?? 0) - factor * (col[pivot] ?? 0)
       }
     }
   }

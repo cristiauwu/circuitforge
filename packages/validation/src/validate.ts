@@ -336,7 +336,7 @@ const RULES: readonly ((project: Project, catalog: Catalog) => Violation[])[] = 
  * @returns Lista de violaciones, ordenadas por severidad (`error` primero) y luego
  *          por regla. Nunca lanza.
  */
-export function validateCircuit(input: Project, catalog: Catalog): Violation[] {
+export function validateCircuit(input: Project | ProjectWithVoltages, catalog: Catalog): Violation[] {
   let project = input
   if (project.components.length === 0 && project.nets.length === 0) return []
   if (

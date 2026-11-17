@@ -106,7 +106,7 @@ export const EditorCatalogDrawer: React.FC<EditorCatalogDrawerProps> = ({
               <ComponentPreview
                 typeId={part.typeId}
                 name={part.name}
-                size="catalog"
+                size="compact"
                 className="nx-piece-thumb"
               />
               <div className="nx-piece-meta">

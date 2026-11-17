@@ -24,7 +24,7 @@ export interface SimulationState {
   reset: () => void
 }
 
-export const useSimulationStore = create<SimulationState>((set, get) => ({
+export const useSimulationStore = create<SimulationState>((set) => ({
   isRunning: false,
   isSolving: false,
   result: null,

@@ -30,11 +30,11 @@ export interface EditorHeaderProps {
   onToggleTools: (trigger: HTMLButtonElement) => void
   onUndo: () => void
   onRedo: () => void
-  canUndoState?: boolean
-  canRedoState?: boolean
-  wiringPending?: { componentId: string; pinId: string } | null
-  onCancelWiring?: () => void
-  toolsTriggerRef?: React.RefObject<HTMLButtonElement | null>
+  canUndoState?: boolean | undefined
+  canRedoState?: boolean | undefined
+  wiringPending?: { componentId: string; pinId: string } | null | undefined
+  onCancelWiring?: (() => void) | undefined
+  toolsTriggerRef?: React.RefObject<HTMLButtonElement | null> | undefined
 }
 
 export const EditorHeader: React.FC<EditorHeaderProps> = ({

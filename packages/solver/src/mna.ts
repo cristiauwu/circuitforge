@@ -24,8 +24,8 @@
  *   That node is eliminated (V = 0) and becomes the reference.
  */
 
-import type { Component, Net, PinEndpoint, Project } from '@circuitforge/netlist'
-import { COMPONENT_INDEX, getDefaultParameters } from '@circuitforge/netlist'
+import type { Component, PinEndpoint, Project } from '@circuitforge/netlist'
+import { COMPONENT_INDEX } from '@circuitforge/netlist'
 import { getInternalContactPairs } from '@circuitforge/netlist'
 import { computeLdrResistance, computeNtcResistance } from './behavioral.js'
 import { solve, zeros, zeroVec } from './matrix.js'
@@ -364,7 +364,6 @@ function extractElements(project: Project, pinNet: Map<string, string>): Element
       }
 
       case 'diode_zener': {
-        const vz = paramNum(comp, 'zenerVoltage', 5.1)
         elements.push({
           kind: 'vsource',
           id: `${comp.id}_vd`,
@@ -630,14 +629,18 @@ export function solveDC(project: Project): DCResult {
     const iB = nodeIdx(el.nodeB)
 
     if (iA !== null) {
-      A[iA]![iA] += g
+      const colA = A[iA]!
+      colA[iA] = (colA[iA] ?? 0) + g
     }
     if (iB !== null) {
-      A[iB]![iB] += g
+      const colB = A[iB]!
+      colB[iB] = (colB[iB] ?? 0) + g
     }
     if (iA !== null && iB !== null) {
-      A[iB]![iA] -= g
-      A[iA]![iB] -= g
+      const colA = A[iA]!
+      const colB = A[iB]!
+      colB[iA] = (colB[iA] ?? 0) - g
+      colA[iB] = (colA[iB] ?? 0) - g
     }
   }
 
@@ -650,12 +653,16 @@ export function solveDC(project: Project): DCResult {
 
     // B and C stamps
     if (iPos !== null) {
-      A[iK]![iPos] += 1  // B: node equation gets +I_k for positive node
-      A[iPos]![iK] += 1  // C: KVL row
+      const colK = A[iK]!
+      const colPos = A[iPos]!
+      colK[iPos] = (colK[iPos] ?? 0) + 1  // B: node equation gets +I_k for positive node
+      colPos[iK] = (colPos[iK] ?? 0) + 1  // C: KVL row
     }
     if (iNeg !== null) {
-      A[iK]![iNeg] -= 1  // B: node equation gets -I_k for negative node
-      A[iNeg]![iK] -= 1  // C: KVL row
+      const colK = A[iK]!
+      const colNeg = A[iNeg]!
+      colK[iNeg] = (colK[iNeg] ?? 0) - 1  // B: node equation gets -I_k for negative node
+      colNeg[iK] = (colNeg[iK] ?? 0) - 1  // C: KVL row
     }
 
     // D is 0 for ideal voltage source
@@ -670,8 +677,8 @@ export function solveDC(project: Project): DCResult {
     const iNeg = nodeIdx(el.nodeNeg)
 
     // Current source: I flows from neg to pos inside, so inject I at pos, extract at neg
-    if (iPos !== null) b[iPos] += el.current
-    if (iNeg !== null) b[iNeg] -= el.current
+    if (iPos !== null) b[iPos] = (b[iPos] ?? 0) + el.current
+    if (iNeg !== null) b[iNeg] = (b[iNeg] ?? 0) - el.current
   }
 
   // Solve

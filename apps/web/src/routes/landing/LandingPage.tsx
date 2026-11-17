@@ -10,31 +10,16 @@ const NexoScene = lazy(() =>
 export function LandingPage() {
   const [sceneApi, setSceneApi] = useState<SceneAPI | null>(null)
   const [selectedBoard, setSelectedBoard] = useState<'uno' | 'esp32'>('uno')
-  const [activeFocus, setActiveFocus] = useState<'board' | 'breadboard' | 'led' | 'wire'>('board')
   const [isLedOn, setIsLedOn] = useState(true)
   const [viewMode, setViewMode] = useState<'perspective' | 'top'>('perspective')
 
   const handleBoardChange = useCallback(
     (board: 'uno' | 'esp32') => {
       setSelectedBoard(board)
-      setActiveFocus('board')
       sceneApi?.setBoard(board)
       sceneApi?.locate(board)
     },
     [sceneApi],
-  )
-
-  const handleFocusChange = useCallback(
-    (target: 'board' | 'breadboard' | 'led' | 'wire') => {
-      setActiveFocus(target)
-      if (!sceneApi) return
-      if (target === 'board') {
-        sceneApi.locate(selectedBoard)
-      } else {
-        sceneApi.locate(target)
-      }
-    },
-    [sceneApi, selectedBoard],
   )
 
   const handleToggleLed = useCallback(() => {

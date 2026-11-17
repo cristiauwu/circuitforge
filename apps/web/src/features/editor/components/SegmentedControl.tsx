@@ -12,8 +12,8 @@ export interface SegmentedOption<T extends string> {
   value: T
   label: string
   icon?: React.ReactNode
-  disabled?: boolean
-  title?: string
+  disabled?: boolean | undefined
+  title?: string | undefined
 }
 
 interface SegmentedControlProps<T extends string> {
@@ -21,8 +21,8 @@ interface SegmentedControlProps<T extends string> {
   value: T
   onChange: (value: T) => void
   ariaLabel: string
-  className?: string
-  size?: 'sm' | 'md'
+  className?: string | undefined
+  size?: 'sm' | 'md' | undefined
 }
 
 export function SegmentedControl<T extends string>({

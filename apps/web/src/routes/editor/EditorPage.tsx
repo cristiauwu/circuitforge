@@ -172,7 +172,7 @@ export function EditorPage() {
 
   const addPiece = useCallback((pTypeId: string) => {
     useNexoSession.getState().continueWork()
-    controllerRef.current?.addPiece(pTypeId)
+    controllerRef.current?.add(pTypeId)
   }, [])
 
   const cancel = useCallback(() => {
@@ -182,7 +182,7 @@ export function EditorPage() {
 
   const pin = useCallback((endpoint: PinEndpoint) => {
     useNexoSession.getState().continueWork()
-    controllerRef.current?.connectPin(endpoint)
+    controllerRef.current?.pin(endpoint)
   }, [])
 
   useEffect(() => {
@@ -194,11 +194,19 @@ export function EditorPage() {
         tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target?.isContentEditable
       if (isInput) return
 
-      const action = resolveShortcut(toKeyEventLike(event))
-      if (!action) return
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        controllerRef.current?.cancel()
+        return
+      }
+
+      const action = resolveShortcut(toKeyEventLike(event), {
+        hasSelection: Boolean(snapshot?.selectedId),
+      })
+      if (action.kind === 'none') return
 
       useNexoSession.getState().continueWork()
-      switch (action) {
+      switch (action.kind) {
         case 'undo':
           event.preventDefault()
           controllerRef.current?.undo()
@@ -215,27 +223,25 @@ export function EditorPage() {
           event.preventDefault()
           controllerRef.current?.remove()
           break
-        case 'cancel':
-          event.preventDefault()
-          controllerRef.current?.cancel()
-          break
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [])
+  }, [snapshot?.selectedId])
 
   const actions: ProjectSceneActions = useMemo(
     () => ({
-      onComponentSelect: (id) => controllerRef.current?.select(id),
-      onComponentMove: (id, pos) => controllerRef.current?.move(id, pos),
-      onPinClick: (endpoint) => controllerRef.current?.connectPin(endpoint),
-      onWireRemove: (wireId) => controllerRef.current?.removeWire(wireId),
+      onSelect: (id) => controllerRef.current?.select(id),
+      onPin: (endpoint) => controllerRef.current?.pin(endpoint),
+      onDragStart: (id) => controllerRef.current?.beginDrag(id),
+      onDragPreview: (pos) => controllerRef.current?.previewDrag(pos),
+      onDragCommit: () => controllerRef.current?.commitDrag(),
+      onDragCancel: () => controllerRef.current?.cancelDrag(),
     }),
     [],
   )
 
-  const onSceneReady = useCallback((api: SceneAPI) => {
+  const onSceneReady = useCallback((api: SceneAPI | null) => {
     sceneRef.current = api
   }, [])
 
@@ -385,18 +391,16 @@ export function EditorPage() {
                   sceneRef.current?.frameProject()
                 }}
                 onResetClick={() => {
-                  sceneRef.current?.resetView()
+                  sceneRef.current?.reset()
                 }}
               />
             </section>
 
             {split && (
               <WorkspaceSplit
-                ratio={ratio}
-                onRatioChange={setSplitRatio}
-                minLeft={360}
-                minRight={360}
-                containerWidth={centerWidth}
+                width={centerWidth}
+                value={schematicWidth}
+                onChange={(w) => setSplitRatio(centerWidth > 0 ? w / centerWidth : 0.5)}
               />
             )}
 

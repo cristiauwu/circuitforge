@@ -15,13 +15,13 @@ export interface TelemetryDashboardTrayProps {
   onToggle: () => void
   project: Project | null
   violations: readonly Violation[]
-  wiringError?: string | null
+  wiringError?: string | null | undefined
 }
 
 export const TelemetryDashboardTray: React.FC<TelemetryDashboardTrayProps> = ({
   open,
   onToggle,
-  project,
+  project: _project,
   violations,
   wiringError,
 }) => {
@@ -46,7 +46,7 @@ export const TelemetryDashboardTray: React.FC<TelemetryDashboardTrayProps> = ({
 
     // Corriente total entregada por fuentes de tensión
     let totalCurrent = 0
-    for (const [key, current] of Object.entries(simResult.currents)) {
+    for (const current of Object.values(simResult.currents)) {
       if (current < 0) {
         // En fuentes, corriente negativa = entrega corriente al circuito
         totalCurrent += Math.abs(current)

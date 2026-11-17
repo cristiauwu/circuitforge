@@ -20,11 +20,11 @@ export interface EditorInspectorDrawerProps {
   tool: 'part' | 'project'
   onToolChange: (tool: 'part' | 'project') => void
   selected: Component | null
-  fixture?: CatalogFixture
+  fixture?: CatalogFixture | undefined
   project: Project | null
   controller: any
   setMessage: (msg: string) => void
-  snapshotPendingWiring?: { componentId: string; pinId: string } | null
+  snapshotPendingWiring?: { componentId: string; pinId: string } | null | undefined
   onPin: (endpoint: PinEndpoint) => void
   notes: string
   onNotesChange: (notes: string) => void
@@ -188,7 +188,7 @@ export const EditorInspectorDrawer: React.FC<EditorInspectorDrawerProps> = ({
                 key={selected.id}
                 component={selected}
                 pending={snapshotPendingWiring ?? null}
-                onPin={onPin}
+                onPin={(componentId, pinId) => onPin({ componentId, pinId })}
               />
             ) : (
               <>

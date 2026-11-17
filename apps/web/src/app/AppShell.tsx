@@ -1,13 +1,11 @@
 import { useEffect, useRef } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { NexoHeader } from '@/features/nexo/NexoHeader'
-import { Atmosphere } from '@/ui/Atmosphere'
 
 export function AppShell() {
   const { pathname } = useLocation()
   const mainRef = useRef<HTMLElement>(null)
   const previousPath = useRef(pathname)
-  const isLanding = pathname === '/'
   const isEditor = /^\/editor\/*$/i.test(pathname)
 
   useEffect(() => {
