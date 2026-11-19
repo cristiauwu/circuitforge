@@ -52,26 +52,27 @@
   --cf-wire-7: #3b82f6;
   --cf-wire-8: #f97316;
 
-  /* ── Translucidez y Materiales iOS (Frosted Glass) ─────────────────────── */
-  --cf-glass-blur: 20px;
+  /* ── Translucidez y Materiales de Grado de Laboratorio (Frosted Glass) ── */
+  --cf-glass-blur: 24px;
   --cf-glass-blur-nav: 24px;
   --cf-glass-sat: 180%;
-  --cf-hairline: rgba(0, 0, 0, 0.06);
+  --cf-hairline: rgba(0, 0, 0, 0.07);
   --cf-hairline-strong: rgba(0, 0, 0, 0.12);
-  --cf-fill: rgba(255, 255, 255, 0.88);
-  --cf-fill-deep: rgba(255, 255, 255, 0.95);
-  --cf-scrim: rgba(15, 23, 42, 0.4);
+  --cf-fill: rgba(255, 255, 255, 0.90);
+  --cf-fill-deep: rgba(255, 255, 255, 0.96);
+  --cf-scrim: rgba(15, 23, 42, 0.35);
   --cf-fill-dim: rgba(241, 245, 249, 0.7);
   --cf-fill-strong: #ffffff;
   --cf-border-hairline: 1px solid var(--cf-hairline);
   --cf-border-panel: 1px solid var(--cf-hairline);
   --cf-border-focus: 2px solid var(--cf-accent);
 
-  /* ── Sombras Apple de Difusión Suave ──────────────────────────────────── */
-  --cf-shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
-  --cf-shadow-elevated: 0 12px 32px -4px rgba(0, 0, 0, 0.07), 0 2px 6px rgba(0, 0, 0, 0.02);
+  /* ── Sombras Físicas Trigonométricas (Alineadas con Key Light Three.js [-3.5, 11, 4.2]: X_off = 0.32 * Y_off) ── */
+  --cf-shadow-card: 1px 2px 5px rgba(15, 23, 42, 0.03), 3px 8px 24px -2px rgba(15, 23, 42, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  --cf-shadow-elevated: 2px 4px 10px rgba(15, 23, 42, 0.04), 5px 16px 36px -4px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.95);
   --cf-shadow-pill: 0 4px 14px rgba(26, 98, 255, 0.22);
-  --cf-shadow-dock: 0 10px 30px rgba(0, 0, 0, 0.06);
+  --cf-shadow-dock: 1px 3px 8px rgba(15, 23, 42, 0.03), 4px 14px 32px -4px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  --cf-shadow-tray: 2px 4px 12px rgba(15, 23, 42, 0.03), 6px 20px 48px -6px rgba(15, 23, 42, 0.09), inset 0 1px 0 rgba(255, 255, 255, 0.95);
 
   /* ── Tipografía (Sistema iOS) ─────────────────────────────────────────── */
   --cf-font-ui: "Manrope", system-ui, -apple-system, sans-serif;

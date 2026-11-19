@@ -330,27 +330,37 @@ export function createElectronicsScene(
     )
   }
 
-  scene.add(new THREE.HemisphereLight('#e6f0f5', '#716c61', 0.9))
-  const key = new THREE.DirectionalLight('#fff3e2', 2.8)
-  key.position.set(-3, 10, 4)
+  // ── Iluminación de Estudio de Grado de Laboratorio (5200K Daylight Neutral) ──
+  // Luz ambiental hemisférica: cielo perla de estudio (#f8fafc), rebote neutro de mesa (#64748b)
+  scene.add(new THREE.HemisphereLight('#f8fafc', '#64748b', 0.85))
+
+  // Luz principal clave (Key Light): 5200K blanco neutro de laboratorio, posición (-3.5, 11, 4.2)
+  const key = new THREE.DirectionalLight('#ffffff', 2.7)
+  key.position.set(-3.5, 11, 4.2)
   key.castShadow = true
   // A wider texel footprint softens PCF contact shadows without extra render passes.
   key.shadow.mapSize.set(1024, 1024)
   Object.assign(key.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9, near: 0.5, far: 30 })
   key.shadow.normalBias = 0.012
   key.shadow.bias = -0.00008
-  key.shadow.radius = 2
+  key.shadow.radius = 2.5
   scene.add(key)
-  const rim = new THREE.DirectionalLight('#d7e7e8', 0.9)
+
+  // Luz trasera de silueta (Rim Light): recorte nítido de aristas de pines y componentes
+  const rim = new THREE.DirectionalLight('#f1f5f9', 0.85)
   rim.position.set(5, 5, -7)
   scene.add(rim)
-  const fill = new THREE.DirectionalLight('#dfe8ff', 0.65)
+
+  // Luz de relleno suave (Fill Light): azul muy tenue (#e0e7ff) para mantener legibilidad en caras opuestas
+  const fill = new THREE.DirectionalLight('#e0e7ff', 0.6)
   fill.position.set(7, 3, 7)
   scene.add(fill)
+
+  // Sombra de contacto sobre el plano de trabajo en tono pizarra (#0f172a)
   const shadow = mesh(
     scene,
     geometry(new THREE.PlaneGeometry(36, 36)),
-    material(new THREE.ShadowMaterial({ color: '#202b2e', opacity: 0.2 })),
+    material(new THREE.ShadowMaterial({ color: '#0f172a', opacity: 0.16 })),
     0,
     0.005,
     0,
