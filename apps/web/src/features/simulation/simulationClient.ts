@@ -6,7 +6,7 @@
  */
 
 import type { Project } from '@circuitforge/netlist'
-import { solveDC, type DCResult } from '@circuitforge/solver'
+import { type DCResult, solveDC } from '@circuitforge/solver'
 import type { SimulationWorkerRequest, SimulationWorkerResponse } from './simulationWorker'
 
 export interface SimulationExecution {
@@ -49,7 +49,7 @@ class SimulationClient {
           type: 'SOLVE_DC',
           project,
         }
-        this.worker!.postMessage(req)
+        this.worker?.postMessage(req)
       })
     }
 

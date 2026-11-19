@@ -6,12 +6,12 @@
  * y accesibilidad mediante ARIA tablist/tab y navegación por teclado.
  */
 
-import React, { useRef } from 'react'
+import { type KeyboardEvent, type ReactNode, useRef } from 'react'
 
 export interface SegmentedOption<T extends string> {
   value: T
   label: string
-  icon?: React.ReactNode
+  icon?: ReactNode
   disabled?: boolean | undefined
   title?: string | undefined
 }
@@ -35,7 +35,7 @@ export function SegmentedControl<T extends string>({
 }: SegmentedControlProps<T>) {
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const handleKeyDown = (event: React.KeyboardEvent, currentIndex: number) => {
+  const handleKeyDown = (event: KeyboardEvent, currentIndex: number) => {
     let nextIndex = currentIndex
     if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
       event.preventDefault()
@@ -79,7 +79,11 @@ export function SegmentedControl<T extends string>({
             }}
             onKeyDown={(e) => handleKeyDown(e, index)}
           >
-            {opt.icon && <span className="nx-segmented-icon" aria-hidden="true">{opt.icon}</span>}
+            {opt.icon && (
+              <span className="nx-segmented-icon" aria-hidden="true">
+                {opt.icon}
+              </span>
+            )}
             <span className="nx-segmented-label">{opt.label}</span>
           </button>
         )

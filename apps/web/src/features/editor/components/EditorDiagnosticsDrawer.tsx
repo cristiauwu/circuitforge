@@ -2,8 +2,8 @@
  * @circuitforge/web — Panel de diagnóstico de reglas eléctricas (ERC V-1..V-6).
  */
 
-import React, { memo } from 'react'
 import type { Violation } from '@circuitforge/validation'
+import { type FC, memo } from 'react'
 import { useErcStore } from '@/features/simulation/useErcStore'
 
 export interface EditorDiagnosticsDrawerProps {
@@ -12,7 +12,7 @@ export interface EditorDiagnosticsDrawerProps {
   wiringError?: string | null | undefined
 }
 
-const EditorDiagnosticsDrawerComponent: React.FC<EditorDiagnosticsDrawerProps> = ({
+const EditorDiagnosticsDrawerComponent: FC<EditorDiagnosticsDrawerProps> = ({
   open,
   violations: propViolations,
   wiringError,
@@ -23,7 +23,14 @@ const EditorDiagnosticsDrawerComponent: React.FC<EditorDiagnosticsDrawerProps> =
 
   return (
     <section className="nx-diagnostics" aria-label="Verificación de Reglas Eléctricas">
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '8px',
+        }}
+      >
         <h2>Verificación de Reglas Eléctricas (ERC)</h2>
         <span className="nx-hud-badge">
           <span className="nx-hud-badge-dot" />
@@ -31,7 +38,8 @@ const EditorDiagnosticsDrawerComponent: React.FC<EditorDiagnosticsDrawerProps> =
         </span>
       </div>
       <p style={{ color: 'var(--nx-muted)', marginBottom: '10px' }}>
-        Comprobación automática de continuidad, polaridades, cortocircuitos y sobretensión en tiempo real:
+        Comprobación automática de continuidad, polaridades, cortocircuitos y sobretensión en tiempo
+        real:
       </p>
 
       {violations.length > 0 ? (
@@ -70,7 +78,13 @@ const EditorDiagnosticsDrawerComponent: React.FC<EditorDiagnosticsDrawerProps> =
                 </span>
               )}
               {v.netId && (
-                <span style={{ color: '#64748b', fontSize: '11px', marginLeft: v.componentId ? '8px' : 'auto' }}>
+                <span
+                  style={{
+                    color: '#64748b',
+                    fontSize: '11px',
+                    marginLeft: v.componentId ? '8px' : 'auto',
+                  }}
+                >
                   Net: {v.netId}
                 </span>
               )}
@@ -85,9 +99,7 @@ const EditorDiagnosticsDrawerComponent: React.FC<EditorDiagnosticsDrawerProps> =
             gap: '8px',
             padding: '12px 16px',
             background: wiringError ? 'rgba(245, 158, 11, 0.08)' : '#f0fdf4',
-            border: wiringError
-              ? '1px solid rgba(245, 158, 11, 0.35)'
-              : '1px solid #bbf7d0',
+            border: wiringError ? '1px solid rgba(245, 158, 11, 0.35)' : '1px solid #bbf7d0',
             borderRadius: '12px',
             color: wiringError ? '#b45309' : '#166534',
             fontSize: '13px',

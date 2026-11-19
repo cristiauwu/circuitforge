@@ -116,6 +116,9 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Check bundle size budget
+        run: pnpm check:budget
+
   # ───────────────────────────────────────────────────────────────────────────
   # Gate 5 — Auditoría de dependencias. No bloquea la merge por ahora: reporta
   # y deja constancia. Se endurecerá cuando el stack esté congelado.

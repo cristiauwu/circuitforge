@@ -18,12 +18,11 @@ export default defineConfig({
     /**
      * Presupuesto de bundle inicial: 200 KB **gzip** (DESIGN.md seccion 9).
      *
-     * El aviso de Vite mide el tamano crudo por chunk, no el gzip. React solo ya
-     * son 219 KB crudos pero 68 KB gzip, asi que un umbral de 200 crudos saltaria
-     * siempre sin decir nada util. Se fija en 250 para que avise de una regresion
-     * real: el total inicial hoy es 116 KB gzip y hay margen de sobra.
+     * El aviso de Vite mide el tamano crudo por chunk, no el gzip. Se fija en 650 kB
+     * para acomodar el motor WebGL Three.js aislado en su propio chunk 'three' (~602 kB crudo,
+     * ~151 kB gzip). Ningún chunk de la aplicación ni vendor de React/Router supera 250 kB.
      */
-    chunkSizeWarningLimit: 250,
+    chunkSizeWarningLimit: 650,
     rollupOptions: {
       output: {
         /**
@@ -36,6 +35,7 @@ export default defineConfig({
         manualChunks(id: string) {
           if (id.includes('node_modules/react-router')) return 'router'
           if (id.includes('node_modules/react')) return 'react'
+          if (id.includes('node_modules/three')) return 'three'
           return undefined
         },
       },

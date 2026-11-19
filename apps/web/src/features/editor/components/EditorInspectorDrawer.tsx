@@ -2,12 +2,18 @@
  * @circuitforge/web — Cajón lateral del Inspector de propiedades (Apple HIG & Emil Design Eng).
  */
 
-import React from 'react'
-import { BREADBOARD_TYPE_ID, type Component, type PinEndpoint, type Project } from '@circuitforge/netlist'
+import {
+  BREADBOARD_TYPE_ID,
+  type Component,
+  type PinEndpoint,
+  type Project,
+} from '@circuitforge/netlist'
+import { type FC, memo, type RefObject } from 'react'
 import { BreadboardContacts } from '@/features/nexo/BreadboardContacts'
 import { BreadboardMountPanel } from '@/features/nexo/BreadboardMountPanel'
 import { ComponentParameters } from '@/features/nexo/ComponentParameters'
 import { ComponentPreview } from '@/features/nexo/ComponentPreview'
+import type { ProjectController } from '@/features/nexo/projectController'
 import { useNexoSession } from '@/features/nexo/session'
 import { SimulationInspectorPanel } from '@/features/simulation/SimulationInspectorPanel'
 import type { CatalogFixture } from '@/lib/fixtures/components'
@@ -16,13 +22,13 @@ import { SegmentedControl } from './SegmentedControl'
 export interface EditorInspectorDrawerProps {
   toolsOpen: boolean
   onClose: () => void
-  toolsRef: React.RefObject<HTMLElement | null>
+  toolsRef: RefObject<HTMLElement | null>
   tool: 'part' | 'project'
   onToolChange: (tool: 'part' | 'project') => void
   selected: Component | null
   fixture?: CatalogFixture | undefined
   project: Project | null
-  controller: any
+  controller: ProjectController | null | undefined
   setMessage: (msg: string) => void
   snapshotPendingWiring?: { componentId: string; pinId: string } | null | undefined
   onPin: (endpoint: PinEndpoint) => void
@@ -32,7 +38,7 @@ export interface EditorInspectorDrawerProps {
   onWireRemove: (wireId: string) => void
 }
 
-const EditorInspectorDrawerComponent: React.FC<EditorInspectorDrawerProps> = ({
+const EditorInspectorDrawerComponent: FC<EditorInspectorDrawerProps> = ({
   toolsOpen,
   onClose,
   toolsRef,
@@ -58,7 +64,7 @@ const EditorInspectorDrawerComponent: React.FC<EditorInspectorDrawerProps> = ({
   return (
     <aside
       id="editor-tools"
-      ref={toolsRef as React.RefObject<HTMLElement>}
+      ref={toolsRef as RefObject<HTMLElement>}
       tabIndex={-1}
       className="nx-editor-tools"
       data-open={toolsOpen}
@@ -156,7 +162,12 @@ const EditorInspectorDrawerComponent: React.FC<EditorInspectorDrawerProps> = ({
                 component={selected}
                 onMount={(boardId, anchor, rotation) => {
                   useNexoSession.getState().continueWork()
-                  const result = controller?.mountComponent(selected.id, boardId, anchor, rotation) ?? {
+                  const result = controller?.mountComponent(
+                    selected.id,
+                    boardId,
+                    anchor,
+                    rotation,
+                  ) ?? {
                     ok: false,
                     error: 'El proyecto aún no está disponible.',
                   }
@@ -221,7 +232,10 @@ const EditorInspectorDrawerComponent: React.FC<EditorInspectorDrawerProps> = ({
           </>
         ) : (
           <div className="nx-tools-empty">
-            <p>Selecciona cualquier pieza en el lienzo 3D para editar parámetros, montarla o inspeccionar su telemetría.</p>
+            <p>
+              Selecciona cualquier pieza en el lienzo 3D para editar parámetros, montarla o
+              inspeccionar su telemetría.
+            </p>
           </div>
         )}
       </div>
@@ -246,13 +260,10 @@ const EditorInspectorDrawerComponent: React.FC<EditorInspectorDrawerProps> = ({
               {project.wires.map((wire) => (
                 <li key={wire.id}>
                   <span>
-                    {wire.id}: {wire.from.componentId}.{wire.from.pinId} &rarr; {wire.to.componentId}.{wire.to.pinId}
+                    {wire.id}: {wire.from.componentId}.{wire.from.pinId} &rarr;{' '}
+                    {wire.to.componentId}.{wire.to.pinId}
                   </span>
-                  <button
-                    type="button"
-                    className="nx-button"
-                    onClick={() => onWireRemove(wire.id)}
-                  >
+                  <button type="button" className="nx-button" onClick={() => onWireRemove(wire.id)}>
                     Desconectar
                   </button>
                 </li>
@@ -265,4 +276,4 @@ const EditorInspectorDrawerComponent: React.FC<EditorInspectorDrawerProps> = ({
   )
 }
 
-export const EditorInspectorDrawer = React.memo(EditorInspectorDrawerComponent)
+export const EditorInspectorDrawer = memo(EditorInspectorDrawerComponent)

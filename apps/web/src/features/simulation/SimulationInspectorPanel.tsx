@@ -5,8 +5,8 @@
  * y potencia consumida con tipografía tabular limpia estilo Apple iOS.
  */
 
-import React from 'react'
 import type { Component, Project } from '@circuitforge/netlist'
+import type { FC } from 'react'
 import { useSimulationStore } from './useSimulationStore'
 
 interface SimulationInspectorPanelProps {
@@ -14,7 +14,7 @@ interface SimulationInspectorPanelProps {
   project: Project
 }
 
-export const SimulationInspectorPanel: React.FC<SimulationInspectorPanelProps> = ({
+export const SimulationInspectorPanel: FC<SimulationInspectorPanelProps> = ({
   component,
   project,
 }) => {
@@ -41,16 +41,13 @@ export const SimulationInspectorPanel: React.FC<SimulationInspectorPanelProps> =
             <span className="nx-sim-dot" data-status="idle" />
             <h4 className="nx-sim-title">Telemetría DC</h4>
           </div>
-          <button
-            type="button"
-            className="nx-sim-btn-primary"
-            onClick={handleSimulateClick}
-          >
+          <button type="button" className="nx-sim-btn-primary" onClick={handleSimulateClick}>
             Iniciar simulación
           </button>
         </div>
         <p className="nx-sim-hint">
-          Inicia el motor MNA para ver tensiones de nodo, corrientes y disipación de potencia en tiempo real.
+          Inicia el motor MNA para ver tensiones de nodo, corrientes y disipación de potencia en
+          tiempo real.
         </p>
       </div>
     )
@@ -105,18 +102,14 @@ export const SimulationInspectorPanel: React.FC<SimulationInspectorPanelProps> =
           {componentPower !== undefined && (
             <div className="nx-sim-metric-item">
               <span className="nx-sim-metric-label">Potencia</span>
-              <span className="nx-sim-metric-val">
-                {formatPower(componentPower)}
-              </span>
+              <span className="nx-sim-metric-val">{formatPower(componentPower)}</span>
             </div>
           )}
 
           {componentCurrent !== undefined && (
             <div className="nx-sim-metric-item">
               <span className="nx-sim-metric-label">Corriente</span>
-              <span className="nx-sim-metric-val">
-                {formatCurrent(componentCurrent)}
-              </span>
+              <span className="nx-sim-metric-val">{formatCurrent(componentCurrent)}</span>
             </div>
           )}
 

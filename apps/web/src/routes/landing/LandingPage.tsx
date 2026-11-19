@@ -38,16 +38,13 @@ export function LandingPage() {
     [sceneApi],
   )
 
-  const handleSceneReady = useCallback(
-    (api: SceneAPI | null) => {
-      setSceneApi(api)
-      if (api) {
-        api.setBoard('uno')
-        api.setLed(true)
-      }
-    },
-    [],
-  )
+  const handleSceneReady = useCallback((api: SceneAPI | null) => {
+    setSceneApi(api)
+    if (api) {
+      api.setBoard('uno')
+      api.setLed(true)
+    }
+  }, [])
 
   return (
     <div className="nx-landing">
@@ -64,11 +61,7 @@ export function LandingPage() {
             </span>
           </div>
 
-          <RevealText
-            as="h1"
-            text="Cada componente cuenta."
-            className="nx-hero-title"
-          />
+          <RevealText as="h1" text="Cada componente cuenta." className="nx-hero-title" />
 
           <p>
             Explora, conecta y valida microcontroladores, protoboards y más de 70 componentes
@@ -109,20 +102,44 @@ export function LandingPage() {
 
           <div className="nx-hero-features">
             <div className="nx-feature-chip">
-              <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <svg
+                viewBox="0 0 16 16"
+                width="12"
+                height="12"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                aria-hidden="true"
+              >
                 <circle cx="8" cy="8" r="6" />
                 <path d="M5 8l2 2 4-4" />
               </svg>
               <span>73 componentes</span>
             </div>
             <div className="nx-feature-chip">
-              <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <svg
+                viewBox="0 0 16 16"
+                width="12"
+                height="12"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                aria-hidden="true"
+              >
                 <path d="M8 2v12M2 8h12" />
               </svg>
               <span>Reglas ERC en vivo</span>
             </div>
             <div className="nx-feature-chip">
-              <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <svg
+                viewBox="0 0 16 16"
+                width="12"
+                height="12"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                aria-hidden="true"
+              >
                 <path d="M3 4h10M3 8h10M3 12h6" />
               </svg>
               <span>Exportación C++</span>
@@ -137,7 +154,11 @@ export function LandingPage() {
         <figure className="nx-hero-object">
           <Suspense
             fallback={
-              <div className="nx-hero-scene" role="status" style={{ display: 'grid', placeItems: 'center', color: 'var(--nx-muted)' }}>
+              <div
+                className="nx-hero-scene"
+                role="status"
+                style={{ display: 'grid', placeItems: 'center', color: 'var(--nx-muted)' }}
+              >
                 <span>Iniciando motor Three.js PBR…</span>
               </div>
             }
@@ -157,7 +178,11 @@ export function LandingPage() {
           </div>
 
           {/* Dock flotante inferior integrado estilo Apple iOS */}
-          <div className="nx-hero-dock" role="toolbar" aria-label="Controles de placa y perspectiva 3D">
+          <div
+            className="nx-hero-dock"
+            role="toolbar"
+            aria-label="Controles de placa y perspectiva 3D"
+          >
             <div className="nx-hud-pills">
               <button
                 type="button"
@@ -207,7 +232,15 @@ export function LandingPage() {
                 onClick={() => handleToggleView(viewMode === 'perspective' ? 'top' : 'perspective')}
                 title="Alterna entre perspectiva isométrica y vista cenital"
               >
-                <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <svg
+                  viewBox="0 0 16 16"
+                  width="12"
+                  height="12"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  aria-hidden="true"
+                >
                   <rect x="2" y="2" width="12" height="12" rx="2" />
                   <circle cx="8" cy="8" r="2" />
                 </svg>
@@ -252,34 +285,58 @@ export function LandingPage() {
           <div className="nx-pillars-grid">
             <article className="nx-pillar-card">
               <div className="nx-pillar-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.75">
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  width="22"
+                  height="22"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                >
                   <rect x="2" y="3" width="20" height="18" rx="2" />
                   <path d="M7 8h10M7 12h10M7 16h6" />
                 </svg>
               </div>
               <h3>Montaje Espacial en Protoboard</h3>
               <p>
-                Coloca componentes con snap magnético sobre 830 puntos de contacto.
-                Detección física de pines, polaridad visual y cables con curvas dinámicas.
+                Coloca componentes con snap magnético sobre 830 puntos de contacto. Detección física
+                de pines, polaridad visual y cables con curvas dinámicas.
               </p>
             </article>
 
             <article className="nx-pillar-card">
               <div className="nx-pillar-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.75">
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  width="22"
+                  height="22"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                >
                   <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />
                 </svg>
               </div>
               <h3>Verificación Eléctrica ERC</h3>
               <p>
-                Análisis continuo de reglas de diseño: previene sobrecorrientes, cortocircuitos
-                y polaridades invertidas antes de conectar el hardware físico.
+                Análisis continuo de reglas de diseño: previene sobrecorrientes, cortocircuitos y
+                polaridades invertidas antes de conectar el hardware físico.
               </p>
             </article>
 
             <article className="nx-pillar-card">
               <div className="nx-pillar-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.75">
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  width="22"
+                  height="22"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                >
                   <path d="m16 18 6-6-6-6M8 6l-6 6 6 6" />
                 </svg>
               </div>
