@@ -11,10 +11,39 @@ import type { DCResult, SolverResult } from '@circuitforge/solver'
 import { create } from 'zustand'
 import { simulationClient } from './simulationClient'
 
+export interface TelemetryMetrics {
+  readonly mainVoltage: number
+  readonly totalCurrentA: number
+  readonly totalPowerW: number
+}
+
+export function computeTelemetryMetrics(result: SolverResult | null): TelemetryMetrics {
+  if (!result || !result.ok) {
+    return { mainVoltage: 0, totalCurrentA: 0, totalPowerW: 0 }
+  }
+  const maxVoltage = Math.max(0, ...Object.values(result.voltages))
+  let totalCurrent = 0
+  for (const current of Object.values(result.currents)) {
+    if (current < 0) {
+      totalCurrent += Math.abs(current)
+    }
+  }
+  let totalPower = 0
+  for (const p of Object.values(result.power)) {
+    if (p > 0) totalPower += p
+  }
+  return {
+    mainVoltage: maxVoltage,
+    totalCurrentA: totalCurrent,
+    totalPowerW: totalPower,
+  }
+}
+
 export interface SimulationState {
   isRunning: boolean
   isSolving: boolean
   result: SolverResult | null
+  metrics: TelemetryMetrics
   error: string | null
   durationMs: number
 
@@ -28,6 +57,7 @@ export const useSimulationStore = create<SimulationState>((set) => ({
   isRunning: false,
   isSolving: false,
   result: null,
+  metrics: { mainVoltage: 0, totalCurrentA: 0, totalPowerW: 0 },
   error: null,
   durationMs: 0,
 
@@ -47,6 +77,7 @@ export const useSimulationStore = create<SimulationState>((set) => ({
         set({
           isSolving: false,
           result,
+          metrics: computeTelemetryMetrics(result),
           error: null,
           durationMs,
         })
@@ -54,6 +85,7 @@ export const useSimulationStore = create<SimulationState>((set) => ({
         set({
           isSolving: false,
           result: null,
+          metrics: { mainVoltage: 0, totalCurrentA: 0, totalPowerW: 0 },
           error: result.error,
           durationMs,
         })
@@ -64,6 +96,7 @@ export const useSimulationStore = create<SimulationState>((set) => ({
       set({
         isSolving: false,
         result: null,
+        metrics: { mainVoltage: 0, totalCurrentA: 0, totalPowerW: 0 },
         error: errorMsg,
         durationMs: 0,
       })
@@ -76,6 +109,7 @@ export const useSimulationStore = create<SimulationState>((set) => ({
       isRunning: false,
       isSolving: false,
       result: null,
+      metrics: { mainVoltage: 0, totalCurrentA: 0, totalPowerW: 0 },
       error: null,
       durationMs: 0,
     })

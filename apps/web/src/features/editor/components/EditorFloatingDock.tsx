@@ -14,7 +14,7 @@ export interface EditorFloatingDockProps {
   onResetClick: () => void
 }
 
-export const EditorFloatingDock: React.FC<EditorFloatingDockProps> = ({
+const EditorFloatingDockComponent: React.FC<EditorFloatingDockProps> = ({
   cameraView,
   onPerspectiveClick,
   onTopClick,
@@ -103,3 +103,5 @@ export const EditorFloatingDock: React.FC<EditorFloatingDockProps> = ({
     </>
   )
 }
+
+export const EditorFloatingDock = React.memo(EditorFloatingDockComponent)

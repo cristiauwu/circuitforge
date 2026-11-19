@@ -21,7 +21,7 @@ export interface EditorCatalogDrawerProps {
   windowWidth: number
 }
 
-export const EditorCatalogDrawer: React.FC<EditorCatalogDrawerProps> = ({
+const EditorCatalogDrawerComponent: React.FC<EditorCatalogDrawerProps> = ({
   catalogOpen,
   onClose,
   catalogRef,
@@ -128,3 +128,5 @@ export const EditorCatalogDrawer: React.FC<EditorCatalogDrawerProps> = ({
     </aside>
   )
 }
+
+export const EditorCatalogDrawer = React.memo(EditorCatalogDrawerComponent)

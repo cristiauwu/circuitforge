@@ -2,20 +2,23 @@
  * @circuitforge/web — Panel de diagnóstico de reglas eléctricas (ERC V-1..V-6).
  */
 
-import React from 'react'
+import React, { memo } from 'react'
 import type { Violation } from '@circuitforge/validation'
+import { useErcStore } from '@/features/simulation/useErcStore'
 
 export interface EditorDiagnosticsDrawerProps {
   open: boolean
-  violations: readonly Violation[]
-  wiringError?: string | null
+  violations?: readonly Violation[] | undefined
+  wiringError?: string | null | undefined
 }
 
-export const EditorDiagnosticsDrawer: React.FC<EditorDiagnosticsDrawerProps> = ({
+const EditorDiagnosticsDrawerComponent: React.FC<EditorDiagnosticsDrawerProps> = ({
   open,
-  violations,
+  violations: propViolations,
   wiringError,
 }) => {
+  const storeViolations = useErcStore((s) => s.violations)
+  const violations = propViolations ?? storeViolations
   if (!open) return null
 
   return (
@@ -101,3 +104,5 @@ export const EditorDiagnosticsDrawer: React.FC<EditorDiagnosticsDrawerProps> = (
     </section>
   )
 }
+
+export const EditorDiagnosticsDrawer = memo(EditorDiagnosticsDrawerComponent)

@@ -32,7 +32,7 @@ export interface EditorInspectorDrawerProps {
   onWireRemove: (wireId: string) => void
 }
 
-export const EditorInspectorDrawer: React.FC<EditorInspectorDrawerProps> = ({
+const EditorInspectorDrawerComponent: React.FC<EditorInspectorDrawerProps> = ({
   toolsOpen,
   onClose,
   toolsRef,
@@ -264,3 +264,5 @@ export const EditorInspectorDrawer: React.FC<EditorInspectorDrawerProps> = ({
     </aside>
   )
 }
+
+export const EditorInspectorDrawer = React.memo(EditorInspectorDrawerComponent)

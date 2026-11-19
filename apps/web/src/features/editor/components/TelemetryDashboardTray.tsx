@@ -5,66 +5,34 @@
  * con tarjetas squircle, tipografía tabular y detalles expandibles sin empujar el viewport 3D.
  */
 
-import React, { useMemo } from 'react'
+import React, { memo } from 'react'
 import type { Project } from '@circuitforge/netlist'
 import type { Violation } from '@circuitforge/validation'
+import { useErcStore } from '@/features/simulation/useErcStore'
 import { useSimulationStore } from '@/features/simulation/useSimulationStore'
 
 export interface TelemetryDashboardTrayProps {
   open: boolean
   onToggle: () => void
   project: Project | null
-  violations: readonly Violation[]
+  violations?: readonly Violation[] | undefined
   wiringError?: string | null | undefined
 }
 
-export const TelemetryDashboardTray: React.FC<TelemetryDashboardTrayProps> = ({
+const TelemetryDashboardTrayComponent: React.FC<TelemetryDashboardTrayProps> = ({
   open,
   onToggle,
   project: _project,
-  violations,
+  violations: propViolations,
   wiringError,
 }) => {
   const isSimRunning = useSimulationStore((s) => s.isRunning)
   const isSolving = useSimulationStore((s) => s.isSolving)
-  const simResult = useSimulationStore((s) => s.result)
+  const metrics = useSimulationStore((s) => s.metrics)
   const simError = useSimulationStore((s) => s.error)
   const durationMs = useSimulationStore((s) => s.durationMs)
-
-  // Calcular métricas globales del circuito
-  const metrics = useMemo(() => {
-    if (!simResult) {
-      return {
-        mainVoltage: 0,
-        totalCurrentA: 0,
-        totalPowerW: 0,
-      }
-    }
-
-    // Tensión principal: valor máximo de tensión detectado en nodos
-    const maxVoltage = Math.max(0, ...Object.values(simResult.voltages))
-
-    // Corriente total entregada por fuentes de tensión
-    let totalCurrent = 0
-    for (const current of Object.values(simResult.currents)) {
-      if (current < 0) {
-        // En fuentes, corriente negativa = entrega corriente al circuito
-        totalCurrent += Math.abs(current)
-      }
-    }
-
-    // Potencia total disipada por cargas
-    let totalPower = 0
-    for (const p of Object.values(simResult.power)) {
-      if (p > 0) totalPower += p
-    }
-
-    return {
-      mainVoltage: maxVoltage,
-      totalCurrentA: totalCurrent,
-      totalPowerW: totalPower,
-    }
-  }, [simResult])
+  const storeViolations = useErcStore((s) => s.violations)
+  const violations = propViolations ?? storeViolations
 
   const hasErrors = violations.some((v) => v.severity === 'error') || Boolean(wiringError)
   const hasWarnings = violations.some((v) => v.severity === 'warning')
@@ -264,3 +232,5 @@ function formatPowerUnit(watts: number): string {
   if (abs < 1) return 'mW'
   return 'W'
 }
+
+export const TelemetryDashboardTray = memo(TelemetryDashboardTrayComponent)

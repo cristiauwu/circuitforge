@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
 import type { ProjectSnapshot } from './projectController'
 import type { ProjectSceneActions, SceneAPI } from './scene'
 
@@ -13,7 +13,7 @@ export interface NexoSceneProps {
 }
 
 /** The route owns project state; this host owns only its progressively loaded scene. */
-export function NexoScene({ mode, snapshot, actions, onReady, className }: NexoSceneProps) {
+function NexoSceneComponent({ mode, snapshot, actions, onReady, className }: NexoSceneProps) {
   const hostRef = useRef<HTMLDivElement>(null)
   const apiRef = useRef<SceneAPI | null>(null)
   const modeRef = useRef(mode)
@@ -93,3 +93,5 @@ export function NexoScene({ mode, snapshot, actions, onReady, className }: NexoS
     </div>
   )
 }
+
+export const NexoScene = memo(NexoSceneComponent)

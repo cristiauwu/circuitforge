@@ -1,5 +1,4 @@
 import type { Category, PinEndpoint } from '@circuitforge/netlist'
-import { validateCircuit, type Violation } from '@circuitforge/validation'
 import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { resolveShortcut, toKeyEventLike } from '@/features/editor/canvas/keyboardShortcuts'
@@ -13,6 +12,7 @@ import { WorkspaceSplit } from '@/features/editor/workspace/WorkspaceSplit'
 import { NexoScene, type ProjectSceneActions, type SceneAPI } from '@/features/nexo/NexoScene'
 import { createProjectController, type ProjectSnapshot } from '@/features/nexo/projectController'
 import { useNexoSession } from '@/features/nexo/session'
+import { useErcStore } from '@/features/simulation/useErcStore'
 import { useSimulationStore } from '@/features/simulation/useSimulationStore'
 import { CATALOG, CATALOG_INDEX } from '@/lib/fixtures/components'
 import { isEditableType } from '@/features/nexo/capabilities'
@@ -101,24 +101,29 @@ export function EditorPage() {
   const toggleSimRunning = useSimulationStore((s) => s.toggleRunning)
   const executeSimulation = useSimulationStore((s) => s.execute)
 
+  const ercViolationsCount = useErcStore((s) => s.violationsCount)
+  const hasErcError = useErcStore((s) => s.hasError)
+
+  // Sincronización atómica desacoplada de proyecto y simulación con el store ERC
   useEffect(() => {
-    if (isSimRunning && snapshot?.project) {
-      executeSimulation(snapshot.project)
+    const proj = snapshot?.project ?? null
+    if (!proj) {
+      useErcStore.getState().syncWithProject(null)
+      return
+    }
+
+    if (isSimRunning) {
+      executeSimulation(proj).then((res) => {
+        if (res.ok) {
+          useErcStore.getState().syncWithProject(proj, res.voltages)
+        } else {
+          useErcStore.getState().syncWithProject(proj)
+        }
+      })
+    } else {
+      useErcStore.getState().syncWithProject(proj)
     }
   }, [isSimRunning, snapshot?.project, executeSimulation])
-
-  const simResult = useSimulationStore((s) => s.result)
-
-  const ercViolations = useMemo<Violation[]>(() => {
-    if (!snapshot?.project) return []
-    return validateCircuit(
-      {
-        ...snapshot.project,
-        netVoltages: simResult?.voltages,
-      },
-      CATALOG_INDEX,
-    )
-  }, [snapshot?.project, simResult])
 
   const setCode = useNexoSession((s) => s.setCode)
   const setNotes = useNexoSession((s) => s.setNotes)
@@ -274,8 +279,8 @@ export function EditorPage() {
           useNexoSession.getState().continueWork()
           setDiagnosticsOpen(!diagnosticsOpen)
         }}
-        ercViolationsCount={ercViolations.length}
-        hasErcError={ercViolations.some((v) => v.severity === 'error')}
+        ercViolationsCount={ercViolationsCount}
+        hasErcError={hasErcError}
         toolsOpen={toolsOpen}
         onToggleTools={(trigger) => toggleDrawer('tools', trigger)}
         onUndo={() => {
@@ -467,7 +472,6 @@ export function EditorPage() {
           setDiagnosticsOpen(!diagnosticsOpen)
         }}
         project={project ?? null}
-        violations={ercViolations}
         wiringError={snapshot?.wiring.error}
       />
 

@@ -37,7 +37,7 @@ export interface EditorHeaderProps {
   toolsTriggerRef?: React.RefObject<HTMLButtonElement | null> | undefined
 }
 
-export const EditorHeader: React.FC<EditorHeaderProps> = ({
+const EditorHeaderComponent: React.FC<EditorHeaderProps> = ({
   projectName,
   stats,
   view,
@@ -219,3 +219,5 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
     </header>
   )
 }
+
+export const EditorHeader = React.memo(EditorHeaderComponent)
