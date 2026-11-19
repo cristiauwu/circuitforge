@@ -230,8 +230,20 @@ export function EditorPage() {
           break
       }
     }
+    const onBlur = () => {
+      controllerRef.current?.cancel()
+    }
+    const onPointerCancel = () => {
+      controllerRef.current?.cancel()
+    }
     window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
+    window.addEventListener('blur', onBlur)
+    window.addEventListener('pointercancel', onPointerCancel)
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('blur', onBlur)
+      window.removeEventListener('pointercancel', onPointerCancel)
+    }
   }, [snapshot?.selectedId])
 
   const actions: ProjectSceneActions = useMemo(

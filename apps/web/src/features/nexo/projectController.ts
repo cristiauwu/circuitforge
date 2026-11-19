@@ -1,8 +1,9 @@
 import type { ParamValue, PinEndpoint, Project, Rotation } from '@circuitforge/netlist'
+import { createEditorFSM } from '@/features/editor/canvas/editorFSM'
 import {
   EMPTY_WIRING,
+  isSamePin,
   type PinClickOutcome,
-  resolvePinClick,
   type WiringState,
 } from '@/features/editor/canvas/wiringState'
 import {
@@ -29,11 +30,42 @@ export interface ProjectSnapshot {
 const finitePosition = (position: CanvasPosition): boolean =>
   Number.isFinite(position.x) && Number.isFinite(position.y)
 
+type FSMState = ReturnType<ReturnType<typeof createEditorFSM>['getState']>
+
+function resolvePinOutcome(
+  prevState: FSMState,
+  nextState: FSMState,
+  endpoint: PinEndpoint,
+): PinClickOutcome {
+  if (nextState.type === 'DRAGGING_WIRE' || nextState.type === 'SNAPPED_MAGNETIC') {
+    const isError = Boolean('error' in nextState && nextState.error)
+    const wiringState = Object.freeze({
+      pending: Object.freeze({
+        componentId: nextState.from.componentId,
+        pinId: nextState.from.pinId,
+      }),
+      error: 'error' in nextState ? (nextState.error ?? null) : null,
+    })
+    return {
+      kind: isError ? 'rejected' : 'selected',
+      state: wiringState,
+    }
+  }
+
+  const wasActive = prevState.type === 'DRAGGING_WIRE' || prevState.type === 'SNAPPED_MAGNETIC'
+  const isCancelled = wasActive && isSamePin(prevState.from, endpoint)
+  return {
+    kind: isCancelled ? 'cancelled' : 'connected',
+    state: EMPTY_WIRING,
+  }
+}
+
 /** DOM-free adapter: persistent edits belong to the shared store, gestures do not. */
 export function createProjectController(
   onChange: (snapshot: ProjectSnapshot) => void,
   onMessage?: (message: string) => void,
 ) {
+  const fsm = createEditorFSM((from, to) => useEditorStore.getState().connectPins(from, to))
   let wiring: WiringState = EMPTY_WIRING
   let preview: ProjectSnapshot['preview'] = null
   let disposed = false
@@ -97,6 +129,7 @@ export function createProjectController(
   const unsubscribe = useEditorStore.subscribe(publish)
 
   function clearTransient() {
+    fsm.reset()
     wiring = EMPTY_WIRING
     preview = null
   }
@@ -201,12 +234,14 @@ export function createProjectController(
     pin(endpoint: PinEndpoint): PinClickOutcome | null {
       if (disposed || !hasPin(useEditorStore.getState().project, endpoint)) return null
       return batch(() => {
-        const outcome = resolvePinClick(
-          wiring,
-          Object.freeze({ ...endpoint }),
-          useEditorStore.getState().connectPins,
-        )
-        wiring = Object.freeze(outcome.state)
+        const frozenEndpoint = Object.freeze({
+          componentId: endpoint.componentId,
+          pinId: endpoint.pinId,
+        })
+        const prevState = fsm.getState()
+        const nextState = fsm.dispatch({ kind: 'PIN_CLICK', endpoint: frozenEndpoint })
+        const outcome = resolvePinOutcome(prevState, nextState, frozenEndpoint)
+        wiring = outcome.state
         return outcome
       })
     },
@@ -229,6 +264,11 @@ export function createProjectController(
         return
       }
       batch(() => {
+        fsm.dispatch({
+          kind: 'COMPONENT_DRAG_START',
+          componentId: id,
+          position: component.position,
+        })
         preview = Object.freeze({
           componentId: id,
           position: Object.freeze({ x: component.position.x, y: component.position.y }),
@@ -240,6 +280,7 @@ export function createProjectController(
     previewDrag(position: CanvasPosition) {
       if (disposed || !preview || !finitePosition(position)) return
       if (preview.position.x === position.x && preview.position.y === position.y) return
+      fsm.dispatch({ kind: 'COMPONENT_DRAG_MOVE', position })
       preview = Object.freeze({ ...preview, position: Object.freeze({ ...position }) })
       publish()
     },
@@ -248,6 +289,7 @@ export function createProjectController(
       if (disposed || !preview) return
       const drag = preview
       batch(() => {
+        fsm.dispatch({ kind: 'COMPONENT_DRAG_END' })
         preview = null
         const state = useEditorStore.getState()
         const component = state.project.components.find((c) => c.id === drag.componentId)
@@ -261,6 +303,7 @@ export function createProjectController(
 
     cancelDrag() {
       if (disposed || !preview) return
+      fsm.dispatch({ kind: 'ESCAPE' })
       preview = null
       publish()
     },
