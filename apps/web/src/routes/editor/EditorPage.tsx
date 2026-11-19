@@ -3,19 +3,19 @@ import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState }
 import { useLocation } from 'react-router-dom'
 import { resolveShortcut, toKeyEventLike } from '@/features/editor/canvas/keyboardShortcuts'
 import { EditorCatalogDrawer } from '@/features/editor/components/EditorCatalogDrawer'
-import { TelemetryDashboardTray } from '@/features/editor/components/TelemetryDashboardTray'
 import { EditorFloatingDock } from '@/features/editor/components/EditorFloatingDock'
 import { EditorHeader } from '@/features/editor/components/EditorHeader'
 import { EditorInspectorDrawer } from '@/features/editor/components/EditorInspectorDrawer'
-import { canShowSplit, clampSplitWidth } from '@/features/editor/workspace/workspaceLayout'
+import { TelemetryDashboardTray } from '@/features/editor/components/TelemetryDashboardTray'
 import { WorkspaceSplit } from '@/features/editor/workspace/WorkspaceSplit'
+import { canShowSplit, clampSplitWidth } from '@/features/editor/workspace/workspaceLayout'
+import { isEditableType } from '@/features/nexo/capabilities'
 import { NexoScene, type ProjectSceneActions, type SceneAPI } from '@/features/nexo/NexoScene'
 import { createProjectController, type ProjectSnapshot } from '@/features/nexo/projectController'
 import { useNexoSession } from '@/features/nexo/session'
 import { useErcStore } from '@/features/simulation/useErcStore'
 import { useSimulationStore } from '@/features/simulation/useSimulationStore'
 import { CATALOG, CATALOG_INDEX } from '@/lib/fixtures/components'
-import { isEditableType } from '@/features/nexo/capabilities'
 
 export function EditorPage() {
   const [snapshot, setSnapshot] = useState<ProjectSnapshot | null>(null)
@@ -485,6 +485,7 @@ export function EditorPage() {
         }}
         project={project ?? null}
         wiringError={snapshot?.wiring.error}
+        onSelectComponent={(id) => controllerRef.current?.select(id)}
       />
 
       <footer className="nx-statusbar">
