@@ -2,6 +2,7 @@ import type { Category, PinEndpoint } from '@circuitforge/netlist'
 import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { resolveShortcut, toKeyEventLike } from '@/features/editor/canvas/keyboardShortcuts'
+import { ActuatorControlHUD } from '@/features/editor/components/ActuatorControlHUD'
 import { EditorCatalogDrawer } from '@/features/editor/components/EditorCatalogDrawer'
 import { EditorFloatingDock } from '@/features/editor/components/EditorFloatingDock'
 import { EditorHeader } from '@/features/editor/components/EditorHeader'
@@ -257,6 +258,9 @@ export function EditorPage() {
       onDragCommit: () => controllerRef.current?.commitDrag(),
       onDragCancel: () => controllerRef.current?.cancelDrag(),
       onPinHover: (endpoint) => setHoveredPin(endpoint),
+      onUpdateParameter: (componentId, key, value) => {
+        controllerRef.current?.updateParameter(componentId, key, value)
+      },
     }),
     [],
   )
@@ -396,6 +400,16 @@ export function EditorPage() {
                 error={snapshot?.wiring.error}
                 totalWires={wires.length}
               />
+
+              {!snapshot?.wiring.pending && (
+                <ActuatorControlHUD
+                  selectedComponent={selected}
+                  onUpdateParameter={(componentId, key, value) => {
+                    controllerRef.current?.updateParameter(componentId, key, value)
+                  }}
+                  onDeselect={() => controllerRef.current?.select(null)}
+                />
+              )}
 
               <NexoScene
                 mode="lab"

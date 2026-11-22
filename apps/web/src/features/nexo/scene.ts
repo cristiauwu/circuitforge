@@ -1,7 +1,8 @@
-import type { PinEndpoint } from '@circuitforge/netlist'
+import type { ParamValue, PinEndpoint } from '@circuitforge/netlist'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'
+import { useSimulationStore } from '../simulation/useSimulationStore'
 import { frameCameraBounds } from './cameraFraming'
 import { createProjectLayer } from './editor3d'
 import type { ProjectSnapshot } from './projectController'
@@ -14,6 +15,7 @@ export interface ProjectSceneActions {
   onDragCommit(): void
   onDragCancel(): void
   onPinHover?(endpoint: PinEndpoint | null): void
+  onUpdateParameter?(componentId: string, key: string, value: ParamValue): void
 }
 
 export type SceneAPI = ReturnType<typeof createElectronicsScene>
@@ -27,6 +29,7 @@ export function createElectronicsScene(
   actions?: ProjectSceneActions,
 ): {
   updateProject(snapshot: ProjectSnapshot): void
+  updateSimulation(result: import('@circuitforge/solver').SolverResult | null): void
   cancelGesture(): void
   locateProject(id: string): void
   frameProject(): void
@@ -63,6 +66,7 @@ export function createElectronicsScene(
     host.append(fallback)
     return {
       updateProject() {},
+      updateSimulation() {},
       cancelGesture() {},
       locateProject() {},
       frameProject() {},
@@ -1135,6 +1139,7 @@ export function createElectronicsScene(
     renderer.shadowMap.needsUpdate = true
     invalidate()
   }
+  let unsubSim: (() => void) | null = null
   if (actions) {
     projectLayer = createProjectLayer({
       scene,
@@ -1148,6 +1153,9 @@ export function createElectronicsScene(
       ...actions,
     })
     projectLayer.setActive(false)
+    unsubSim = useSimulationStore.subscribe((sim) => {
+      projectLayer?.updateSimulation(sim.isRunning ? sim.result : null)
+    })
   }
   function onInspect() {
     canvas.dispatchEvent(new CustomEvent('nexo:scene', { detail: { scene, camera } }))
@@ -1163,6 +1171,10 @@ export function createElectronicsScene(
       projectLayer?.update(snapshot)
       // The React host sets lab mode before delivering its initial snapshot.
       if (initial && mode === 'lab') projectLayer?.frameProject()
+    },
+    updateSimulation(result: import('@circuitforge/solver').SolverResult | null) {
+      if (disposed) return
+      projectLayer?.updateSimulation(result)
     },
     cancelGesture() {
       projectLayer?.cancelGesture()
@@ -1245,6 +1257,7 @@ export function createElectronicsScene(
       canvas.removeEventListener('wheel', onWheel)
       canvas.removeEventListener('nexo:inspect', onInspect)
       controls.removeEventListener('change', invalidate)
+      unsubSim?.()
       projectLayer?.dispose()
       controls.dispose()
       instances.forEach((item) => {

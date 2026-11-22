@@ -2967,3 +2967,266 @@ button:disabled {
     transform: translateX(4px);
   }
 }
+
+/* --------------------------------------------------------------------------
+   11. ACTUATOR & SENSOR PHYSICAL CONTROL HUD (Fase T-8)
+   -------------------------------------------------------------------------- */
+.nx-actuator-hud-container {
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  z-index: 45;
+  pointer-events: none;
+  max-width: 340px;
+  width: calc(100% - 48px);
+}
+
+.nx-actuator-hud-card {
+  pointer-events: auto;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 18px;
+  box-shadow:
+    0 12px 32px rgba(15, 23, 42, 0.08),
+    0 2px 6px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: nx-hud-enter 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes nx-hud-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.nx-actuator-hud-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+  padding-bottom: 10px;
+}
+
+.nx-actuator-header-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nx-actuator-chip-badge {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #0f172a;
+  color: #fff;
+  letter-spacing: 0.04em;
+}
+
+.nx-actuator-chip-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+  text-transform: capitalize;
+}
+
+.nx-actuator-close-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 14px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.nx-actuator-close-btn:hover {
+  background: rgba(241, 245, 249, 0.8);
+  color: #0f172a;
+}
+
+.nx-actuator-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.nx-actuator-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nx-actuator-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.nx-actuator-val-pill {
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #0f172a;
+  font-feature-settings: 'tnum', 'zero';
+}
+
+.nx-actuator-slider {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #e2e8f0;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.nx-actuator-slider::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #0ea5e9;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(14, 165, 233, 0.4);
+  cursor: grab;
+  transition: transform 0.1s;
+}
+
+.nx-actuator-slider::-webkit-slider-thumb:active {
+  cursor: grabbing;
+  transform: scale(1.15);
+}
+
+.nx-actuator-presets {
+  display: flex;
+  gap: 6px;
+}
+
+.nx-actuator-btn-preset {
+  flex: 1;
+  padding: 5px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.nx-actuator-btn-preset:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.nx-actuator-metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+
+.nx-actuator-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nx-actuator-metric-single {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+
+.nx-actuator-metric-k {
+  font-size: 10px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.nx-actuator-metric-v {
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+  font-feature-settings: 'tnum', 'zero';
+}
+
+.nx-actuator-switch-container {
+  display: flex;
+  justify-content: center;
+  padding-block: 4px;
+}
+
+.nx-actuator-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.nx-actuator-toggle-btn--active {
+  background: #10b981;
+  border-color: #059669;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+}
+
+.nx-actuator-toggle-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #94a3b8;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nx-actuator-toggle-btn--active .nx-actuator-toggle-thumb {
+  background: #fff;
+  transform: scale(1.1);
+}
+
+.nx-actuator-hint {
+  font-size: 11px;
+  color: #64748b;
+  text-align: center;
+  margin: 0;
+  margin-top: 2px;
+}

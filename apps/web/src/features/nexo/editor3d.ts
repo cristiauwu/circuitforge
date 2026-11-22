@@ -2,11 +2,14 @@ import {
   BREADBOARD_CONTACTS,
   BREADBOARD_TYPE_ID,
   type Component,
+  type ParamValue,
   type PinEndpoint,
   type Project,
 } from '@circuitforge/netlist'
+import type { SolverResult } from '@circuitforge/solver'
 import * as THREE from 'three'
 import type { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import { playMechanicalClick } from './audioFeedback'
 import { frameCameraBounds } from './cameraFraming'
 import { isEditableType } from './capabilities'
 import { pickBreadboardContact } from './contactPicking'
@@ -29,10 +32,12 @@ interface ProjectLayerOptions {
   onDragCommit: () => void
   onDragCancel: () => void
   onPinHover?: ((endpoint: PinEndpoint | null) => void) | undefined
+  onUpdateParameter?: ((componentId: string, key: string, value: ParamValue) => void) | undefined
 }
 
 export interface ProjectLayer {
   update(snapshot: ProjectSnapshot): void
+  updateSimulation(result: SolverResult | null): void
   setActive(active: boolean): void
   cancelGesture(): void
   bounds(id?: string): THREE.Box3
@@ -141,6 +146,15 @@ export function createProjectLayer(options: ProjectLayerOptions): ProjectLayer {
   const wiresRoot = new THREE.Group()
   root.add(componentsRoot, wiresRoot)
   const models = new Map<string, ModelEntry>()
+  let lastSimulationResult: SolverResult | null = null
+  const INTERACTIVE_TYPES = new Set([
+    'pushbutton',
+    'switch_spst',
+    'switch_spdt',
+    'reed_switch',
+    'dip_switch_4',
+    'potentiometer',
+  ])
   const markerGeometry = new THREE.SphereGeometry(0.09, 12, 8)
   const hitGeometry = new THREE.SphereGeometry(0.18, 10, 8)
   const markerMaterial = new THREE.MeshStandardMaterial({
@@ -617,6 +631,59 @@ export function createProjectLayer(options: ProjectLayerOptions): ProjectLayer {
     handleComponentDragMove(event, current)
   }
 
+  function handleInteractiveClick(componentId: string) {
+    const comp = snapshot?.project.components.find((item) => item.id === componentId)
+    if (!comp) return
+    if (comp.typeId === 'pushbutton') {
+      const next = !(comp.params.pressed === true)
+      playMechanicalClick(next ? 'press' : 'release')
+      options.onUpdateParameter?.(comp.id, 'pressed', next)
+    } else if (comp.typeId === 'switch_spst') {
+      const next = !(comp.params.closed === true)
+      playMechanicalClick('toggle')
+      options.onUpdateParameter?.(comp.id, 'closed', next)
+    } else if (comp.typeId === 'switch_spdt') {
+      const next = comp.params.position === 'throw_b' ? 'throw_a' : 'throw_b'
+      playMechanicalClick('toggle')
+      options.onUpdateParameter?.(comp.id, 'position', next)
+    } else if (comp.typeId === 'reed_switch') {
+      const next = !(comp.params.closed === true)
+      playMechanicalClick('toggle')
+      options.onUpdateParameter?.(comp.id, 'closed', next)
+    } else if (comp.typeId === 'dip_switch_4') {
+      const currentMask = typeof comp.params.closedMask === 'number' ? comp.params.closedMask : 0
+      const next = (currentMask + 1) % 16
+      playMechanicalClick('toggle')
+      options.onUpdateParameter?.(comp.id, 'closedMask', next)
+    }
+  }
+
+  function applyLedSimulation(result: SolverResult | null) {
+    for (const [id, entry] of models) {
+      if (entry.typeId !== 'led') continue
+      const currentIf = result ? Math.abs(result.currents[`${id}_vd`] ?? 0) : 0
+      const isLit = currentIf > 0.0001
+      const intensity = isLit ? Math.min(2.5, Math.max(0.6, currentIf / 0.015)) : 0.02
+      entry.model.group.traverse((child) => {
+        if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshPhysicalMaterial) {
+          child.material.emissiveIntensity = intensity
+          child.material.color.set(isLit ? '#ff7436' : '#e26835')
+        }
+        if (
+          child instanceof THREE.Mesh &&
+          child.material instanceof THREE.MeshStandardMaterial &&
+          child.name === 'Dado emisor'
+        ) {
+          child.material.emissiveIntensity = isLit ? 2.0 : 0
+        }
+        if (child instanceof THREE.PointLight) {
+          child.intensity = isLit ? 0.8 : 0
+        }
+      })
+    }
+    invalidate()
+  }
+
   function pointerUp(event: PointerEvent) {
     const current = gesture
     if (!current || current.pointerId !== event.pointerId) return
@@ -633,6 +700,8 @@ export function createProjectLayer(options: ProjectLayerOptions): ProjectLayer {
         snapRingMesh.visible = false
         options.onPinHover?.(null)
       }
+    } else if (!current.moved && !current.pin && current.componentId) {
+      handleInteractiveClick(current.componentId)
     }
     refreshGeometry()
   }
@@ -675,6 +744,13 @@ export function createProjectLayer(options: ProjectLayerOptions): ProjectLayer {
         updateActiveWire(root.worldToLocal(point))
       }
     } else {
+      if (hit?.componentId) {
+        const comp = snapshot?.project.components.find((c) => c.id === hit.componentId)
+        if (comp && INTERACTIVE_TYPES.has(comp.typeId)) {
+          setCanvasCursor('pointer')
+          return
+        }
+      }
       setCanvasCursor('')
     }
   }
@@ -764,6 +840,12 @@ export function createProjectLayer(options: ProjectLayerOptions): ProjectLayer {
         }
       }
       refreshGeometry()
+      applyLedSimulation(lastSimulationResult)
+    },
+    updateSimulation(result) {
+      if (disposed) return
+      lastSimulationResult = result
+      applyLedSimulation(result)
     },
     setActive(value) {
       if (disposed) return

@@ -40,6 +40,8 @@ function NexoSceneComponent({ mode, snapshot, actions, onReady, className }: Nex
       onDragCommit: () => actionsRef.current?.onDragCommit(),
       onDragCancel: () => actionsRef.current?.onDragCancel(),
       onPinHover: (endpoint) => actionsRef.current?.onPinHover?.(endpoint),
+      onUpdateParameter: (componentId, key, value) =>
+        actionsRef.current?.onUpdateParameter?.(componentId, key, value),
     }
 
     async function initialize(host: HTMLDivElement) {

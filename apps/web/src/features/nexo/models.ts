@@ -621,9 +621,11 @@ export function createProjectModel(
         bodyAnchor: [x, 0.66, 0],
       }
     }
+    const currentIf = typeof params?.currentIf === 'number' ? params.currentIf : 0
+    const isLit = currentIf > 0.0001 || params?.lit === true
     const ledSurface = material(
       new THREE.MeshPhysicalMaterial({
-        color: '#e26835',
+        color: isLit ? '#ff7436' : '#e26835',
         roughness: 0.2,
         metalness: 0,
         transparent: true,
@@ -634,7 +636,7 @@ export function createProjectModel(
         clearcoat: 1,
         clearcoatRoughness: 0.14,
         emissive: '#ff5a19',
-        emissiveIntensity: 0.02,
+        emissiveIntensity: isLit ? Math.min(2.5, Math.max(0.6, (currentIf || 0.015) / 0.015)) : 0.02,
       }),
     )
     mesh(
@@ -661,11 +663,17 @@ export function createProjectModel(
       new THREE.MeshStandardMaterial({
         color: '#e8bca4',
         emissive: '#ff7436',
-        emissiveIntensity: 0,
+        emissiveIntensity: isLit ? 2.0 : 0,
       }),
     )
     box(led, metal, -0.07, 0.78, 0, 0.065, 0.22, 0.07)
     box(led, dieSurface, 0.04, 0.83, 0, 0.12, 0.07, 0.12, 'Dado emisor')
+    if (isLit) {
+      const ledLight = new THREE.PointLight('#ff5a19', 0.8, 2.5)
+      ledLight.position.set(0, 1.2, 0)
+      ledLight.name = 'Luz puntual de emisión de LED'
+      led.add(ledLight)
+    }
     anchors.anode = new THREE.Vector3(-0.12, -0.04, 0)
     anchors.cathode = new THREE.Vector3(0.12, -0.04, 0)
   } else if (typeId === 'resistor') {
@@ -724,28 +732,7 @@ export function createProjectModel(
     anchors.a = new THREE.Vector3(-0.92, 0, 0)
     anchors.b = new THREE.Vector3(0.92, 0, 0)
   } else if (typeId !== 'dc_source' && typeId !== 'gnd_ref') {
-    contactPicking = buildPhysicalModel(typeId, {
-      group,
-      anchors,
-      geometry,
-      material,
-      standard,
-      mesh,
-      box,
-      slab,
-      tube,
-      repeated,
-      labelTexture,
-      print,
-      graphite,
-      chip,
-      metal,
-      brushedMetal,
-      gold,
-      solder,
-      ceramic,
-      holeMaterial,
-    })
+    contactPicking = buildPhysicalModel(typeId, tools)
   } else {
     const ink = material(new THREE.LineBasicMaterial({ color: '#315a63' }))
     const vertices: number[] = []

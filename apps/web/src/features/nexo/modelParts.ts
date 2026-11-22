@@ -256,11 +256,27 @@ export function buildPhysicalModel(
       cylinder(brushedMetal, 0.57, 0.34, 0, 0.36, 0, 'Carcasa circular de potenciómetro')
       cylinder(graphite, 0.5, 0.09, 0, 0.14, 0, 'Base fenólica')
       cylinder(metal, 0.18, 0.49, 0, 0.76, 0, 'Eje moleteado')
-      cylinder(graphite, 0.3, 0.26, 0, 1.1, 0, 'Mando de ajuste')
+
+      const pos = typeof tools.params?.position === 'number' ? tools.params.position : 0.5
+      const knobAngle = (pos - 0.5) * (Math.PI * 1.5)
+      const knobGroup = new THREE.Group()
+      knobGroup.name = 'Mando giratorio de potenciómetro'
+      knobGroup.rotation.y = -knobAngle
+      group.add(knobGroup)
+
+      mesh(
+        knobGroup,
+        geometry(new THREE.CylinderGeometry(0.3, 0.3, 0.26, 32)),
+        graphite,
+        0,
+        1.1,
+        0,
+        'Mando de ajuste',
+      )
       for (let i = 0; i < 16; i++) {
         const angle = (i / 16) * Math.PI * 2
         box(
-          group,
+          knobGroup,
           brushedMetal,
           Math.cos(angle) * 0.29,
           1.1,
@@ -271,7 +287,7 @@ export function buildPhysicalModel(
           'Estría de mando',
         )
       }
-      box(group, pearl, 0, 1.238, -0.15, 0.035, 0.012, 0.2, 'Índice de posición')
+      box(knobGroup, pearl, 0, 1.238, -0.15, 0.035, 0.012, 0.2, 'Índice de posición')
       for (const [pinId, x] of [
         ['a', -0.34],
         ['wiper', 0],
@@ -377,8 +393,25 @@ export function buildPhysicalModel(
       }
       cylinder(shell, 0.38, 0.19, 0, 1.28, -0.42, 'Caja de engranajes')
       cylinder(pearl, 0.14, 0.19, 0, 1.43, -0.42, 'Eje estriado')
-      box(group, pearl, 0, 1.54, -0.42, 1.5, 0.11, 0.22, 'Brazo de servo')
-      cylinder(metal, 0.07, 0.02, 0, 1.609, -0.42, 'Tornillo de brazo')
+
+      const angleDeg = typeof tools.params?.angle === 'number' ? tools.params.angle : 90
+      const hornGroup = new THREE.Group()
+      hornGroup.name = 'Brazo orientable de servo'
+      hornGroup.position.set(0, 1.54, -0.42)
+      hornGroup.rotation.y = ((angleDeg - 90) * Math.PI) / 180
+      group.add(hornGroup)
+
+      box(hornGroup, pearl, 0, 0, 0, 1.5, 0.11, 0.22, 'Brazo de servo')
+      mesh(
+        hornGroup,
+        geometry(new THREE.CylinderGeometry(0.07, 0.07, 0.02, 16)),
+        metal,
+        0,
+        0.069,
+        0,
+        'Tornillo de brazo',
+      )
+
       const cableColors = ['#a3503f', '#40352e', '#c4a568']
       ;['VCC', 'GND', 'SIG'].forEach((pinId, i) => {
         const x = (i - 1) * 0.16

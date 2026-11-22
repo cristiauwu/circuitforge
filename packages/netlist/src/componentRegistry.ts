@@ -257,6 +257,7 @@ export const COMPONENT_DEFINITIONS: readonly ComponentDefinition[] = [
     48,
     48,
     'radial',
+    [number('lux', 'Iluminación ambiental', 100, 'lux', 0, 100000, 10)],
   ),
   define(
     'dht22',
@@ -290,6 +291,7 @@ export const COMPONENT_DEFINITIONS: readonly ComponentDefinition[] = [
     72,
     96,
     'motor',
+    [number('angle', 'Ángulo físico', 90, '°', 0, 180, 1)],
   ),
   // Preserve these two historical terminal types for saved projects.
   define(
@@ -445,14 +447,17 @@ export const COMPONENT_DEFINITIONS: readonly ComponentDefinition[] = [
   define(
     'thermistor_ntc',
     'Termistor NTC',
-    'Resistencia nominal a 25 °C; no simula temperatura.',
+    'Resistencia dependiente de la temperatura según curva NTC.',
     'passive',
     'RT',
     passive('a', 'b'),
     48,
     48,
     'radial',
-    [number('resistance', 'Resistencia a 25 °C', 10, 'kohm')],
+    [
+      number('resistance', 'Resistencia a 25 °C', 10, 'kohm'),
+      number('temperature', 'Temperatura ambiental', 25, '°C', -40, 125, 1),
+    ],
   ),
   define(
     'varistor_mov',
