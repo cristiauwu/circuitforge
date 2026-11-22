@@ -28,6 +28,7 @@ interface ProjectLayerOptions {
   onDragPreview: (position: { x: number; y: number }) => void
   onDragCommit: () => void
   onDragCancel: () => void
+  onPinHover?: ((endpoint: PinEndpoint | null) => void) | undefined
 }
 
 export interface ProjectLayer {
@@ -63,6 +64,10 @@ interface Gesture {
 }
 
 const compare = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
+
+function isSamePin(a: PinEndpoint, b: PinEndpoint): boolean {
+  return a.componentId === b.componentId && a.pinId === b.pinId
+}
 
 interface ComponentPickHit {
   distance: number
@@ -172,6 +177,46 @@ export function createProjectLayer(options: ProjectLayerOptions): ProjectLayer {
   selection.material.opacity = 0.8
   selection.renderOrder = 10
   root.add(selection)
+
+  // Cable dinámico en curso de trazado (Rubberband live wire)
+  const activeWireGroup = new THREE.Group()
+  activeWireGroup.name = 'Cable interactivo dinámico'
+  activeWireGroup.visible = false
+  root.add(activeWireGroup)
+
+  const activeWireMaterial = new THREE.MeshStandardMaterial({
+    color: '#d4eb91',
+    roughness: 0.32,
+    metalness: 0.25,
+    emissive: new THREE.Color('#84cc16'),
+    emissiveIntensity: 0.45,
+  })
+  const activeTipMaterial = new THREE.MeshStandardMaterial({
+    color: '#ffffff',
+    roughness: 0.2,
+    metalness: 0.8,
+    emissive: new THREE.Color('#d4eb91'),
+    emissiveIntensity: 0.8,
+  })
+  const activeTipMesh = new THREE.Mesh(new THREE.SphereGeometry(0.065, 14, 10), activeTipMaterial)
+  let activeWireMesh: THREE.Mesh | null = null
+  activeWireGroup.add(activeTipMesh)
+
+  // Halo indicador de atracción magnética y hover en pines
+  const snapRingGeometry = new THREE.RingGeometry(0.07, 0.14, 24)
+  snapRingGeometry.rotateX(-Math.PI / 2)
+  const snapRingMaterial = new THREE.MeshBasicMaterial({
+    color: '#10b981',
+    transparent: true,
+    opacity: 0.9,
+    side: THREE.DoubleSide,
+    depthTest: false,
+  })
+  const snapRingMesh = new THREE.Mesh(snapRingGeometry, snapRingMaterial)
+  snapRingMesh.visible = false
+  snapRingMesh.renderOrder = 20
+  root.add(snapRingMesh)
+
   const raycaster = new THREE.Raycaster()
   const pointer = new THREE.Vector2()
   const ground = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
@@ -261,6 +306,59 @@ export function createProjectLayer(options: ProjectLayerOptions): ProjectLayer {
     entry.model.group.rotation.y = pose.rotation
   }
 
+  function anchorPoint(endpoint: PinEndpoint): THREE.Vector3 | null {
+    const entry = models.get(endpoint.componentId)
+    const component = snapshot?.project.components.find((item) => item.id === endpoint.componentId)
+    const anchor = entry?.model.anchors[endpoint.pinId]
+    if (!entry || !anchor) return null
+    if (
+      component?.typeId !== BREADBOARD_TYPE_ID &&
+      !component?.pins.some((pin) => pin.pinId === endpoint.pinId)
+    ) {
+      return null
+    }
+    return root.worldToLocal(entry.model.group.localToWorld(anchor.clone()))
+  }
+
+  function updateActiveWire(targetPoint: THREE.Vector3 | null) {
+    const pending = snapshot?.wiring.pending
+    if (!pending || !targetPoint) {
+      activeWireGroup.visible = false
+      return
+    }
+    const from = anchorPoint(pending)
+    if (!from) {
+      activeWireGroup.visible = false
+      return
+    }
+    const to = targetPoint
+    const dist = from.distanceTo(to)
+    if (dist < 0.04) {
+      activeWireGroup.visible = false
+      return
+    }
+    const lift = Math.max(from.y, to.y) + Math.min(1.8, 0.35 + dist * 0.16)
+    const curve = new THREE.CubicBezierCurve3(
+      from,
+      new THREE.Vector3(from.x, lift, from.z),
+      new THREE.Vector3(to.x, lift, to.z),
+      to,
+    )
+    if (activeWireMesh) {
+      activeWireMesh.geometry.dispose()
+      activeWireMesh.geometry = new THREE.TubeGeometry(curve, 28, 0.04, 8, false)
+    } else {
+      activeWireMesh = new THREE.Mesh(
+        new THREE.TubeGeometry(curve, 28, 0.04, 8, false),
+        activeWireMaterial,
+      )
+      activeWireGroup.add(activeWireMesh)
+    }
+    activeTipMesh.position.copy(to)
+    activeWireGroup.visible = true
+    invalidate()
+  }
+
   function clearWires() {
     for (const item of [...wiresRoot.children]) {
       wiresRoot.remove(item)
@@ -272,16 +370,6 @@ export function createProjectLayer(options: ProjectLayerOptions): ProjectLayer {
     if (!snapshot) return
     root.updateWorldMatrix(true, true)
     const segments: { netId: string; from: THREE.Vector3; to: THREE.Vector3 }[] = []
-    const anchorPoint = (endpoint: PinEndpoint): THREE.Vector3 | null => {
-      const entry = models.get(endpoint.componentId)
-      const component = snapshot?.project.components.find(
-        (item) => item.id === endpoint.componentId,
-      )
-      const anchor = entry?.model.anchors[endpoint.pinId]
-      if (!entry || !anchor || !component?.pins.some((pin) => pin.pinId === endpoint.pinId))
-        return null
-      return root.worldToLocal(entry.model.group.localToWorld(anchor.clone()))
-    }
     for (const connection of projectWireConnections(snapshot.project)) {
       const from = anchorPoint(connection.from)
       const to = anchorPoint(connection.to)
@@ -407,7 +495,17 @@ export function createProjectLayer(options: ProjectLayerOptions): ProjectLayer {
     if (canvas.hasPointerCapture(current.pointerId)) canvas.releasePointerCapture(current.pointerId)
   }
 
+  function setCanvasCursor(cursor: string) {
+    if (canvas.style) {
+      canvas.style.cursor = cursor
+    }
+  }
+
   function cancelGesture() {
+    activeWireGroup.visible = false
+    snapRingMesh.visible = false
+    setCanvasCursor('')
+    options.onPinHover?.(null)
     const current = gesture
     if (!current) return
     releaseGesture(current)
@@ -427,6 +525,14 @@ export function createProjectLayer(options: ProjectLayerOptions): ProjectLayer {
     if (!entry || !point) return
     event.preventDefault()
     event.stopImmediatePropagation()
+
+    if (snapshot?.wiring.pending && hit.pin) {
+      options.onPin(hit.pin)
+      activeWireGroup.visible = false
+      snapRingMesh.visible = false
+      return
+    }
+
     gesture = {
       pointerId: event.pointerId,
       componentId: hit.componentId,
@@ -442,26 +548,42 @@ export function createProjectLayer(options: ProjectLayerOptions): ProjectLayer {
     controls.enabled = false
     canvas.setPointerCapture(event.pointerId)
     options.onSelect(hit.componentId)
+
+    if (hit.pin) {
+      options.onPin(hit.pin)
+    }
   }
 
-  function pointerMove(event: PointerEvent) {
-    const current = gesture
-    if (!active || !current || current.pointerId !== event.pointerId) return
-    event.preventDefault()
-    event.stopImmediatePropagation()
-    if (
-      !current.moved &&
-      Math.hypot(event.clientX - current.startX, event.clientY - current.startY) < 5
-    )
-      return
-    current.moved = true
-    if (current.pin) return // Pin gestures are clicks, never component drags.
+  function handlePinDragMove(event: PointerEvent, current: Gesture) {
+    const hit = pick(event)
+    if (hit?.pin && current.pin && !isSamePin(current.pin, hit.pin)) {
+      const pinPos = anchorPoint(hit.pin)
+      if (pinPos) {
+        snapRingMesh.position.copy(pinPos)
+        snapRingMesh.position.y += 0.015
+        snapRingMesh.visible = true
+        snapRingMaterial.color.set('#10b981')
+        setCanvasCursor('crosshair')
+        updateActiveWire(pinPos)
+        options.onPinHover?.(hit.pin)
+        return
+      }
+    }
+    snapRingMesh.visible = false
+    options.onPinHover?.(null)
+    const point = planePoint(event)
+    if (point) {
+      updateActiveWire(root.worldToLocal(point))
+    }
+  }
+
+  function handleComponentDragMove(event: PointerEvent, current: Gesture) {
     if (snapshot?.project.mounts?.some((mount) => mount.componentId === current.componentId)) {
       if (!current.dragging) {
         current.dragging = true
         options.onDragStart(current.componentId)
       }
-      return // Mounted children move only through the explicit reposition operation.
+      return
     }
     const point = planePoint(event)
     if (!point) return
@@ -477,21 +599,84 @@ export function createProjectLayer(options: ProjectLayerOptions): ProjectLayer {
     options.onDragPreview(position)
   }
 
+  function pointerMove(event: PointerEvent) {
+    const current = gesture
+    if (!active || !current || current.pointerId !== event.pointerId) return
+    event.preventDefault()
+    event.stopImmediatePropagation()
+    if (
+      !current.moved &&
+      Math.hypot(event.clientX - current.startX, event.clientY - current.startY) < 5
+    )
+      return
+    current.moved = true
+    if (current.pin) {
+      handlePinDragMove(event, current)
+      return
+    }
+    handleComponentDragMove(event, current)
+  }
+
   function pointerUp(event: PointerEvent) {
     const current = gesture
     if (!current || current.pointerId !== event.pointerId) return
     event.preventDefault()
     event.stopImmediatePropagation()
     releaseGesture(current)
-    if (current.dragging) options.onDragCommit()
-    else if (
-      current.pin &&
-      !current.moved &&
-      Math.hypot(event.clientX - current.startX, event.clientY - current.startY) < 5
-    ) {
-      options.onPin(current.pin)
+    if (current.dragging) {
+      options.onDragCommit()
+    } else if (current.pin && current.moved) {
+      const dropHit = pick(event)
+      if (dropHit?.pin && !isSamePin(current.pin, dropHit.pin)) {
+        options.onPin(dropHit.pin)
+        activeWireGroup.visible = false
+        snapRingMesh.visible = false
+        options.onPinHover?.(null)
+      }
     }
     refreshGeometry()
+  }
+
+  function updateHoveredPin(pin: PinEndpoint, pending: PinEndpoint | null | undefined): boolean {
+    const pinPos = anchorPoint(pin)
+    if (!pinPos) return false
+    snapRingMesh.position.copy(pinPos)
+    snapRingMesh.position.y += 0.015
+    snapRingMesh.visible = true
+    if (pending) {
+      const isOrigin = isSamePin(pending, pin)
+      snapRingMaterial.color.set(isOrigin ? '#f59e0b' : '#10b981')
+      updateActiveWire(pinPos)
+    } else {
+      snapRingMaterial.color.set('#38bdf8')
+    }
+    setCanvasCursor('crosshair')
+    options.onPinHover?.(pin)
+    invalidate()
+    return true
+  }
+
+  function handleHoverMove(event: PointerEvent) {
+    if (!active || disposed || gesture) return
+    const hit = pick(event)
+    const pending = snapshot?.wiring.pending
+
+    if (hit?.pin && updateHoveredPin(hit.pin, pending)) {
+      return
+    }
+
+    snapRingMesh.visible = false
+    options.onPinHover?.(null)
+
+    if (pending) {
+      setCanvasCursor('crosshair')
+      const point = planePoint(event)
+      if (point) {
+        updateActiveWire(root.worldToLocal(point))
+      }
+    } else {
+      setCanvasCursor('')
+    }
   }
 
   function pointerCancelled(event: PointerEvent) {
@@ -500,6 +685,7 @@ export function createProjectLayer(options: ProjectLayerOptions): ProjectLayer {
 
   canvas.addEventListener('pointerdown', pointerDown, true)
   canvas.addEventListener('pointermove', pointerMove, true)
+  canvas.addEventListener('pointermove', handleHoverMove, false)
   canvas.addEventListener('pointerup', pointerUp, true)
   canvas.addEventListener('pointercancel', pointerCancelled, true)
   canvas.addEventListener('lostpointercapture', pointerCancelled, true)
@@ -508,6 +694,12 @@ export function createProjectLayer(options: ProjectLayerOptions): ProjectLayer {
     update(next) {
       if (disposed) return
       snapshot = next
+      if (!next.wiring.pending) {
+        activeWireGroup.visible = false
+        snapRingMesh.visible = false
+        setCanvasCursor('')
+        options.onPinHover?.(null)
+      }
       const present = new Set(next.project.components.map((component) => component.id))
       if (
         gesture &&
@@ -599,6 +791,7 @@ export function createProjectLayer(options: ProjectLayerOptions): ProjectLayer {
       disposed = true
       canvas.removeEventListener('pointerdown', pointerDown, true)
       canvas.removeEventListener('pointermove', pointerMove, true)
+      canvas.removeEventListener('pointermove', handleHoverMove, false)
       canvas.removeEventListener('pointerup', pointerUp, true)
       canvas.removeEventListener('pointercancel', pointerCancelled, true)
       canvas.removeEventListener('lostpointercapture', pointerCancelled, true)
@@ -619,6 +812,12 @@ export function createProjectLayer(options: ProjectLayerOptions): ProjectLayer {
       contactMaterial.dispose()
       selection.geometry.dispose()
       selection.material.dispose()
+      activeWireMaterial.dispose()
+      activeTipMaterial.dispose()
+      activeTipMesh.geometry.dispose()
+      activeWireMesh?.geometry.dispose()
+      snapRingGeometry.dispose()
+      snapRingMaterial.dispose()
       snapshot = null
     },
   }

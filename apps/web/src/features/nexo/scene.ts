@@ -13,6 +13,7 @@ export interface ProjectSceneActions {
   onDragPreview(position: { x: number; y: number }): void
   onDragCommit(): void
   onDragCancel(): void
+  onPinHover?(endpoint: PinEndpoint | null): void
 }
 
 export type SceneAPI = ReturnType<typeof createElectronicsScene>

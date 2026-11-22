@@ -7,6 +7,7 @@ import { EditorFloatingDock } from '@/features/editor/components/EditorFloatingD
 import { EditorHeader } from '@/features/editor/components/EditorHeader'
 import { EditorInspectorDrawer } from '@/features/editor/components/EditorInspectorDrawer'
 import { TelemetryDashboardTray } from '@/features/editor/components/TelemetryDashboardTray'
+import { WiringGuideOverlay } from '@/features/editor/components/WiringGuideOverlay'
 import { WorkspaceSplit } from '@/features/editor/workspace/WorkspaceSplit'
 import { canShowSplit, clampSplitWidth } from '@/features/editor/workspace/workspaceLayout'
 import { isEditableType } from '@/features/nexo/capabilities'
@@ -35,6 +36,7 @@ export function EditorPage() {
   const catalogTriggerRef = useRef<HTMLButtonElement | null>(null)
   const toolsTriggerRef = useRef<HTMLButtonElement | null>(null)
   const location = useLocation()
+  const [hoveredPin, setHoveredPin] = useState<PinEndpoint | null>(null)
 
   const closeDrawer = useCallback((drawer: 'catalog' | 'tools', restoreFocus = true) => {
     const panel = drawer === 'catalog' ? catalogRef.current : toolsRef.current
@@ -254,6 +256,7 @@ export function EditorPage() {
       onDragPreview: (pos) => controllerRef.current?.previewDrag(pos),
       onDragCommit: () => controllerRef.current?.commitDrag(),
       onDragCancel: () => controllerRef.current?.cancelDrag(),
+      onPinHover: (endpoint) => setHoveredPin(endpoint),
     }),
     [],
   )
@@ -385,6 +388,14 @@ export function EditorPage() {
                   <span>PBR 60 FPS</span>
                 </span>
               </div>
+
+              <WiringGuideOverlay
+                pending={snapshot?.wiring.pending}
+                hoveredPin={hoveredPin}
+                onCancel={cancel}
+                error={snapshot?.wiring.error}
+                totalWires={wires.length}
+              />
 
               <NexoScene
                 mode="lab"

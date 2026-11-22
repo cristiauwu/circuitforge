@@ -313,7 +313,9 @@ button:disabled {
   background: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.05);
   border-radius: 28px;
-  box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.02);
+  box-shadow:
+    0 16px 40px -12px rgba(0, 0, 0, 0.06),
+    0 2px 6px rgba(0, 0, 0, 0.02);
   overflow: hidden;
 }
 .nx-hero-scene {
@@ -936,7 +938,12 @@ button:disabled {
   border-radius: 12px;
   background: #f8fafc;
   color: #0f172a;
-  font: 13px / 1.7 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font:
+    13px / 1.7 ui-monospace,
+    "SF Mono",
+    Menlo,
+    Consolas,
+    monospace;
   padding: 14px 16px;
   transition: all 140ms ease;
 }
@@ -1470,7 +1477,6 @@ button:disabled {
   }
 }
 
-
 /* ── COMPONENTES MODERNOS ESTILO APPLE IOS (WASHOS / HUMAN INTERFACE) ── */
 
 /* 1. HUD y Dock 3D de Inspección Espacial (Landing Hero) */
@@ -1627,8 +1633,13 @@ button:disabled {
   background: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.05);
   border-radius: 20px;
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
-  transition: transform 180ms cubic-bezier(0.23, 1, 0.32, 1), box-shadow 180ms ease, border-color 180ms ease;
+  box-shadow:
+    0 4px 20px -2px rgba(0, 0, 0, 0.04),
+    0 1px 3px rgba(0, 0, 0, 0.02);
+  transition:
+    transform 180ms cubic-bezier(0.23, 1, 0.32, 1),
+    box-shadow 180ms ease,
+    border-color 180ms ease;
 }
 .nx-pillar-card:hover {
   transform: translateY(-2px);
@@ -1678,8 +1689,13 @@ button:disabled {
   border-radius: 20px;
   padding: 22px;
   min-width: 0;
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
-  transition: transform 180ms cubic-bezier(0.23, 1, 0.32, 1), border-color 180ms ease, box-shadow 180ms ease;
+  box-shadow:
+    0 4px 20px -2px rgba(0, 0, 0, 0.04),
+    0 1px 3px rgba(0, 0, 0, 0.02);
+  transition:
+    transform 180ms cubic-bezier(0.23, 1, 0.32, 1),
+    border-color 180ms ease,
+    box-shadow 180ms ease;
 }
 .nx-catalog-row:hover {
   transform: translateY(-2px);
@@ -1776,7 +1792,7 @@ button:disabled {
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: rgba(255, 255, 255, 0.90);
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid rgba(0, 0, 0, 0.07);
@@ -1947,7 +1963,9 @@ button:disabled {
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1), background-color 0.15s ease;
+  transition:
+    transform 0.15s cubic-bezier(0.2, 0, 0, 1),
+    background-color 0.15s ease;
 }
 
 .nx-sim-btn-primary:hover {
@@ -2154,7 +2172,11 @@ button:disabled {
   font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
-  transition: transform 120ms cubic-bezier(0.2, 0, 0, 1), color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
+  transition:
+    transform 120ms cubic-bezier(0.2, 0, 0, 1),
+    color 150ms ease,
+    background-color 150ms ease,
+    box-shadow 150ms ease;
 }
 
 .nx-segmented-pill:hover:not(:disabled) {
@@ -2169,7 +2191,9 @@ button:disabled {
   background: #ffffff;
   color: #0f172a;
   font-weight: 600;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .nx-segmented-pill:disabled {
@@ -2201,7 +2225,7 @@ button:disabled {
 .nx-telemetry-tray {
   margin: 0 16px 16px 16px;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.90);
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid rgba(0, 0, 0, 0.07);
@@ -2282,7 +2306,9 @@ button:disabled {
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 120ms cubic-bezier(0.2, 0, 0, 1), background-color 150ms ease;
+  transition:
+    transform 120ms cubic-bezier(0.2, 0, 0, 1),
+    background-color 150ms ease;
 }
 
 .nx-telemetry-toggle-btn:hover {
@@ -2314,14 +2340,23 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  box-shadow: 1px 2px 5px rgba(15, 23, 42, 0.02), 2px 6px 18px -2px rgba(15, 23, 42, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.95);
-  transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.15s ease, border-color 0.15s ease;
+  box-shadow:
+    1px 2px 5px rgba(15, 23, 42, 0.02),
+    2px 6px 18px -2px rgba(15, 23, 42, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  transition:
+    transform 0.15s cubic-bezier(0.2, 0, 0, 1),
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .nx-metric-widget:hover {
   transform: translateY(-2px);
-  border-color: rgba(0, 0, 0, 0.10);
-  box-shadow: 2px 4px 8px rgba(15, 23, 42, 0.03), 4px 12px 24px -2px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow:
+    2px 4px 8px rgba(15, 23, 42, 0.03),
+    4px 12px 24px -2px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
 }
 
 .nx-metric-widget-label {
@@ -2617,14 +2652,23 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  box-shadow: 1px 2px 5px rgba(15, 23, 42, 0.02), 2px 8px 20px -2px rgba(15, 23, 42, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.95);
-  transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.15s ease, border-color 0.15s ease;
+  box-shadow:
+    1px 2px 5px rgba(15, 23, 42, 0.02),
+    2px 8px 20px -2px rgba(15, 23, 42, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  transition:
+    transform 0.15s cubic-bezier(0.2, 0, 0, 1),
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .nx-piece-card:hover {
   transform: translateY(-2px);
   border-color: rgba(26, 98, 255, 0.25);
-  box-shadow: 2px 4px 8px rgba(15, 23, 42, 0.03), 3px 12px 24px -3px rgba(15, 23, 42, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  box-shadow:
+    2px 4px 8px rgba(15, 23, 42, 0.03),
+    3px 12px 24px -3px rgba(15, 23, 42, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
 }
 
 .nx-piece-main {
@@ -2682,7 +2726,10 @@ button:disabled {
   font-weight: 600;
   box-shadow: 0 2px 8px rgba(26, 98, 255, 0.22);
   cursor: pointer;
-  transition: transform 120ms cubic-bezier(0.2, 0, 0, 1), background-color 140ms ease, box-shadow 140ms ease;
+  transition:
+    transform 120ms cubic-bezier(0.2, 0, 0, 1),
+    background-color 140ms ease,
+    box-shadow 140ms ease;
 }
 
 .nx-piece-add:hover {
@@ -2695,5 +2742,228 @@ button:disabled {
   transform: scale(0.97);
 }
 
+/* 10. Overlay Interactivo de Cableado y Asistente HUD de Conexión */
+.nx-wiring-hud-container {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 25;
+  pointer-events: none;
+  max-width: 90%;
+}
 
+.nx-wiring-hud-container.pointer-idle {
+  top: 22px;
+}
 
+.nx-wiring-hud-card {
+  pointer-events: auto;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 18px;
+  padding: 12px 18px;
+  box-shadow:
+    0 10px 30px -4px rgba(15, 23, 42, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 380px;
+  transition:
+    border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nx-wiring-hud-card.target-locked {
+  border-color: #10b981;
+  box-shadow:
+    0 12px 36px -4px rgba(16, 185, 129, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.nx-wiring-hud-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.nx-wiring-hud-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #166534;
+  background: #f0fdf4;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  border: 1px solid #bbf7d0;
+}
+
+.nx-wiring-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 0 rgba(16, 185, 129, 0.7);
+  animation: nx-pulse-glow 1.4s infinite;
+}
+
+@keyframes nx-pulse-glow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.nx-wiring-hud-cancel-btn {
+  background: #f1f5f9;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #475569;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.nx-wiring-hud-cancel-btn:hover {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fca5a5;
+}
+
+.nx-wiring-hud-steps {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: #f8fafc;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: 12px;
+  padding: 8px 12px;
+}
+
+.nx-wiring-step-box {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.nx-wiring-step-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+}
+
+.nx-wiring-step-val {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.nx-wiring-pin-tag {
+  color: #1a62ff;
+  font-family: monospace;
+}
+
+.nx-wiring-step-val.highlighted {
+  color: #059669;
+}
+
+.nx-wiring-step-placeholder {
+  font-size: 12px;
+  font-weight: 500;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.nx-wiring-step-arrow {
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.nx-wiring-hud-hint {
+  font-size: 11px;
+  color: #475569;
+  line-height: 1.4;
+}
+
+.nx-wiring-hover-pill {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  color: #1e293b;
+  transition: transform 0.15s ease;
+}
+
+.nx-wiring-hover-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 6px #38bdf8;
+}
+
+.nx-wiring-alert-card {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 14px;
+  padding: 10px 16px;
+  color: #991b1b;
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.12);
+  animation: nx-alert-shake 0.35s ease;
+}
+
+@keyframes nx-alert-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-4px);
+  }
+  40%,
+  80% {
+    transform: translateX(4px);
+  }
+}
