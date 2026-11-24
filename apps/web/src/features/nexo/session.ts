@@ -33,7 +33,7 @@ export interface NexoSession {
 export const useNexoSession = create<NexoSession>((set) => ({
   code: '',
   notes: '',
-  view: 'split',
+  view: 'mount',
   splitRatio: 0.62,
   help: {
     enabled: true,

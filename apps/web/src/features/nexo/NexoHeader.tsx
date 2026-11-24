@@ -4,8 +4,8 @@ export function NexoHeader() {
   return (
     <header className="nx-header">
       <div className="nx-header-inner">
-        <Link className="nx-brand" to="/" aria-label="Nexo, inicio">
-          nexo
+        <Link className="nx-brand" to="/" aria-label="CircuitForge, inicio">
+          CircuitForge
           <svg
             className="nx-brand-mark"
             viewBox="0 0 24 24"

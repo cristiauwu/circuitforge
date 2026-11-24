@@ -9,8 +9,8 @@ beforeEach(() => {
 })
 
 describe('session drafts and workspace', () => {
-  it('starts in split view with a 62% mounting pane and empty drafts', () => {
-    expect(state()).toMatchObject({ code: '', notes: '', view: 'split', splitRatio: 0.62 })
+  it('starts in mount view with a 62% mounting ratio and empty drafts', () => {
+    expect(state()).toMatchObject({ code: '', notes: '', view: 'mount', splitRatio: 0.62 })
     expect(state().help).toEqual({
       enabled: true,
       invited: false,

@@ -101,7 +101,7 @@ const EditorCatalogDrawerComponent: React.FC<EditorCatalogDrawerProps> = ({
 
       <div className="nx-palette-list">
         {catalog.map((part) => (
-          <div key={part.typeId} className="nx-piece-card" data-nx-code={part.category.toUpperCase()}>
+          <div key={part.typeId} className="nx-piece-card">
             <div className="nx-piece-main">
               <ComponentPreview
                 typeId={part.typeId}

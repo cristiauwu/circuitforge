@@ -96,7 +96,7 @@ const EditorHeaderComponent: React.FC<EditorHeaderProps> = ({
     <header className="nx-header">
       <div className="nx-brand">
         <Link to="/" className="nx-logo">
-          nexo <span className="nx-logo-arrow">↗</span>
+          CircuitForge <span className="nx-logo-arrow">↗</span>
         </Link>
         <div className="nx-project-info">
           <span className="nx-project-name">{projectName}</span>

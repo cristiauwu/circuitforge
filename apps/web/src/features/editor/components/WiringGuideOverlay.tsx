@@ -51,10 +51,7 @@ const WiringGuideOverlayComponent: FC<WiringGuideOverlayProps> = ({
 
     return (
       <div className="nx-wiring-hud-container" role="status" aria-live="polite">
-        <div
-          className={`nx-wiring-hud-card nx-frame--scan ${isTargetLocked ? 'target-locked' : ''}`}
-          data-nx-code="WIRE-2P"
-        >
+        <div className={`nx-wiring-hud-card ${isTargetLocked ? 'target-locked' : ''}`}>
           <div className="nx-wiring-hud-header">
             <span className="nx-wiring-hud-badge">
               <span className="nx-wiring-pulse-dot" />

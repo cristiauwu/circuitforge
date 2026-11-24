@@ -403,6 +403,36 @@ export function EditorPage() {
                 totalWires={wires.length}
               />
 
+              {!snapshot?.wiring.pending && project?.components.length === 0 && (
+                <section className="nx-empty-guide" aria-label="Guía rápida de inicio">
+                  <span className="nx-empty-guide-eyebrow">Inicio rápido</span>
+                  <h2>Monta tu primer circuito en 3 pasos</h2>
+                  <ol className="nx-empty-guide-steps">
+                    <li>
+                      <strong>1. Elige piezas</strong>
+                      <span>Pulsa &ldquo;Añadir&rdquo; en el catálogo izquierdo (p. ej. Arduino UNO, LED o resistencia).</span>
+                    </li>
+                    <li>
+                      <strong>2. Conecta terminales</strong>
+                      <span>Haz clic en un pin dorado y luego en el contacto destino para trazar el cable.</span>
+                    </li>
+                    <li>
+                      <strong>3. Simula en vivo</strong>
+                      <span>Pulsa <strong>Simular DC</strong> arriba para ver tensiones, corrientes y actuadores.</span>
+                    </li>
+                  </ol>
+                  <div className="nx-empty-guide-actions">
+                    <button
+                      type="button"
+                      className="nx-button-primary nx-empty-guide-btn"
+                      onClick={() => addPiece('esp32')}
+                    >
+                      Empezar con ESP32
+                    </button>
+                  </div>
+                </section>
+              )}
+
               {!snapshot?.wiring.pending && (
                 <ActuatorControlHUD
                   selectedComponent={selected}
