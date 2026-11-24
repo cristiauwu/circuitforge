@@ -1,8 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
-  "buildCommand": "pnpm run build && node -e \"import('node:fs').then(fs => { fs.rmSync('dist', { recursive: true, force: true }); fs.cpSync('apps/web/dist', 'dist', { recursive: true }); })\"",
-  "outputDirectory": "apps/web/dist",
+  "buildCommand": "pnpm run build && node -e \"import('node:fs').then(fs => { if (!fs.existsSync('dist') && fs.existsSync('apps/web/dist')) fs.cpSync('apps/web/dist', 'dist', { recursive: true }); })\"",
+  "outputDirectory": "dist",
   "installCommand": "pnpm install --no-frozen-lockfile",
   "cleanUrls": true,
   "rewrites": [
