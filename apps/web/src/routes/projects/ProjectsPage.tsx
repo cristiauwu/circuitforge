@@ -53,7 +53,7 @@ export function ProjectsPage() {
         </p>
         <ul className="nx-project-list">
           {PROJECTS.map((example) => (
-            <li className="nx-catalog-row" key={example.id}>
+            <li className="nx-catalog-row" data-nx-code="REF-CIR" key={example.id}>
               <div className="nx-catalog-copy">
                 <span className="nx-badge">Circuito de Referencia Verificado</span>
                 <h3>{example.name}</h3>

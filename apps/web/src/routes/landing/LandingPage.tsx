@@ -70,7 +70,7 @@ export function LandingPage() {
           </p>
 
           <div className="nx-hero-actions">
-            <Link className="nx-button nx-button-primary" to="/editor">
+            <Link className="nx-button nx-button-primary nx-action" data-nx-code="NX-3D" to="/editor">
               <span className="cf-btn__roll">
                 <span className="cf-btn__text">Abrir laboratorio 3D</span>
                 <span className="cf-btn__text" aria-hidden="true">
@@ -89,7 +89,7 @@ export function LandingPage() {
               </svg>
             </Link>
 
-            <Link className="nx-button nx-button-secondary" to="/biblioteca">
+            <Link className="nx-button nx-button-secondary nx-action" data-nx-code="CAT-73" to="/biblioteca">
               <span className="cf-btn__roll">
                 <span className="cf-btn__text">Ver catálogo en vivo</span>
                 <span className="cf-btn__text" aria-hidden="true">

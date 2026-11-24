@@ -312,7 +312,7 @@ export const ActuatorControlHUD = memo(function ActuatorControlHUD({
 
   return (
     <aside className="nx-actuator-hud-container" aria-label="Control interactivo de componente 3D">
-      <div className="nx-actuator-hud-card">
+      <div className="nx-actuator-hud-card" data-nx-code="ACT-T8">
         <header className="nx-actuator-hud-header">
           <div className="nx-actuator-header-info">
             <span className="nx-actuator-chip-badge">{selectedComponent.id}</span>

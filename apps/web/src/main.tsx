@@ -6,6 +6,7 @@ import './styles/tokens.css'
 import './styles/animations.css'
 import './styles/atmosphere.css'
 import './styles/nexo.css'
+import './styles/nexo-frames.css'
 
 const container = document.getElementById('root')
 
