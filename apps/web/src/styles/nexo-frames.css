@@ -109,6 +109,12 @@
       opacity 160ms ease;
   }
 
+  .nx-piece-card[data-nx-code]::after {
+    top: 10px;
+    bottom: auto;
+    right: 12px;
+  }
+
   .nx-frame--dark[data-nx-code]::after {
     background: #064e3b;
     color: #ecfdf5;

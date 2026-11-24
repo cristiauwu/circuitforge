@@ -1,0 +1,273 @@
+/* Layout dedicado del Editor (EditorHeader, Firmware C++, acciones y feedback táctil) */
+
+.nexo-app-editor .nx-header {
+  height: auto;
+  min-height: 60px;
+  padding: 8px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 40;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--cf-hairline);
+}
+
+.nexo-app-editor .nx-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  font-size: 14px;
+}
+
+.nexo-app-editor .nx-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  text-decoration: none;
+  color: var(--cf-ink);
+  min-height: 40px;
+  padding: 0 4px;
+}
+
+.nexo-app-editor .nx-logo-arrow {
+  font-size: 16px;
+  color: var(--cf-accent);
+}
+
+.nexo-app-editor .nx-project-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  border-left: 1px solid var(--cf-hairline-strong);
+  padding-left: 12px;
+}
+
+.nexo-app-editor .nx-project-name {
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--cf-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nexo-app-editor .nx-stats-badge {
+  font-size: 11px;
+  color: var(--cf-text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.nexo-app-editor .nx-header-center {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.nexo-app-editor .nx-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.nexo-app-editor .nx-actions .nx-button {
+  min-height: 36px;
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 9999px;
+  background: var(--cf-surface);
+  border: 1px solid var(--cf-hairline-strong);
+  color: var(--cf-ink);
+}
+
+.nexo-app-editor .nx-actions .nx-button:hover:not(:disabled) {
+  background: var(--cf-surface-alt);
+  border-color: rgba(26, 98, 255, 0.35);
+}
+
+.nexo-app-editor .nx-sim-toolbar-btn {
+  min-height: 36px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  border: 1px solid var(--cf-hairline-strong);
+  background: var(--cf-surface);
+  color: var(--cf-ink);
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  transition:
+    transform 100ms ease-out,
+    background-color 150ms ease-out,
+    border-color 150ms ease-out,
+    color 150ms ease-out;
+}
+
+.nexo-app-editor .nx-sim-toolbar-btn:active {
+  transform: scale(0.97);
+}
+
+.nexo-app-editor .nx-sim-toolbar-btn.active {
+  background: var(--cf-accent);
+  border-color: var(--cf-accent);
+  color: var(--cf-on-accent);
+}
+
+.nexo-app-editor .nx-sim-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: var(--cf-text-muted);
+}
+
+.nexo-app-editor .nx-sim-dot[data-status="active"] {
+  background: #34d399;
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.25);
+}
+
+.nexo-app-editor .nx-sim-dot[data-status="error"] {
+  background: var(--cf-error);
+}
+
+.nexo-app-editor .nx-toolbar-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: #eff6ff;
+  border: 1px solid rgba(26, 98, 255, 0.25);
+  color: var(--cf-accent);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.nexo-app-editor .nx-cancel-wiring-btn {
+  min-height: 24px;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  border: 1px solid rgba(26, 98, 255, 0.25);
+  background: #ffffff;
+  color: var(--cf-ink);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Panel de Firmware C++ */
+.nx-code-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  background: #0f172a;
+  color: #e2e8f0;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.nx-code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: #0b1220;
+  flex-wrap: wrap;
+}
+
+.nx-code-header h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 650;
+  color: #f8fafc;
+}
+
+.nx-code-header p {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.nx-code-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nx-code-btn {
+  min-height: 32px;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f8fafc;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 100ms ease-out, background-color 140ms ease-out;
+}
+
+.nx-code-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.nx-code-btn:active {
+  transform: scale(0.97);
+}
+
+.nx-code-btn--primary {
+  background: var(--cf-accent);
+  border-color: var(--cf-accent);
+  color: #ffffff;
+}
+
+.nx-code-btn--primary:hover {
+  background: var(--cf-accent-hover);
+}
+
+.nx-code-textarea {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  border: 0;
+  resize: none;
+  padding: 16px 18px;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: var(--cf-font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  outline: none;
+}
+
+.nexo-app-editor .nx-telemetry-tray {
+  margin: 0 12px 10px;
+  padding: 10px 16px;
+}
+
+.nexo-app-editor .nx-telemetry-header {
+  margin-bottom: 8px;
+}
+
+@media (max-width: 1080px) {
+  .nexo-app-editor .nx-actions {
+    margin-left: 0;
+  }
+}

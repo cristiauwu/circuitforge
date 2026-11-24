@@ -18,6 +18,7 @@ import { useNexoSession } from '@/features/nexo/session'
 import { useErcStore } from '@/features/simulation/useErcStore'
 import { useSimulationStore } from '@/features/simulation/useSimulationStore'
 import { CATALOG, CATALOG_INDEX } from '@/lib/fixtures/components'
+import './EditorPage.css'
 
 export function EditorPage() {
   const [snapshot, setSnapshot] = useState<ProjectSnapshot | null>(null)
@@ -87,6 +88,7 @@ export function EditorPage() {
   const [diagnosticsOpen, setDiagnosticsOpen] = useState(false)
   const [message, setMessage] = useState('')
   const [cameraView, setCameraView] = useState<'perspective' | 'top'>('perspective')
+  const [copiedCode, setCopiedCode] = useState(false)
 
   useEffect(() => {
     if (!message) return
@@ -359,7 +361,7 @@ export function EditorPage() {
           windowWidth={windowWidth}
         />
 
-        <div className="nx-center" ref={centerRef}>
+        <div className="nx-editor-center" ref={centerRef}>
           <div className="nx-split">
             <section
               id="workspace-schematic"
@@ -456,6 +458,34 @@ export function EditorPage() {
                 <div>
                   <h2>Firmware C++</h2>
                   <p>Código fuente embebido para microcontroladores (Arduino UNO / ESP32).</p>
+                </div>
+                <div className="nx-code-actions">
+                  <button
+                    type="button"
+                    className="nx-code-btn"
+                    onClick={() => {
+                      navigator.clipboard?.writeText(code).catch(() => {})
+                      setCopiedCode(true)
+                      window.setTimeout(() => setCopiedCode(false), 1800)
+                    }}
+                  >
+                    {copiedCode ? 'Copiado ✓' : 'Copiar'}
+                  </button>
+                  <button
+                    type="button"
+                    className="nx-code-btn nx-code-btn--primary"
+                    onClick={() => {
+                      const blob = new Blob([code], { type: 'text/plain;charset=utf-8' })
+                      const url = URL.createObjectURL(blob)
+                      const anchor = document.createElement('a')
+                      anchor.href = url
+                      anchor.download = 'main.cpp'
+                      anchor.click()
+                      URL.revokeObjectURL(url)
+                    }}
+                  >
+                    Descargar main.cpp
+                  </button>
                 </div>
               </header>
 
