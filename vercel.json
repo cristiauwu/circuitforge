@@ -3,7 +3,7 @@
   "framework": "vite",
   "buildCommand": "pnpm run build",
   "outputDirectory": "apps/web/dist",
-  "installCommand": "pnpm install --frozen-lockfile",
+  "installCommand": "pnpm install --no-frozen-lockfile",
   "cleanUrls": true,
   "rewrites": [
     {
